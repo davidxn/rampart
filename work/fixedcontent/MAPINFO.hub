@@ -1,0 +1,13 @@
+defaultmap {
+    NoJump
+    NoCrouch
+    sky1 = RSKY1
+    next = MAP01
+    music = D_RUNNIN
+}
+
+map MAP01 "Hub"
+{
+	cluster = 1
+    NoIntermission
+}
