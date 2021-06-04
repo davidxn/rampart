@@ -28,10 +28,12 @@ class Pin_Handler {
         }
 
         $jumpcrouch = isset($map['jumpcrouch']) ? $map['jumpcrouch'] : 0;
+        $wip = isset($map['wip']) ? $map['wip'] : 0;
         echo json_encode([
             "mapname" => $map['map_name'],
             "author" => $map['author'],
-            "jumpcrouch" => $jumpcrouch
+            "jumpcrouch" => $jumpcrouch,
+            "wip" => $wip
         ]);
     }
 

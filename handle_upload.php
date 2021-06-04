@@ -13,6 +13,10 @@ class Upload_Handler {
         $mapname = $this->clean_text($_POST['mapname']);
         $authorname = $this->clean_text($_POST['authorname']);
         $jumpcrouch = $this->clean_text($_POST['jumpcrouch']);
+        $wip = 0;
+        if (isset($_POST['wip'])) {
+            $wip = $this->clean_text($_POST['wip']);
+        }
         $pin = strtoupper($this->clean_text($pin));
 
         $this->validate_fields($mapname, $authorname);
@@ -61,7 +65,8 @@ class Upload_Handler {
             'map_name' => $mapname,
             'author' => $authorname,
             'map_number' => $map_number,
-            'jumpcrouch' => $jumpcrouch
+            'jumpcrouch' => $jumpcrouch,
+            'wip' => $wip
         ];
         file_put_contents(CATALOG_FILE, json_encode($catalog));
         $this->lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
@@ -77,7 +82,7 @@ class Upload_Handler {
 
     function clean_text($string, $length = 0) {
        $string = trim($string);
-       $string = preg_replace('/[^A-Za-z0-9\-\'! ]/', '', $string); // Removes special chars.
+       $string = preg_replace('/[^A-Za-z0-9\-\'!: ]/', '', $string); // Removes special chars.
        if ($length) {
            $string = substr($string, 0, $length);
        }
@@ -176,7 +181,7 @@ class Upload_Handler {
     }
 }
 
-//Let's make it look like we're working, (discourages spamming this script)
+//Let's make it look like we're working (discourages spamming this script)
 sleep(2);
 
 $filename = isset($_FILES['file']['name']) ? $_FILES['file']['name'] : null;

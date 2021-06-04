@@ -10,6 +10,7 @@ class Mapinfo_Handler {
     }
 
     public function parse() {
+        
         //This is incredibly basic - replace this with the equivalent of the parser from UDB eventually...
         $parsed_data = [];
         $mapinfo_lines = split(PHP_EOL, $this->bytes);
@@ -24,10 +25,20 @@ class Mapinfo_Handler {
             
             $line_tokens = split("=", $line);
             if (in_array($this->clean_token($line_tokens[0]), ['sky1', 'skybox'])) {
-                $parsed_data['sky1'] = $this->strip_quotes($line_tokens[1]);
+                $value = $this->strip_quotes($line_tokens[1]);
+                $terminatechar = strpos($value, ",");
+                if ($terminatechar) {
+                    $value = trim(substr($value, 0, $terminatechar));
+                }
+                $parsed_data['sky1'] = $value;
             }
             if ($this->clean_token($line_tokens[0]) == 'sky2') {
-                $parsed_data['sky2'] = $this->strip_quotes($line_tokens[1]);
+                $value = $this->strip_quotes($line_tokens[1]);
+                $terminatechar = strpos($value, ",");
+                if ($terminatechar) {
+                    $value = trim(substr($value, 0, $terminatechar));
+                }
+                $parsed_data['sky2'] = $value;
             }
         }
         
