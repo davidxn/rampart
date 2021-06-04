@@ -14,10 +14,16 @@ const PK3_FOLDER            = "./work/pk3/";
 const PK3_FILE              = "/tmpramp/" . PROJECT_FILE_NAME;
 
 const LOG_FILE              = "./work/log.log";
-const PK3_GEN_LOG_FILE       = "./work/pk3generation.log";
+const PK3_GEN_LOG_FILE      = "./work/pk3generation.log";
+const STATUS_FILE           = "./status.log";
 
 const LOCK_FILE_UPLOAD      = "./work/.uploadlockfile";
 const LOCK_FILE_DOWNLOAD    = "./work/.downloadlockfile";
 
 const DEFAULT_SKY_LUMP      = "RSKY1";
 const ZIP_SCRIPT            = "python pythonzip.py";
+
+const HUB_SLOTS             = 54;
+const HUB_MAP_FILE          = "maps/MAP01.wad";
+
+const MAPS_PER_PAGE         = 7;

@@ -53,8 +53,12 @@ class Wad_Handler {
         if (in_array($lump['name'], $this->map_lump_names)) {
             return 'mapdata';
         }
+        //DECORATE or ZSCRIPT?
+        if (in_array($lump['name'], ['DECORATE', 'ZSCRIPT'])) {
+            return strtolower($lump['name']);
+        }            
         //Could be a MAPINFO
-        if ($lump['name'] == 'MAPINFO') {
+        if (in_array($lump['name'], ['MAPINFO', 'ZMAPINFO'])) {
             return 'mapinfo';
         }
         //If the length is 0 it's just a marker
@@ -74,6 +78,13 @@ class Wad_Handler {
             }
             if ($string == 'OggS') {
                 return 'ogg';
+            }
+        }
+        if ($lump['size'] >= 3) {
+            fseek($this->wad_file, $lump['position']);
+            $string = $this->read_bytes(3, 'str');
+            if ($string == 'ID3' || $string == "\xFF\xFB\x90") {
+                return 'mp3';
             }
         }
         return 'unknown';
@@ -125,6 +136,7 @@ class Wad_Handler {
         $directory_bytes = "";
         foreach($this->lumps as $lump) {
             $lumps_bytes .= $lump['data'];
+            $lump['size'] = strlen($lump['data']); //Recalculate size of lump
             $new_directory_bytes = pack("L", (12 + $total_lump_size)) . pack("L", $lump['size']) . str_pad($lump['name'], 8, "\x00");
             $directory_bytes .= $new_directory_bytes;
             $total_lump_size += $lump['size'];

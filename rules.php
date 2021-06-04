@@ -17,7 +17,7 @@ require_once('./header.php');
 
 <ul>
 <li>The first map (map name doesn't matter)</li>
-<li>(Optional) The first MIDI or OGG, for your background music (lump name doesn't matter)</li>
+<li>(Optional) The first MIDI/OGG/MP3 for your background music (lump name doesn't matter)</li>
 <li>(Optional) A graphics lump called RSKY1, for your map's sky</li>
 </ul>
 

@@ -12,8 +12,10 @@ a.quickstart {
 body {
     background-color: #333;
     font-family: Exo, sans-serif;
-    background-image: url(bg.jpg);
-    background-size: cover;
+    background-image: url('bg.jpg');
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 button {
@@ -163,6 +165,10 @@ div.code {
 table.upload_table {
     width: 80%;
     margin: 0 auto;
+}
+
+table.upload_table td {
+    border-bottom: 1px solid #888;
 }
 
 table.maps_table {

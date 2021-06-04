@@ -1,4 +1,5 @@
 var uploadFormData = new FormData();
+var downloadStatus = null;
 
 var loadingSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(119, 119, 119); display: block;" width="40px" height="40px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid"><g transform="translate(50 50)"><g><animateTransform attributeName="transform" type="rotate" values="0;45" keyTimes="0;1" dur="0.4081632653061225s" repeatCount="indefinite"></animateTransform><path d="M29.491524206117255 -5.5 L37.491524206117255 -5.5 L37.491524206117255 5.5 L29.491524206117255 5.5 A30 30 0 0 1 24.742744050198738 16.964569457146712 L24.742744050198738 16.964569457146712 L30.399598299691117 22.621423706639092 L22.621423706639096 30.399598299691114 L16.964569457146716 24.742744050198734 A30 30 0 0 1 5.5 29.491524206117255 L5.5 29.491524206117255 L5.5 37.491524206117255 L-5.499999999999997 37.491524206117255 L-5.499999999999997 29.491524206117255 A30 30 0 0 1 -16.964569457146705 24.742744050198738 L-16.964569457146705 24.742744050198738 L-22.621423706639085 30.399598299691117 L-30.399598299691117 22.621423706639092 L-24.742744050198738 16.964569457146712 A30 30 0 0 1 -29.491524206117255 5.500000000000009 L-29.491524206117255 5.500000000000009 L-37.491524206117255 5.50000000000001 L-37.491524206117255 -5.500000000000001 L-29.491524206117255 -5.500000000000002 A30 30 0 0 1 -24.742744050198738 -16.964569457146705 L-24.742744050198738 -16.964569457146705 L-30.399598299691117 -22.621423706639085 L-22.621423706639092 -30.399598299691117 L-16.964569457146712 -24.742744050198738 A30 30 0 0 1 -5.500000000000011 -29.491524206117255 L-5.500000000000011 -29.491524206117255 L-5.500000000000012 -37.491524206117255 L5.499999999999998 -37.491524206117255 L5.5 -29.491524206117255 A30 30 0 0 1 16.964569457146702 -24.74274405019874 L16.964569457146702 -24.74274405019874 L22.62142370663908 -30.39959829969112 L30.399598299691117 -22.6214237066391 L24.742744050198738 -16.964569457146716 A30 30 0 0 1 29.491524206117255 -5.500000000000013 M0 -19A19 19 0 1 0 0 19 A19 19 0 1 0 0 -19" fill="#d5cc1b"></path></g></g></svg>'
 
@@ -76,6 +77,7 @@ $(function() {
         uploadFormData.set('authorname', $('#input_author_name').val());
         uploadFormData.set('pin', $('#input_pin_to_reupload').val());
         uploadFormData.set('jumpcrouch', ($('#input_map_jumpcrouch')[0].checked ? 1 : 0));
+        uploadFormData.set('wip', ($('#input_map_wip')[0].checked ? 1 : 0));
         uploadData(uploadFormData);
     });
 
@@ -94,14 +96,33 @@ $(function() {
 
 });
 
+function readStatus() {
+    $.ajax({
+        url: './status.log?xcache=' + Math.random(),
+        type: 'get',
+        dataType: 'text',
+        success: function(response){
+            $('#download_status').text(response);
+        }
+    });
+}
+
 function downloadProject() {
+    downloadStatus = setInterval(readStatus, 5000);
     $.ajax({
         url: './handle_pk3_update.php?xcache=' + Math.random(),
         type: 'get',
+        dataType: 'json',
         success: function(response){
-            $('#download_button').text("PK3 generated!");
+            $('#download_status').text("");
+            clearInterval(downloadStatus);
             //Don't really re-enable the button!
             $('#download_button').removeClass("waitingdisabled");
+            if (response.error) {
+                $('#download_button').text(response.error);
+                return;
+            }
+            $('#download_button').text("PK3 generated!");
             window.location.href = './handle_download.php?xcache=' + Math.random();
         }
     });
@@ -197,6 +218,7 @@ function populateMapInfo(response) {
         $("#input_map_name").val(response.mapname);
         $("#input_author_name").val(response.author);
         $('#input_map_jumpcrouch')[0].checked = response.jumpcrouch == 0 ? false : true;
+        $('#input_map_wip')[0].checked = response.wip == 0 ? false : true;
         $("#upload_prompt").html('OK - alter your details and attach a new map here if you need to.');
         $("#upload_wad").text('Submit changes');
     }

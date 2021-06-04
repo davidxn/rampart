@@ -6,6 +6,7 @@ require_once('./header.php');
 <img src="./davidn.png" class="inlineimg"/>
 
 <p><a href="./handle_pk3_update.php?nocache=true">Regenerate PK3</a></p>
+<p><a href="./generateguide.php">Make guide conversation script</a></p>
 
 <div style="clear: both;">&nbsp;</div>
 

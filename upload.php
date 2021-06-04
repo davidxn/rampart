@@ -5,11 +5,17 @@ require_once('./header.php');
 
                 <p>Upload a WAD file containing a single map in any format (Doom, Hexen, UDMF). You can amend a submission at any time by using the PIN given to you on first upload.</p>
                 
+                <div class="lightbox">
                 <p>As well as a map, you can include these resources:</p>
                 <ul>
-                <li>The first MIDI or OGG file in the WAD will be used as your map's music, no matter what its name is.</li>
-                <li>Include a lump called RSKY1 to use it for your map's sky.</li>
+                <li>The first MIDI/OGG/MP3 file in the WAD will be used as your map's music, no matter what its name is.</li>
+                <li>For skies, you can do one of two things:
+                    <ul><li>Include a lump called RSKY1 and it'll automatically be used as the sky</li>
+                    <li>OR Include your sky texture(s) under other names and point to them with SKY1 and SKY2 in a MAPINFO</li></ul>
+                </li>
                 </ul>
+                <p>Take a look at <a href="./guide.php">the tutorial video for uploading</a> to see how!</p>
+                </div>
 
                 <p>If you need to use any other custom resources, ask DavidN in the <a href="https://discord.gg/afFGdGNhW2">Discord</a> and he can include them in the PK3.</p> 
                 
@@ -43,6 +49,15 @@ require_once('./header.php');
                                     <input type="checkbox" id="input_map_jumpcrouch">
                                     <span class="checkmark"></span>
                                 </label>
+                            </td>
+                        </tr><tr>
+                            <td>Map is a work-in-progress:</td>
+                            <td>
+                                <label class="checkmarkcontainer">
+                                    <input type="checkbox" id="input_map_wip">
+                                    <span class="checkmark"></span>
+                                </label>
+                                <div class="smallnote">This does nothing in-game, it's just a useful indicator that a map hasn't been finished yet. You'll still be able to upload new versions even if this box isn't checked</div>
                             </td>
                         </tr><tr>
                         <td>Map file:</td><td>

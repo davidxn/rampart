@@ -2,8 +2,8 @@
 <html>
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="upload.js?xcache=2" type="text/javascript"></script>
-        <link rel="stylesheet" href="./ramp.css?xcache=2">
+        <script src="upload.js?xcache=7" type="text/javascript"></script>
+        <link rel="stylesheet" href="./ramp.css?xcache=4">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Exo">
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
