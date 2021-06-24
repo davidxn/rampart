@@ -1,5 +1,5 @@
 <?php
-require_once("./_constants.php");
+require_once("_constants.php");
 
 class Wad_Handler {
     
@@ -36,7 +36,7 @@ class Wad_Handler {
         
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
         for ($i = 0; $i < $this->numlumps; $i++) {
-            $type = $this->identify_lump($this->lumps[$i]);
+            $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
             $this->lumps[$i]['type'] = $type;
             $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
         }
@@ -48,7 +48,7 @@ class Wad_Handler {
         return $this->read_bytes($lump['size']);
     }
     
-    public function identify_lump($lump) {
+    public function identify_lump($lump, $nextlump) {
         //Check for map data by name
         if (in_array($lump['name'], $this->map_lump_names)) {
             return 'mapdata';
@@ -61,10 +61,10 @@ class Wad_Handler {
         if (in_array($lump['name'], ['MAPINFO', 'ZMAPINFO'])) {
             return 'mapinfo';
         }
-        //If the length is 0 it's just a marker
+        //If the length is 0 it's just a marker. If the next lump is either TEXTMAP or THINGS it's a map.
         if ($lump['size'] == 0) {
             $type = 'marker';
-            if (substr($lump['name'], 0, 3) == 'MAP') { //There must be a better way to do this
+            if ($nextlump && in_array($nextlump['name'], ['TEXTMAP', 'THINGS'])) {
                 $type = 'mapmarker';
             }
             return $type;
