@@ -25,7 +25,7 @@ const LOCK_FILE_UPLOAD      = "./work/.uploadlockfile";
 const LOCK_FILE_DOWNLOAD    = "./work/.downloadlockfile";
 
 const DEFAULT_SKY_LUMP      = "RSKY1";
-const ZIP_SCRIPT            = "python pythonzip.py";
+const ZIP_SCRIPT            = "cd " . RAMPART_HOME . PK3_FOLDER . " && zip -FSr1 " . PK3_FILE . " *";
 
 const HUB_SLOTS             = 120;
 const HUB_MAP_FILE          = "maps/MAP01.wad";
