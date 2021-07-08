@@ -48,7 +48,11 @@ $table_string .= "</tbody></table>";
 ?>
                 <p>Download a snapshot of the compiled project so far!</p>
                 
+<<<<<<< HEAD
                 <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are currently in the hub. This seems sufficient.</p>
+=======
+                <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are currently in the hub - the hub will be expanded as slots fill up.</p>
+>>>>>>> 715c9beefc57e1cc21821b0324eb0bceaaad9f1b
                 <?
                 if (count($file_table) > HUB_SLOTS) {
                     ?> <p class="smallnote">The hub needs to be expanded so all maps are available!</p> <?

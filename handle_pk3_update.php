@@ -1,6 +1,10 @@
 <?php
 
+<<<<<<< HEAD
 set_time_limit(600);
+=======
+set_time_limit(300);
+>>>>>>> 715c9beefc57e1cc21821b0324eb0bceaaad9f1b
 
 require_once("_constants.php");
 require_once("scripts/wad_handler.php");
@@ -18,7 +22,11 @@ class Project_Compiler {
         $tries = 0;
         $start_time = time();
         
+<<<<<<< HEAD
         $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - filemtime(LOCK_FILE_COMPILE)) < 600;
+=======
+        $lock_file_recent = file_exists(LOCK_FILE_DOWNLOAD) && (time() - filemtime(LOCK_FILE_DOWNLOAD)) < 600;
+>>>>>>> 715c9beefc57e1cc21821b0324eb0bceaaad9f1b
         $pk3_is_current = file_exists(PK3_FILE) && (filemtime(CATALOG_FILE) < filemtime(PK3_FILE));
         
         if ($lock_file_recent) {

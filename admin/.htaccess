@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Admin Tools"
+AuthUserFile /media/usb/doom/ramp/admin/.htpasswd
+require valid-user
