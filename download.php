@@ -22,6 +22,10 @@ foreach($catalog as $identifier => $map_data) {
     ];
 }
 
+usort($file_table, function($a, $b) {
+   return $a['map_number'] > $b['map_number']; 
+});
+
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
@@ -44,13 +48,13 @@ $table_string .= "</tbody></table>";
 ?>
                 <p>Download a snapshot of the compiled project so far!</p>
                 
-                <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are in the hub.</p>
+                <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are currently in the hub. This seems sufficient.</p>
                 <?
                 if (count($file_table) > HUB_SLOTS) {
                     ?> <p class="smallnote">The hub needs to be expanded so all maps are available!</p> <?
                 }
                 ?>
-                <center><button type="button" id="download_button">Download the PK3</button>
+                <center><button type="button" id="download_button">Download a snapshot of RAMP!</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
                 <p>Map list updated at <?=$date_catalog ? date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>

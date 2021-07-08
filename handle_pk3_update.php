@@ -1,22 +1,24 @@
 <?php
 
-set_time_limit(240);
+set_time_limit(600);
 
-require_once("./_constants.php");
-require_once("./scripts/wad_handler.php");
-require_once("./scripts/mapinfo_handler.php");
-require_once("./scripts/guide_writer.php");
+require_once("_constants.php");
+require_once("scripts/wad_handler.php");
+require_once("scripts/mapinfo_handler.php");
+require_once("scripts/guide_writer.php");
 
 class Project_Compiler {
 
     public $txid = null;
+    
+    public $map_additional_mapinfo = [];
 
     function compile_project($bypass_cache) {
         $this->set_status("Initializing");
         $tries = 0;
         $start_time = time();
         
-        $lock_file_recent = file_exists(LOCK_FILE_DOWNLOAD) && (time() - filemtime(LOCK_FILE_DOWNLOAD)) < 60;
+        $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - filemtime(LOCK_FILE_COMPILE)) < 600;
         $pk3_is_current = file_exists(PK3_FILE) && (filemtime(CATALOG_FILE) < filemtime(PK3_FILE));
         
         if ($lock_file_recent) {
@@ -24,12 +26,12 @@ class Project_Compiler {
             die();
         }
         if (!$pk3_is_current) {
-            $this->lg("Catalog is newer than PK3, so update is required: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
+            $this->lg("Catalog is newer than PK3, so an update is required: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
         } else {
             if (file_exists(PK3_FILE)) {
-                $this->lg("Catalog is older than PK3 - can serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
+                $this->lg("Catalog is older than PK3 - will serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
             } else {
-                $this->lg("No snapshot yet - will create one");
+                $this->lg("No snapshot exists - will create one");
             }
         }
 
@@ -43,7 +45,7 @@ class Project_Compiler {
         @unlink(PK3_GEN_LOG_FILE);
 
         //Mutex
-        file_put_contents(LOCK_FILE_DOWNLOAD, ":)");
+        file_put_contents(LOCK_FILE_COMPILE, ":)");
 
         $this->lg("Locked for generating new download");
 
@@ -65,7 +67,7 @@ class Project_Compiler {
         $this->set_status("Waiting on the ZIP process (this one always takes a minute or so)");
         $this->create_pk3();
         //Unmutex
-        @unlink(LOCK_FILE_DOWNLOAD);
+        @unlink(LOCK_FILE_COMPILE);
         $this->set_status("Complete");
         $this->lg("Download generating lock released");
         
@@ -82,18 +84,11 @@ class Project_Compiler {
         foreach ($wad_in->lumps as $lump) {
             $this->lg("Got lump " . $lump['name'] . " from hub WAD");
             if ($lump['name'] == 'DIALOGUE') {
-                $this->lg("Throwing that one out");
-                continue;
+                $this->lg("Appending generated DIALOGUE");
+                $guide_writer = new Guide_Dialogue_Writer();
+                $lump['data'] .= PHP_EOL . $guide_writer->write();
             }
             $wad_out->add_lump($lump);
-            if ($lump['name'] == 'BEHAVIOR') {
-                $this->lg("Adding new generated DIALOGUE lump");
-                $guide_writer = new Guide_Dialogue_Writer();
-                $new_dialogue_lump = [];
-                $new_dialogue_lump['name'] = 'DIALOGUE';
-                $new_dialogue_lump['data'] = $guide_writer->write();
-                $wad_out->add_lump($new_dialogue_lump);
-            }
         }
         $this->lg("Writing new hub WAD");
         $bytes_written = $wad_out->write_wad($hub_map_location);
@@ -119,8 +114,26 @@ class Project_Compiler {
             //The basics - include the name, author, and point everything to go back to MAP01
             $mapinfo .= "{" . PHP_EOL;
             $mapinfo .= "\t" . "author = \"" . $map_data['author'] . "\"" . PHP_EOL;
+            $mapinfo .= "\t" . "levelnum = " . $map_data['map_number'] . PHP_EOL;
             $mapinfo .= "\t" . "cluster = 1" . PHP_EOL;
             $mapinfo .= "\t" . "next = MAP01" . PHP_EOL;
+            
+            //Include any allowed custom properties
+            $this->lg("Checking for custom properties for map number " .$map_data['map_number']);
+            if (isset($this->map_additional_mapinfo[$map_data['map_number']])) {
+                $custom_properties = $this->map_additional_mapinfo[$map_data['map_number']];
+                foreach ($custom_properties as $index => $property) {
+                    if ($index == 'music') {
+                        continue; //We'll handle music specifically later
+                    }
+                    $this->lg("Including custom property " . $index . " as " . $property);
+                    if ($property == '_SET_') { //Used to flag properties that take no value
+                        $mapinfo .= "\t" . $index . PHP_EOL;
+                    } else {
+                        $mapinfo .= "\t" . $index . " = " . $property . PHP_EOL;
+                    }
+                }
+            }
             
             //Skies. If a sky has been included, it'll have been written to our PK3 folder - if now, just default to RSKY1
             $has_sky = false;
@@ -135,9 +148,13 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
             }
 
-            //Use this map's music if it exists, or D_RUNNIN
+            //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to D_RUNNIN
             if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
                 $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
+            } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
+                $music_lump = $this->map_additional_mapinfo[$map_data['map_number']]['music'];
+                $this->lg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number']);
+                $mapinfo .= "\t" . "music = " . $music_lump . PHP_EOL;
             } else {
                 $mapinfo .= "\t" . "music = D_RUNNIN" . PHP_EOL;
             }
@@ -187,11 +204,11 @@ class Project_Compiler {
         $this->lg("--- GENERATING MAPS ---");
         
         foreach ($catalog as $map_data) {
+            $lumpnumber = 0;
             $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
             $this->lg(PHP_EOL . "> MAP" . $map_data['map_number'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
             $source_wad = UPLOADS_FOLDER . $map_file_name;
             $target_wad = PK3_FOLDER . "maps/" . $map_file_name;
-            $wad_bytes = file_get_contents($source_wad);
             $wad_handler = new Wad_Handler($source_wad);
             $this->lg($wad_handler->wad_info());
 
@@ -232,6 +249,14 @@ class Project_Compiler {
                     }
                     foreach ($mapinfo_properties as $index => $value) {
                         $this->lg("\t" . $index . ": " . $value);
+                        if(in_array($index, ALLOWED_MAPINFO_PROPERTIES)) {
+                            if (!isset($this->map_additional_mapinfo[$map_data['map_number']])) { $this->map_additional_mapinfo[$map_data['map_number']] = []; }
+                            $this->map_additional_mapinfo[$map_data['map_number']][$index] = $value;
+                            $this->lg("Found custom allowable MAPINFO property " . $index . " - adding value " . $value . " to custom properties array");
+                        }
+                    }
+                    if (isset($mapinfo_properties['lightmode'])) {
+
                     }
                     //Check for SKY1 and SKY2
                     for ($i = 1; $i <= 2; $i++) {
@@ -247,17 +272,24 @@ class Project_Compiler {
                         }
                     }
                 }
+                //Copy DECORATE or ZSCRIPT into files in the scripts folder, and append the name on to the include file in the root
                 if (in_array(strtoupper($lump['name']), ['DECORATE', 'ZSCRIPT'])) {
                     if (strpos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
                         $this->lg("Found " . $lump['name'] . " lump but refusing it as it performs replacements!");
                     } else {
-                        $this->lg("Found " . $lump['name'] . " lump, throwing it into the root");
+                        $this->lg("Found " . $lump['name'] . " lump, adding it to our script folder");
+                        $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump['name']);
                         @mkdir(PK3_FOLDER);
-                        $script_file_path = PK3_FOLDER . "/" . strtoupper($lump['name']) . "." . $map_data['map_number'];
+                        @mkdir($script_folder);
+                        $script_file_name = strtoupper($lump['name']) . "-" . $map_data['map_number'] . "-" . $lumpnumber . ".txt";
+                        $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
                         file_put_contents($script_file_path, $lump['data']);
                         $this->lg("Wrote " . strlen($lump['data']) . " bytes to " . $script_file_path);
+                        
+                        file_put_contents(PK3_FOLDER . strtoupper($lump['name']) . ".custom", "#include \"" . strtoupper($lump['name']) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
                     }
                 }
+                $lumpnumber++;
             }
             
             //Write our music if we have it

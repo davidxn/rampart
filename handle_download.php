@@ -1,6 +1,7 @@
 <?
+set_time_limit(6000);
 
-require_once("./_constants.php");
+require_once("_constants.php");
 
 $path = PK3_FILE;
 

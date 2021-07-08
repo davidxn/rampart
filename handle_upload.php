@@ -1,6 +1,6 @@
 <?php
 
-require_once("./_constants.php");
+require_once("_constants.php");
 
 class Upload_Handler {
 
@@ -40,7 +40,7 @@ class Upload_Handler {
             $map_number = $existing_map['map_number'];
         }
         else {
-            $pin_result = $this->get_new_pin();
+            $pin_result = $this->get_new_pin($catalog);
             $map_number = $pin_result['map_number'];
             $pin = $pin_result['pin'];
         }
@@ -89,7 +89,7 @@ class Upload_Handler {
        return $string;
     }
 
-    function get_new_pin() {
+    function get_new_pin($catalog) {
         if (file_exists(PIN_FILE)) {
             $file = file(PIN_FILE);            
         }
@@ -105,13 +105,19 @@ class Upload_Handler {
 
         //Now assign a map number by looking at the latest one. Start from 10 so we have some space for defaults in maps 1-9
         //(and to be honest so that I don't have to do a special case adding a 0 to single digit maps)
-        $map_number = 10;
-        if (file_exists(MAP_NUM_FILE)) {
-            $map_number = file_get_contents(MAP_NUM_FILE);
+        $occupied_slots = [];
+        foreach($catalog as $mapdata) {
+            $occupied_slots[$mapdata['map_number']] = true;
         }
-        $this->lg("Assigning map number: " . $map_number);
-        file_put_contents(MAP_NUM_FILE, $map_number + 1);        
-        return ['map_number' => $map_number, 'pin' => $pin];
+        $examined_slot = FIRST_USER_MAP_NUMBER;
+        while (true) {
+            if (!isset($occupied_slots[$examined_slot])) {
+                break;
+            }
+            $examined_slot++;
+        }        
+        $this->lg("Assigning map number: " . $examined_slot);       
+        return ['map_number' => $examined_slot, 'pin' => $pin];
     }
 
     function lg($string) {
@@ -193,6 +199,17 @@ if (empty($pin) && (empty($filename) || empty($filesize) || empty($tmpname))) {
     echo json_encode(['error' => 'No file was uploaded!']);
     die();
 }
+
+if (!$pin && !ALLOW_NEW_UPLOADS) {
+    echo json_encode(['error' => 'New uploads are currently disabled! If you want to edit an existing map, please use a PIN']);
+    die();
+}
+
+if ($pin && !ALLOW_EDIT_UPLOADS) {
+    echo json_encode(['error' => 'Edits are currently disabled!']);
+    die();
+}
+
 
 $handler = new Upload_Handler();
 $handler->handle_upload($filename, $filesize, $tmpname, $pin);

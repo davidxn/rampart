@@ -11,7 +11,7 @@ require_once('./header.php');
 
 <p>Custom content is allowed, although bear in mind that it will be easier to upload WADs without it! Feel free to include what you like, as long as you don't overwrite any of the default DOOM2 lumps (unfortunately I can't support DEHACKED either). And if you're just beginning with Doom mapping, it might be easier to stay with the material in DOOM2.WAD for your first venture.</p>
 
-<p>The textures of <b>cc4-tex.wad</b> will be included in the project, so you don't need to do anything special to use those.</p>
+<p>The textures of <b>cc4-tex.wad</b> and <b>OTEX_1.1.WAD</b> will be included in the project, so you don't need to do anything special to use those.</p>
 
 <p>When you upload your WAD through this site, the uploader will recognize and include:</p>
 
