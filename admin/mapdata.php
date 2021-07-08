@@ -1,0 +1,45 @@
+<?
+require_once('header.php');
+require_once('_constants.php');
+require_once("scripts/wad_handler.php");
+
+$catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
+if (empty($catalog)) {
+    $catalog = [];
+}
+
+$map_data_table = [];
+$map_types = ['UDMF' => 0, 'Hexen' => 0, 'Vanilla/Boom' => 0];
+
+foreach ($catalog as $map_data) {
+    $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
+    $my_data['map_file_name'] = $map_file_name;
+    $source_wad = UPLOADS_FOLDER . $map_file_name;
+    $wad_handler = new Wad_Handler($source_wad);
+    if ($wad_handler->get_lump('TEXTMAP')) {
+        $my_data['map_type'] = 'UDMF';
+    } else if ($wad_handler->get_lump('BEHAVIOR')) {
+        $my_data['map_type'] = 'Hexen';
+    } else {
+        $my_data['map_type'] = 'Vanilla/Boom';
+    }
+    $map_types[$my_data['map_type']]++;
+    $map_data_table[$map_data['map_number']] = $my_data;
+}
+
+$table_string = "<table class=\"maps_table\"><thead><tr><th>Map File</th><th>Guessed Type</th></tr></thead><tbody>";
+foreach($map_data_table as $file_data) {
+        $table_string .= "<tr>";
+        $table_string .= "<td>" . $file_data['map_file_name'] . "</td>";
+        $table_string .= "<td>" . $file_data['map_type'] . "</td>";
+        $table_string .= "</tr>";
+}
+$table_string .= "</tbody></table>";
+
+?>
+<h3>Further Map Data</h3>
+
+<?=$table_string?>
+<? print_r($map_types);
+
+require_once('footer.php');

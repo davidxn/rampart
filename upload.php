@@ -1,5 +1,6 @@
 <?
-require_once('./header.php');
+require_once('header.php');
+require_once('_constants.php');
 ?>
                 <p>Here's where you can submit a map to RAMP!</p>
 
@@ -21,8 +22,12 @@ require_once('./header.php');
                 
                 <div id="upload-question-type">
                     <p>I want to...</p>
+                    <? if (ALLOW_NEW_UPLOADS) { ?>
                     <button type="button" id="uploadtype_first">Upload a map for the first time</button>
+                    <? } ?>
+                    <? if (ALLOW_EDIT_UPLOADS) { ?>
                     <button type="button" id="uploadtype_update">Update a map I've already added</button>
+                    <? } ?>
                 </div>
                 <div id="upload-question-pin">
                     <div id="pin_form" class="lightbox">

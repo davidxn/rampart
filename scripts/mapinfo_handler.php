@@ -1,5 +1,5 @@
 <?php
-require_once("./_constants.php");
+require_once("_constants.php");
 
 class Mapinfo_Handler {
     
@@ -24,7 +24,18 @@ class Mapinfo_Handler {
             }
             
             $line_tokens = split("=", $line);
-            if (in_array($this->clean_token($line_tokens[0]), ['sky1', 'skybox'])) {
+
+            $key = $this->clean_token($line_tokens[0]);
+            if (in_array($key, ALLOWED_MAPINFO_PROPERTIES)) {
+                if (!isset($line_tokens[1])) {
+                    $value = "_SET_";
+                } else {
+                    $value = $this->clean_token($line_tokens[1]);
+                }
+                $parsed_data[$key] = $value;
+            }
+            
+            if (in_array($key, ['sky1', 'skybox'])) {
                 $value = $this->strip_quotes($line_tokens[1]);
                 $terminatechar = strpos($value, ",");
                 if ($terminatechar) {
@@ -32,7 +43,7 @@ class Mapinfo_Handler {
                 }
                 $parsed_data['sky1'] = $value;
             }
-            if ($this->clean_token($line_tokens[0]) == 'sky2') {
+            if ($key == 'sky2') {
                 $value = $this->strip_quotes($line_tokens[1]);
                 $terminatechar = strpos($value, ",");
                 if ($terminatechar) {

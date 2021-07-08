@@ -1,6 +1,6 @@
 <?php
 
-require_once("./_constants.php");
+require_once("_constants.php");
 
 class Pin_Handler {
     
