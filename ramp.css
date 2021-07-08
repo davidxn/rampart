@@ -57,7 +57,12 @@ input {
     width: 90%;
 }
 
-div.code {
+textarea {
+    width: 90%;
+    height: 800px;
+}
+
+.code {
     font-family: monospace;
     border: 1px solid #555;
     background-color: #333;
@@ -76,6 +81,13 @@ div.code {
     top: 0px;
     width: 100%;
     height: 100%;
+}
+
+.bannermessage {
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+    background-color: #888;
 }
 
 .clearme {

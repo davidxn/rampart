@@ -1,6 +1,10 @@
 <?php
 
+<<<<<<< HEAD
 require_once("_constants.php");
+=======
+require_once("./_constants.php");
+>>>>>>> 715c9beefc57e1cc21821b0324eb0bceaaad9f1b
 
 class Upload_Handler {
 
@@ -200,6 +204,7 @@ if (empty($pin) && (empty($filename) || empty($filesize) || empty($tmpname))) {
     die();
 }
 
+<<<<<<< HEAD
 if (!$pin && !ALLOW_NEW_UPLOADS) {
     echo json_encode(['error' => 'New uploads are currently disabled! If you want to edit an existing map, please use a PIN']);
     die();
@@ -211,5 +216,7 @@ if ($pin && !ALLOW_EDIT_UPLOADS) {
 }
 
 
+=======
+>>>>>>> 715c9beefc57e1cc21821b0324eb0bceaaad9f1b
 $handler = new Upload_Handler();
 $handler->handle_upload($filename, $filesize, $tmpname, $pin);
