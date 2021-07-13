@@ -7,6 +7,13 @@
 const ALLOW_NEW_UPLOADS = false;
 const ALLOW_EDIT_UPLOADS = true;
 
+//////////////////////////////////////////////////////////////////////////////////
+// To protect against spam, limits in seconds for one IP trying PINs and uploading
+//////////////////////////////////////////////////////////////////////////////////
+
+const PIN_ATTEMPT_GAP = 120;
+const UPLOAD_ATTEMPT_GAP = 120;
+
 ///////////////////////////////////////////////////////////
 // Details about your hub map and how to assign map numbers
 ///////////////////////////////////////////////////////////
@@ -26,18 +33,20 @@ const DEFAULT_SKY_LUMP      = "RSKY1";
 ////////////////////////////////////////
 // Which properties to detect in MAPINFO
 ////////////////////////////////////////
+
+// Must be lowercase!!
 const ALLOWED_MAPINFO_PROPERTIES = [
     'lightmode',
     'map07special',
     'music',
-    'SpiderMastermindSpecial',
-    'SpecialAction_ExitLevel',
-    'SpecialAction_OpenDoor',
-    'SpecialAction_LowerFloor',
-    'SpecialAction_KillMonsters',
-    'BaronSpecial',
-    'CyberdemonSpecial',
-    'SpiderMastermindSpecial'
+    'spidermastermindspecial',
+    'specialaction_exitlevel',
+    'specialaction_opendoor',
+    'specialaction_lowerfloor',
+    'specialaction_killmonsters',
+    'baronspecial',
+    'cyberdemonspecial',
+    'spidermastermindspecial'
 ];
 
 ///////////////////////////////////////////////////////////
@@ -52,9 +61,9 @@ const GUIDE_SCRIPT_NUMBER = 1;
 const CLOSE_TEXT = "Close (ESC)";
 const MAPS_PER_PAGE = 8;
 
-////////////////////////////////////////////////////////
-// RAMP constants that you probably don't need to modify
-////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
+// RAMPART constants that you probably don't need to modify
+///////////////////////////////////////////////////////////
 
 const RAMPART_VERSION = "BETA";
 const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
@@ -70,6 +79,7 @@ const STATIC_CONTENT_FOLDER = RAMPART_HOME . "work/fixedcontent/";
 const PK3_FOLDER            = RAMPART_HOME . "work/pk3/";
 const LOG_FILE              = RAMPART_HOME . "work/log.log";
 const PK3_GEN_LOG_FILE      = RAMPART_HOME . "work/pk3generation.log";
+const PK3_GEN_HISTORY_FILE  = RAMPART_HOME . "work/pk3history.log";
 
 const LOCK_FILE_UPLOAD      = RAMPART_HOME . "work/.uploadlockfile";
 const LOCK_FILE_COMPILE     = RAMPART_HOME . "work/.compilelockfile";

@@ -86,6 +86,9 @@ class Wad_Handler {
             if ($string == 'ID3' || $string == "\xFF\xFB\x90") {
                 return 'mp3';
             }
+            if ($string == 'MUS') {
+                return 'mus';
+            }
         }
         return 'unknown';
     }
@@ -158,8 +161,9 @@ class Wad_Handler {
     }
     
     public function get_lump($lumpname) {
+        $lumpname = strtolower($lumpname);
         foreach ($this->lumps as $lump) {
-            if ($lump['name'] == $lumpname) {
+            if (strtolower($lump['name']) == $lumpname) {
                 return $lump;
             }
         }

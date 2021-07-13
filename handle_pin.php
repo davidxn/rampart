@@ -1,6 +1,8 @@
 <?php
 
 require_once("_constants.php");
+require_once("scripts/catalog_handler.php");
+require_once("scripts/logger.php");
 
 class Pin_Handler {
     
@@ -8,7 +10,7 @@ class Pin_Handler {
 
     function handle_pin() {
 
-        $this->lg("Starting a PIN check");
+        Logger::lg("Starting a PIN check");
         $pin = strtoupper($this->clean_text($_POST['pin']));
         if (empty($pin)) {
             echo json_encode(['error' => 'No PIN was submitted!']);
@@ -16,14 +18,16 @@ class Pin_Handler {
         }
 
         $this->validate_ip();
-        $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
-        if (empty($catalog)) {
-            $catalog = [];
-        }
+        $catalog_handler = new Catalog_Handler();
         
-        $map = isset($catalog[$pin]) ? $catalog[$pin] : null;
+        $map = $catalog_handler->get_map($pin);
         if (!$map) {
             echo json_encode(['error' => 'Sorry, I couldn\'t find a map with that PIN']);
+            die();
+        }
+        $locked = $catalog_handler->is_map_locked($pin);
+        if ($locked) {
+            echo json_encode(['error' => 'This map is locked for edits! Contact the project owner if you need to update it.']);
             die();
         }
 
@@ -46,20 +50,12 @@ class Pin_Handler {
        return $string;
     }
 
-    function lg($string) {
-        if ($this->txid == null) {
-            $this->txid = rand(10000,99999);
-        }
-        $time = date("F d Y H:i:s", time());
-        file_put_contents(LOG_FILE, $time . " " . $this->txid . " " . $string . PHP_EOL, FILE_APPEND);
-    }
-
     function validate_ip() {
         $ip = $_SERVER['REMOTE_ADDR'];
         $filename = 'p' . str_replace(".", "", $ip) . 'p';
         $ip_check_file = IPS_FOLDER . $filename;
-        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < 120) {
-            $this->lg("IP " . $ip . " is trying PINs too fast");
+        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < PIN_ATTEMPT_GAP) {
+            Logger::lg("IP " . $ip . " is trying PINs too fast");
             echo json_encode(['error' => 'Hold on a minute before you try another PIN']);
             die();
         }
