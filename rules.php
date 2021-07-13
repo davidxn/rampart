@@ -1,5 +1,5 @@
 <?
-require_once('./header.php');
+require_once('header.php');
 ?>
 <p>Rules? Not many, really - experiment and create what you like! But I can offer some guidelines:</p>
 

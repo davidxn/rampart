@@ -1,5 +1,5 @@
 <?
-require_once('./header.php');
+require_once('header.php');
 ?>
 <p>There are a ton of guides for editing Doom out on Youtube - here are a few resources to get you started!</p>
 

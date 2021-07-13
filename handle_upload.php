@@ -1,22 +1,24 @@
 <?php
 
 require_once("_constants.php");
+require_once("scripts/catalog_handler.php");
+require_once("scripts/logger.php");
+require_once("scripts/pin_manager.php");
 
 class Upload_Handler {
 
     public $txid = null;
+    public $catalog_handler = null;
 
     function handle_upload($filename, $filesize, $tmpname, $pin) {
 
-        $this->lg("Starting an upload attempt");
+        Logger::lg("Starting an upload attempt");
 
         $mapname = $this->clean_text($_POST['mapname']);
         $authorname = $this->clean_text($_POST['authorname']);
         $jumpcrouch = $this->clean_text($_POST['jumpcrouch']);
         $wip = 0;
-        if (isset($_POST['wip'])) {
-            $wip = $this->clean_text($_POST['wip']);
-        }
+        if (isset($_POST['wip'])) { $wip = $this->clean_text($_POST['wip']); }
         $pin = strtoupper($this->clean_text($pin));
 
         $this->validate_fields($mapname, $authorname);
@@ -28,27 +30,25 @@ class Upload_Handler {
         //Mutex
         $this->wait_for_lock();
 
-        $this->lg("POST data is: " . print_r($_POST, true));
+        Logger::lg("POST data is: " . print_r($_POST, true));
 
-        $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
-        if (empty($catalog)) {
-            $catalog = [];
-        }
+        $catalog_handler = new Catalog_Handler();
         
         if ($pin) {
-            $existing_map = $this->validate_pin($pin, $catalog);
+            $existing_map = $this->validate_pin($pin, $catalog_handler);
             $map_number = $existing_map['map_number'];
         }
         else {
-            $pin_result = $this->get_new_pin($catalog);
-            $map_number = $pin_result['map_number'];
-            $pin = $pin_result['pin'];
+            $new_pin = Pin_Manager::get_new_pin();
+            $map_number = $catalog_handler->get_next_available_slot();   
+            Logger::lg("Assigning PIN: " . $new_pin);
+            Logger::lg("Assigning map number: " . $map_number);
         }
         
         //Finalize the file, if we have one
         if ($tmpname) {
             $location = UPLOADS_FOLDER . "MAP" . $map_number . ".WAD";
-            $this->lg("Moving file " . $tmpname . " to " . $location);
+            Logger::lg("Moving file " . $tmpname . " to " . $location);
             if (file_exists($location)) {
                 unlink($location);
             }
@@ -61,19 +61,21 @@ class Upload_Handler {
         }
 
         //Now update the catalog
-        $catalog[$pin] = [
-            'map_name' => $mapname,
-            'author' => $authorname,
-            'map_number' => $map_number,
-            'jumpcrouch' => $jumpcrouch,
-            'wip' => $wip
-        ];
-        file_put_contents(CATALOG_FILE, json_encode($catalog));
-        $this->lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
+        $catalog_handler->update_map_properties(
+            $pin,
+            [
+                'map_name' => $mapname,
+                'author' => $authorname,
+                'map_number' => $map_number,
+                'jumpcrouch' => $jumpcrouch,
+                'wip' => $wip
+            ]
+        );
+        Logger::lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
 
         //Unmutex
         unlink(LOCK_FILE_UPLOAD);
-        $this->lg("Lock released");
+        Logger::lg("Lock released");
 
         $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is <b>" . $pin . "</b> - use this if you ever need to update your level.";
 
@@ -89,51 +91,23 @@ class Upload_Handler {
        return $string;
     }
 
-    function get_new_pin($catalog) {
-        if (file_exists(PIN_FILE)) {
-            $file = file(PIN_FILE);            
-        }
-        else {
-            $file = file(PIN_MASTER_FILE);
-        }
-        $position = rand(0, count($file)-1);
-        $pin = $file[$position];
-        unset($file[$position]); //This pops the entry out of the array
-        file_put_contents(PIN_FILE, $file);
-        $pin = trim($pin);
-        $this->lg("Assigning PIN: " . $pin);
+    function get_slot_and_pin($catalog_handler) {
 
-        //Now assign a map number by looking at the latest one. Start from 10 so we have some space for defaults in maps 1-9
-        //(and to be honest so that I don't have to do a special case adding a 0 to single digit maps)
-        $occupied_slots = [];
-        foreach($catalog as $mapdata) {
-            $occupied_slots[$mapdata['map_number']] = true;
-        }
-        $examined_slot = FIRST_USER_MAP_NUMBER;
-        while (true) {
-            if (!isset($occupied_slots[$examined_slot])) {
-                break;
-            }
-            $examined_slot++;
-        }        
-        $this->lg("Assigning map number: " . $examined_slot);       
-        return ['map_number' => $examined_slot, 'pin' => $pin];
-    }
-
-    function lg($string) {
-        if ($this->txid == null) {
-            $this->txid = rand(10000,99999);
-        }
-        $time = date("F d Y H:i:s", time());
-        file_put_contents(LOG_FILE, $time . " " . $this->txid . " " . $string . PHP_EOL, FILE_APPEND);
+        return ['map_number' => $map_number, 'pin' => $new_pin];
     }
     
-    function validate_pin($pin, $catalog) {
-        $map = isset($catalog[$pin]) ? $catalog[$pin] : null;
+    function validate_pin($pin, $catalog_handler) {
+        $map = $catalog_handler->get_map($pin);
         if (!$map) {
             echo json_encode(['error' => 'That PIN doesn\'t exist, stop messing with the site please']);
             die();
         }
+        $locked = $catalog_handler->is_map_locked($pin);
+        if ($locked) {
+            echo json_encode(['error' => 'This map is locked for edits! Contact the project owner if you need to update it.']);
+            die();
+        }
+
         return $map;
     }
 
@@ -142,7 +116,7 @@ class Upload_Handler {
         $bytes = fread($file, 4);
         fclose($file);
         $match = ($bytes == "PWAD");
-        $this->lg("First four bytes " . ($match ? "match" : "do not match") . " PWAD header");
+        Logger::lg("First four bytes " . ($match ? "match" : "do not match") . " PWAD header");
         if (!$match) {
             echo json_encode(['error' => 'That doesn\'t look like a WAD. Can you check?']);
             die();
@@ -153,8 +127,8 @@ class Upload_Handler {
         $ip = $_SERVER['REMOTE_ADDR'];
         $filename = 'b' . str_replace(".", "", $ip) . 'b';
         $ip_check_file = IPS_FOLDER . $filename;
-        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < 120) {
-            $this->lg("IP " . $ip . " is submitting too fast");
+        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < UPLOAD_ATTEMPT_GAP) {
+            Logger::lg("IP " . $ip . " is submitting too fast");
             echo json_encode(['error' => 'You uploaded just a moment ago - hold on a minute before you submit again']);
             die();
         }
@@ -183,7 +157,7 @@ class Upload_Handler {
             }
         }
         file_put_contents(LOCK_FILE_UPLOAD, ":)");
-        $this->lg("Lock acquired");
+        Logger::lg("Lock acquired");
     }
 }
 

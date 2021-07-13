@@ -20,7 +20,7 @@ foreach ($catalog as $map_data) {
 ksort($credits_table);
 foreach ($credits_table as $author => $maps) {
     print($author . PHP_EOL);
-    asort($maps);
+    usort($maps, 'strnatcasecmp');
     foreach ($maps as $map) {
         print("  " . $map . PHP_EOL);
     }

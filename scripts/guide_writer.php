@@ -1,17 +1,15 @@
 <?
 require_once('_constants.php');
+require_once('scripts/catalog_handler.php');
 
 class Guide_Dialogue_Writer {
     
     function write() {
 
-        $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
-        if (empty($catalog)) {
-            $catalog = [];
-        }
+        $catalog_handler = new Catalog_Handler();
 
         $maps = [];
-        foreach($catalog as $mapdata) {
+        foreach($catalog_handler->get_catalog() as $mapdata) {
             $maps[$mapdata['map_number']] = $mapdata['map_name'];
         }
 
@@ -61,7 +59,7 @@ class Guide_Dialogue_Writer {
         ";
             }
             foreach($page as $index => $map) {
-                $text .= "        choice { text = \" $map\"; special = 80; arg0 = 1; arg1 = 0; arg2 = $index; }
+                $text .= "        choice { text = \" $map\"; special = 80; arg0 = " . GUIDE_SCRIPT_NUMBER . "; arg1 = 0; arg2 = $index; }
         ";
             }
             if ($page_number != $end_page_number-1) {
