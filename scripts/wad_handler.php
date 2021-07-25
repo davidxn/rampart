@@ -83,7 +83,7 @@ class Wad_Handler {
         if ($lump['size'] >= 3) {
             fseek($this->wad_file, $lump['position']);
             $string = $this->read_bytes(3, 'str');
-            if ($string == 'ID3' || $string == "\xFF\xFB\x90") {
+            if ($string == 'ID3' || substr($string, 0, 2) == "\xFF\xFB") {
                 return 'mp3';
             }
             if ($string == 'MUS') {

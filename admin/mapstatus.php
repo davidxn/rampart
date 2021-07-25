@@ -40,7 +40,7 @@ usort($file_table, function($a, $b) {
    return $a['map_number'] > $b['map_number']; 
 });
 
-$table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th><th></th></tr></thead><tbody>";
+$table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th><th></th><th></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
         $table_string .= "<td>" . $file_data['map_number'] . "</td>";
@@ -64,6 +64,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<td><a href="mapstatus.php?action=lock&pin=' . $file_data['pin'] . '">Lock</a></td>';
 
         }
+        $table_string .= '<td><a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '">Download</a></td>';
         $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
