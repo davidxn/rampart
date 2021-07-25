@@ -34,13 +34,16 @@ class Upload_Handler {
 
         $catalog_handler = new Catalog_Handler();
         
+        $existing_map = null;
         if ($pin) {
             $existing_map = $this->validate_pin($pin, $catalog_handler);
             $map_number = $existing_map['map_number'];
+            $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ("MAP" . (substr("0" . $map_number, -2)));
         }
         else {
             $new_pin = Pin_Manager::get_new_pin();
-            $map_number = $catalog_handler->get_next_available_slot();   
+            $map_number = $catalog_handler->get_next_available_slot();
+            $map_lumpname = "MAP" . (substr("0" . $map_number, -2));
             Logger::lg("Assigning PIN: " . $new_pin);
             Logger::lg("Assigning map number: " . $map_number);
         }
@@ -67,6 +70,7 @@ class Upload_Handler {
                 'map_name' => $mapname,
                 'author' => $authorname,
                 'map_number' => $map_number,
+                'lumpname' => $map_lumpname,
                 'jumpcrouch' => $jumpcrouch,
                 'wip' => $wip
             ]
@@ -78,6 +82,9 @@ class Upload_Handler {
         Logger::lg("Lock released");
 
         $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is <b>" . $pin . "</b> - use this if you ever need to update your level.";
+        if ($existing_map) {
+            $success_message = "Success! Your WAD in slot " . $map_number . " with PIN <b>" . $pin . "</b> has been updated.";
+        }
 
         echo json_encode(["name" => $filename, "size" => $filesize, "pin" => $pin, "map_number" => $map_number, "success" => $success_message]);
     }
@@ -149,7 +156,7 @@ class Upload_Handler {
     function wait_for_lock() {
         $tries = 0;
 
-        while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 2) {
+        while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
             sleep(1);
             if ($tries > 10) {
                 echo json_encode(['error' => 'Upload timeout! Probably a site problem, try pressing it again']);

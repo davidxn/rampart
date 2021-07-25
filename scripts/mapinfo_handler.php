@@ -67,20 +67,3 @@ class Mapinfo_Handler {
     
 }
 
-/*
-$mapinfo = "map MAP01 \"Brick and Root\"
-{
-	Levelnum = 1
-	skybox = \"OSKY12\"
-	SKY1 = \"OSKY12\"
-	SKY2 = \"OSKY33\"
-	Music = \"TREEROOT\"
-	Par = 600
-	NoJump
-	NoCrouch
-	ResetHealth
-	ResetInventory
-}";
-$handler = new Mapinfo_Handler($mapinfo);
-$handler->parse();
-**/

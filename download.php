@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('_constants.php');
 require_once('header.php');
 require_once('scripts/catalog_handler.php');
@@ -48,23 +48,16 @@ foreach($file_table as $file_data) {
 $table_string .= "</tbody></table>";
 
 ?>
-                <p>RAMP is now released! Here you go:</p>
-                <center><a href="./RAMP-BETA1.PK3"><img src="./img/downloadbutton.png"></a></center>
-
-                <p>You can also generate and download a snapshot copy of the project - these aren't guaranteed to be stable.</p>
+                <p>You can generate and download a snapshot version of the project here - this will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
                 
-                <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are currently in the hub. This seems sufficient.</p>
-                <?
-                if (count($file_table) > HUB_SLOTS) {
-                    ?> <p class="smallnote">The hub needs to be expanded so all maps are available!</p> <?
-                }
-                ?>
-                <center><button type="button" id="download_button">Download a snapshot of RAMP!</button>
+                <p><?=count($file_table)?> maps have been uploaded.</p>
+
+                <center><button type="button" id="download_button">Download a snapshot version!</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
-                <p>Map list updated at <?=$date_catalog ? date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
+                <p>Map list updated <?=$date_catalog ? date("F j, Y, g:i a T", " at " . $date_catalog) : "(never updated)"?></p>
                 
                 <?=$table_string?>
 <?
 require_once('./footer.php');
-?>
+

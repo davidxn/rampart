@@ -15,17 +15,10 @@ require_once('_constants.php');
         <title>RAMP</title>
     </head>
     <body>
-        <!--<div style="position: fixed; z-index: -99; width: 100%; height: 100%">
-  <iframe frameborder="0" height="100%" width="100%"
-    src="https://www.youtube.com/embed/80NbTTyVLqU?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=80NbTTyVLqU&modestbranding=1&origin=http://ramp.teamouse.net">
-  </iframe>
-</div>-->
         <div class="outer">
             <div class="header">
-                <div class="titlebox">
-                    <!--<a class="quickstart" href="/rampstarterpack.zip"><img src="/img/quickstartbutton.png"/></a>-->
-                </div>
-                <div class="bannermessage">Beta version 1 is now available!</div>
+                <div class="titlebox">&nbsp;</div>
+                <div class="bannermessage">&nbsp;</div>
                 <div class="menubox">
                     <a href="/index.php"><div class="menuitem">Home</div></a>
                     <a href="/rules.php"><div class="menuitem">Rules</div></a>
@@ -35,10 +28,13 @@ $update_verb = "Submit";
 if (ALLOW_NEW_UPLOADS == false) {
     $update_verb = "Update";
 }
+if (ALLOW_NEW_UPLOADS || ALLOW_EDIT_UPLOADS) {
 ?>
                     <a href="/upload.php"><div class="menuitem"><?=$update_verb?> a Map</div></a>
-                    <a href="/download.php"><div class="menuitem">Download the Project</div></a>
-                    <a target="_blank" href="https://discord.gg/afFGdGNhW2"><div class="menuitem">Discord</div></a>
+<?php
+}
+?>
+                    <a href="/download.php"><div class="menuitem">Download</div></a>
                 </div>
             </div>
             <div class="mainbox">
