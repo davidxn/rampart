@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('_constants.php');
 require_once('scripts/catalog_handler.php');
 

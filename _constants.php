@@ -1,10 +1,10 @@
-<?
+<?php
 
-/////////////////////////////////
-// Site enable/disable
-/////////////////////////////////
+//////////////////////////////////////
+// Enable or disable uploads and edits
+//////////////////////////////////////
 
-const ALLOW_NEW_UPLOADS = false;
+const ALLOW_NEW_UPLOADS = true;
 const ALLOW_EDIT_UPLOADS = true;
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -26,8 +26,8 @@ const FIRST_USER_MAP_NUMBER = 10;
 // Details about the location and name of the output project
 ////////////////////////////////////////////////////////////
 
-const PROJECT_FILE_NAME     = "RAMP-SNAPSHOT.pk3";
-const PK3_FILE              = "/tmpramp/" . PROJECT_FILE_NAME;
+const PROJECT_FILE_NAME     = "PROJECT-SNAPSHOT.pk3";
+const PK3_FILE              = "/out/" . PROJECT_FILE_NAME;
 const DEFAULT_SKY_LUMP      = "RSKY1";
 
 ////////////////////////////////////////
@@ -54,9 +54,9 @@ const ALLOWED_MAPINFO_PROPERTIES = [
 ///////////////////////////////////////////////////////////
 
 const GUIDE_ENABLED = true;
-const GUIDE_NAME = "RAMPO";
-const GUIDE_TEXT = "Hello! I'm RAMPO (which stands for RAMP Assistant for Map Pointing-Out). Which map can I help you navigate to today?";
-const GUIDE_MENU_CLASS = "RampGuideMenu";
+const GUIDE_NAME = "Map Guide";
+const GUIDE_TEXT = "Which map can I help you navigate to today?";
+const GUIDE_MENU_CLASS = "";
 const GUIDE_SCRIPT_NUMBER = 1;
 const CLOSE_TEXT = "Close (ESC)";
 const MAPS_PER_PAGE = 8;
@@ -65,7 +65,7 @@ const MAPS_PER_PAGE = 8;
 // RAMPART constants that you probably don't need to modify
 ///////////////////////////////////////////////////////////
 
-const RAMPART_VERSION = "BETA";
+const RAMPART_VERSION = "BETA 0.9";
 const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
 
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];

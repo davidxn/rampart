@@ -1,10 +1,8 @@
-<?
+<?php
 require_once('header.php');
 require_once('_constants.php');
 ?>
-                <p>Here's where you can submit a map to RAMP!</p>
-
-                <p>Upload a WAD file containing a single map in any format (Doom, Hexen, UDMF). You can amend a submission at any time by using the PIN given to you on first upload.</p>
+                <p>This page lets contributors submit a map to your project!</p>
                 
                 <div class="lightbox">
                 <p>As well as a map, you can include these resources:</p>
@@ -18,8 +16,6 @@ require_once('_constants.php');
                 <p>Take a look at <a href="./guide.php">the tutorial video for uploading</a> to see how!</p>
                 </div>
 
-                <p>If you need to use any other custom resources, ask DavidN in the <a href="https://discord.gg/afFGdGNhW2">Discord</a> and he can include them in the PK3.</p> 
-                
                 <div id="upload-question-type">
                     <p>I want to...</p>
                     <? if (ALLOW_NEW_UPLOADS) { ?>
@@ -31,7 +27,7 @@ require_once('_constants.php');
                 </div>
                 <div id="upload-question-pin">
                     <div id="pin_form" class="lightbox">
-                        <p>Updating an existing map! Please enter the PIN that you got when you first uploaded the map. (If you don't know it, DavidN can look it up - send him a message)</p>
+                        <p>Updating an existing map! Please enter the PIN that you got when you first uploaded the map. (If you don't know it, contact the project owner)</p>
                         <div id="pin_status">&nbsp;</div>
                         <input type="text" id="input_pin_to_reupload"></input>
                         <button type="button" id="confirm_pin">That's my PIN</button>
@@ -73,13 +69,12 @@ require_once('_constants.php');
                             <h1>Drag and drop your WAD here!<br/>(Or click to select a file)</h1>
                         </div>
                         <br/>
-                        <div class="smallnote">Maximum upload size is 10MB! If you're including custom resources like textures and flats that aren't in doom2.wad/freedoom2.wad or cc4tex, make a copy of your WAD without them and send them to DavidN on the Discord separately</div>
                         </td></tr>
                         </tbody></table>
-                        <button type="button" id="upload_wad">Submit new WAD!</button>
+                        <button type="button" id="upload_wad">Submit WAD!</button>
                     </div>
                     <div id="upload_status">&nbsp;</div>
                 </div>
-<?
+<?php
 require_once('./footer.php');
 ?>

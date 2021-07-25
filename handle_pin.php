@@ -63,7 +63,7 @@ class Pin_Handler {
     }
 }
 
-//Let's make it look like we're working
+//Let's make it look like we're working (quick spam discourager)
 sleep(2);
 
 $handler = new Pin_Handler();

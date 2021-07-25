@@ -1,4 +1,4 @@
-<?
+<?php
 include_once('header.php');
 include_once('_constants.php');
 ?>
@@ -9,7 +9,7 @@ include_once('_constants.php');
 </style>
 <script>
 var times = [];
-<?
+<?php
 
 $earliest_timestamp = null;
 $latest_timestamp = null;
@@ -59,7 +59,7 @@ var stopwatch = setInterval(advanceTime, 50);
 </script>
 <div id="maptime">&nbsp;</div>
 <table class="mapuploadtable">
-<?
+<?php
 
 $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
 if (empty($catalog)) {
@@ -78,5 +78,5 @@ foreach($catalog as $mapdata) {
 }
 ?>
 </table>
-<?
+<?php
 include_once('./footer.php');

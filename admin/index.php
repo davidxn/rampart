@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('_constants.php');
 require_once('header.php');
 ?>
@@ -9,8 +9,7 @@ require_once('header.php');
 <p><a href="/handle_pk3_update.php?nocache=true">Regenerate PK3</a></p>
 <p><a href="./generateguide.php">Show guide conversation script</a></p>
 <p><a href="./makecredits.php">Show credits</a></p>
-<p><a href="./mapstatus.php">Lock/unlock maps</a></p>
-<p><a href="./editcatalogue.php">Edit catalog.json</a></p>
+<p><a href="./mapstatus.php">Edit map data</a></p>
 
 <div style="clear: both;">&nbsp;</div>
 
