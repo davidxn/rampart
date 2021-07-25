@@ -22,8 +22,10 @@ require_once('_constants.php');
 </div>-->
         <div class="outer">
             <div class="header">
-                <div class="titlebox"><a class="quickstart" href="/rampstarterpack.zip"><img src="/quickstartbutton.png"/></a></div>
-                <div class="bannermessage">Fixing maps up and getting ready for open beta!</div>
+                <div class="titlebox">
+                    <!--<a class="quickstart" href="/rampstarterpack.zip"><img src="/img/quickstartbutton.png"/></a>-->
+                </div>
+                <div class="bannermessage">Beta version 1 is now available!</div>
                 <div class="menubox">
                     <a href="/index.php"><div class="menuitem">Home</div></a>
                     <a href="/rules.php"><div class="menuitem">Rules</div></a>

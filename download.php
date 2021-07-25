@@ -48,7 +48,10 @@ foreach($file_table as $file_data) {
 $table_string .= "</tbody></table>";
 
 ?>
-                <p>Download a snapshot of the compiled project so far!</p>
+                <p>RAMP is now released! Here you go:</p>
+                <center><a href="./RAMP-BETA1.PK3"><img src="./img/downloadbutton.png"></a></center>
+
+                <p>You can also generate and download a snapshot copy of the project - these aren't guaranteed to be stable.</p>
                 
                 <p><?=count($file_table)?> maps have been uploaded and <?=HUB_SLOTS?> slots are currently in the hub. This seems sufficient.</p>
                 <?

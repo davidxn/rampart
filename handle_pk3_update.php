@@ -103,12 +103,18 @@ class Project_Compiler {
     function generate_info($catalog_handler) {
         
         Logger::pg("--- GENERATING INFO LUMPS ---");
+        
+        $catalog = $catalog_handler->get_catalog();
+        $total_maps = count($catalog);
+        $map_index = 0;
 
         //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
         $mapinfo = "";
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
 
         foreach ($catalog_handler->get_catalog() as $map_data) {
+            $map_index++;
+            $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
             
             //Header
             $mapinfo .= "map MAP" . $map_data['map_number'] . " \"" . $map_data['map_name'] . "\"" . PHP_EOL;
@@ -198,7 +204,12 @@ class Project_Compiler {
         
         Logger::pg("--- GENERATING MAPS ---");
         
-        foreach ($catalog_handler->get_catalog() as $map_data) {
+        $catalog = $catalog_handler->get_catalog();
+        $total_maps = count($catalog);
+        $map_index = 0;
+        foreach ($catalog as $map_data) {
+            $map_index++;
+            $this->set_status("Translating uploaded WADs into maps... " . $map_index . "/" . $total_maps);
             $lumpnumber = 0;
             $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
             Logger::pg(PHP_EOL . "> MAP" . $map_data['map_number'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
