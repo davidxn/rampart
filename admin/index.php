@@ -71,9 +71,9 @@ chart.render();
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 
 <div class="code">
-<? include_once(PK3_GEN_LOG_FILE); ?>
+<?php include_once(PK3_GEN_LOG_FILE); ?>
 </div>
 
-<?
+<?php
 require_once('footer.php');
-?>
+

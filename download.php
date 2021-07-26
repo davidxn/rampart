@@ -12,6 +12,7 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
     $file_table[] = [
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
+        'lumpname' => $map_data['lumpname'],
         'author' => $map_data['author'],
         'updated' => filemtime(UPLOADS_FOLDER . "MAP" . $map_data['map_number'] . ".WAD"),
         'map_number' => $map_data['map_number'],
@@ -28,7 +29,7 @@ usort($file_table, function($a, $b) {
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
-        $table_string .= "<td>" . $file_data['map_number'] . "</td>";
+        $table_string .= "<td>" . $file_data['map_number'] . ": " . $file_data['lumpname'] . "</td>";
         $table_string .= "<td>" . $file_data['map_name'] . "</td>";
         $table_string .= "<td>" . $file_data['author'] . "</td>";
         $table_string .= "<td>";
@@ -55,7 +56,7 @@ $table_string .= "</tbody></table>";
                 <center><button type="button" id="download_button">Download a snapshot version!</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
-                <p>Map list updated <?=$date_catalog ? date("F j, Y, g:i a T", " at " . $date_catalog) : "(never updated)"?></p>
+                <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
                 
                 <?=$table_string?>
 <?

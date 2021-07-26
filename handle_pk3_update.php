@@ -26,13 +26,13 @@ if (!$pk3_is_current) {
 }
 
 //If we already have a PK3 that's been generated after the last update of the catalogue file, terminate and instruct to serve the old one
-if (!$bypass_cache && ($lock_file_recent || $pk3_is_current)) {
+if (!$nocache && ($lock_file_recent || $pk3_is_current)) {
     echo json_encode(['success' => true, 'newpk3' => false]);
     die();
 }
 
 $handler = new Project_Compiler();
-if ($handler->compile_project($nocache)) {
+if ($handler->compile_project()) {
     echo json_encode(['success' => true, 'newpk3' => true]);
     die();
 }
