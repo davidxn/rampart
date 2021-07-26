@@ -346,3 +346,7 @@ h3 {
 .mapsubmission.newmap {
     background-color: #EEB;
 }
+
+.property-editor {
+    display: none;
+}

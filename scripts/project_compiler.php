@@ -10,13 +10,14 @@ class Project_Compiler {
 
     public $map_additional_mapinfo = [];
 
-    function compile_project($bypass_cache) {
+    function compile_project() {
 
         //Begin!
         $start_time = time();
         Logger::clear_pk3_log();
         $this->set_status("Initializing");
         file_put_contents(LOCK_FILE_COMPILE, ":)");
+        @mkdir(PROJECT_OUTPUT_FOLDER, 0777, true);
 
         Logger::pg("Locked for generating new download");
 
@@ -86,7 +87,7 @@ class Project_Compiler {
             $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
             
             //Header
-            $mapinfo .= "map MAP" . $map_data['map_number'] . " \"" . $map_data['map_name'] . "\"" . PHP_EOL;
+            $mapinfo .= "map " . $map_data['lumpname'] . " \"" . $map_data['map_name'] . "\"" . PHP_EOL;
             
             //The basics - include the name, author, and point everything to go back to MAP01
             $mapinfo .= "{" . PHP_EOL;
@@ -151,10 +152,10 @@ class Project_Compiler {
             }
 
             //Now write the map properties we need to read from in the game
-            $language .= "MAP" . $map_data['map_number'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
-            $language .= "MAP" . $map_data['map_number'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
-            $language .= "MAP" . $map_data['map_number'] . "SP_JUMP = \"" . $map_allows_jump . "\";" . PHP_EOL;
-            $language .= "MAP" . $map_data['map_number'] . "SP_WIP = \"" . $map_is_wip . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "SP_JUMP = \"" . $map_allows_jump . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "SP_WIP = \"" . $map_is_wip . "\";" . PHP_EOL;
             $language .= PHP_EOL;
         }
         
@@ -180,10 +181,10 @@ class Project_Compiler {
             $map_index++;
             $this->set_status("Translating uploaded WADs into maps... " . $map_index . "/" . $total_maps);
             $lumpnumber = 0;
-            $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
-            Logger::pg(PHP_EOL . "> MAP" . $map_data['map_number'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
+            $map_file_name = "MAP" . (substr("0" . $map_data['map_number'], -2)) . ".WAD";
+            Logger::pg(PHP_EOL . "> " . $map_data['lumpname'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
             $source_wad = UPLOADS_FOLDER . $map_file_name;
-            $target_wad = PK3_FOLDER . "maps/" . $map_file_name;
+            $target_wad = PK3_FOLDER . "maps/" . $map_data['lumpname'] . ".WAD";
             $wad_handler = new Wad_Handler($source_wad);
             Logger::pg($wad_handler->wad_info());
 

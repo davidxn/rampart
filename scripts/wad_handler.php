@@ -13,13 +13,13 @@ class Wad_Handler {
     public $infotable_offset = 0;
     public $lumps = [];
 
-    public function __construct($file_name = null) {
+    public function __construct($file_name = null, $load_data = true) {
         if ($file_name) {
-            $this->load_wad($file_name);
+            $this->load_wad($file_name, $load_data);
         }
     }
 
-    public function load_wad($wad_file) {
+    public function load_wad($wad_file, $load_data = true) {
         $this->wad_file = fopen($wad_file, "r");
         $this->identification = $this->read_bytes(4, 'str');
         $this->numlumps = $this->read_bytes(4, 'int');
@@ -35,10 +35,12 @@ class Wad_Handler {
         }
         
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
-        for ($i = 0; $i < $this->numlumps; $i++) {
-            $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
-            $this->lumps[$i]['type'] = $type;
-            $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
+        if ($load_data) {
+            for ($i = 0; $i < $this->numlumps; $i++) {
+                $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
+                $this->lumps[$i]['type'] = $type;
+                $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
+            }
         }
         fclose($this->wad_file);
     }

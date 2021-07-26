@@ -1,4 +1,5 @@
 <?php
+const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
 
 //////////////////////////////////////
 // Enable or disable uploads and edits
@@ -11,6 +12,7 @@ const ALLOW_EDIT_UPLOADS = true;
 // To protect against spam, limits in seconds for one IP trying PINs and uploading
 //////////////////////////////////////////////////////////////////////////////////
 
+const PIN_MANAGER_CLASS = "Pin_Manager_Random";
 const PIN_ATTEMPT_GAP = 120;
 const UPLOAD_ATTEMPT_GAP = 120;
 
@@ -27,7 +29,8 @@ const FIRST_USER_MAP_NUMBER = 10;
 ////////////////////////////////////////////////////////////
 
 const PROJECT_FILE_NAME     = "PROJECT-SNAPSHOT.pk3";
-const PK3_FILE              = "/out/" . PROJECT_FILE_NAME;
+const PROJECT_OUTPUT_FOLDER = RAMPART_HOME . "out/";
+const PK3_FILE              = PROJECT_OUTPUT_FOLDER . PROJECT_FILE_NAME;
 const DEFAULT_SKY_LUMP      = "RSKY1";
 
 ////////////////////////////////////////
@@ -66,7 +69,6 @@ const MAPS_PER_PAGE = 8;
 ///////////////////////////////////////////////////////////
 
 const RAMPART_VERSION = "BETA 0.9";
-const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
 
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];
 

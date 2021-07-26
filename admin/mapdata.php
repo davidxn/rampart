@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('header.php');
 require_once('_constants.php');
 require_once("scripts/wad_handler.php");
@@ -15,7 +15,7 @@ foreach ($catalog as $map_data) {
     $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
     $my_data['map_file_name'] = $map_file_name;
     $source_wad = UPLOADS_FOLDER . $map_file_name;
-    $wad_handler = new Wad_Handler($source_wad);
+    $wad_handler = new Wad_Handler($source_wad, false);
     if ($wad_handler->get_lump('TEXTMAP')) {
         $my_data['map_type'] = 'UDMF';
     } else if ($wad_handler->get_lump('BEHAVIOR')) {
@@ -40,6 +40,7 @@ $table_string .= "</tbody></table>";
 <h3>Further Map Data</h3>
 
 <?=$table_string?>
-<? print_r($map_types);
+<?php
+print_r($map_types);
 
 require_once('footer.php');

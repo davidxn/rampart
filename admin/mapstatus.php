@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('_constants.php');
 require_once('header.php');
 require_once('scripts/catalog_handler.php');
@@ -23,6 +23,7 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
     $row_data = [
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
+        'lumpname' => isset($map_data['lumpname']) ? $map_data['lumpname'] : ("MAP" . substr("0" . $map_data['map_number'], -2)),
         'author' => $map_data['author'],
         'updated' => filemtime(UPLOADS_FOLDER . "MAP" . $map_data['map_number'] . ".WAD"),
         'map_number' => $map_data['map_number'],
@@ -40,10 +41,15 @@ usort($file_table, function($a, $b) {
    return $a['map_number'] > $b['map_number']; 
 });
 
-$table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th><th></th><th></th></tr></thead><tbody>";
+$table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>PIN</th><th>Lump</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th><th></th><th></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
         $table_string .= "<td>" . $file_data['map_number'] . "</td>";
+        $table_string .= "<td>" . $file_data['pin'] . "</td>";
+        $table_string .= "<td name=\"" . $file_data['pin'] . "\" class=\"editable-property\">";
+        $table_string .= "<div class=\"property-editor\"><input name=\"lumpname\" value=\"" . $file_data['lumpname'] . "\"></input><button class=\"property-ok\"/><button class=\"property-cancel\"/></div>";
+        $table_string .= "<span class=\"property-edit\">" . $file_data['lumpname'] . "</span>";
+        $table_string .= "</td>";
         $table_string .= "<td>" . $file_data['map_name'] . "</td>";
         $table_string .= "<td>" . $file_data['author'] . "</td>";
         $table_string .= "<td>";
@@ -78,6 +84,7 @@ $table_string .= "</tbody></table>";
                 <p>Locked maps: <?=$locked_maps?></p>
                 
                 <?=$table_string?>
-<?
+                <script src="admin.js" type="text/javascript"></script>
+<?php
 require_once('footer.php');
-?>
+

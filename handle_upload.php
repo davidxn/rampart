@@ -3,7 +3,7 @@
 require_once("_constants.php");
 require_once("scripts/catalog_handler.php");
 require_once("scripts/logger.php");
-require_once("scripts/pin_manager.php");
+require_once("scripts/pin_managers.php");
 
 class Upload_Handler {
 
@@ -41,15 +41,17 @@ class Upload_Handler {
             $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ("MAP" . (substr("0" . $map_number, -2)));
         }
         else {
-            $new_pin = Pin_Manager::get_new_pin();
+            $pin_manager = PIN_MANAGER_CLASS;
+            $pin = $pin_manager::get_new_pin();
             $map_number = $catalog_handler->get_next_available_slot();
             $map_lumpname = "MAP" . (substr("0" . $map_number, -2));
-            Logger::lg("Assigning PIN: " . $new_pin);
+            Logger::lg("Assigning PIN: " . $pin);
             Logger::lg("Assigning map number: " . $map_number);
         }
         
         //Finalize the file, if we have one
         if ($tmpname) {
+            @mkdir(UPLOADS_FOLDER);
             $location = UPLOADS_FOLDER . "MAP" . $map_number . ".WAD";
             Logger::lg("Moving file " . $tmpname . " to " . $location);
             if (file_exists($location)) {
@@ -134,6 +136,7 @@ class Upload_Handler {
         $ip = $_SERVER['REMOTE_ADDR'];
         $filename = 'b' . str_replace(".", "", $ip) . 'b';
         $ip_check_file = IPS_FOLDER . $filename;
+        @mkdir(IPS_FOLDER);
         if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < UPLOAD_ATTEMPT_GAP) {
             Logger::lg("IP " . $ip . " is submitting too fast");
             echo json_encode(['error' => 'You uploaded just a moment ago - hold on a minute before you submit again']);
