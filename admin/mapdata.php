@@ -1,6 +1,7 @@
 <?php
 require_once('header.php');
 require_once('_constants.php');
+require_once('_functions.php');
 require_once("scripts/wad_handler.php");
 
 $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
@@ -12,7 +13,7 @@ $map_data_table = [];
 $map_types = ['UDMF' => 0, 'Hexen' => 0, 'Vanilla/Boom' => 0];
 
 foreach ($catalog as $map_data) {
-    $map_file_name = "MAP" . $map_data['map_number'] . ".WAD";
+    $map_file_name = get_source_wad_file_name($map_data['map_number']);
     $my_data['map_file_name'] = $map_file_name;
     $source_wad = UPLOADS_FOLDER . $map_file_name;
     $wad_handler = new Wad_Handler($source_wad, false);
