@@ -1,6 +1,7 @@
 <?php
 
 require_once("_constants.php");
+require_once("_functions.php");
 require_once("scripts/wad_handler.php");
 require_once("scripts/mapinfo_handler.php");
 require_once("scripts/guide_writer.php");
@@ -181,7 +182,7 @@ class Project_Compiler {
             $map_index++;
             $this->set_status("Translating uploaded WADs into maps... " . $map_index . "/" . $total_maps);
             $lumpnumber = 0;
-            $map_file_name = "MAP" . (substr("0" . $map_data['map_number'], -2)) . ".WAD";
+            $map_file_name = get_source_wad_file_name($map_data['map_number']);
             Logger::pg(PHP_EOL . "> " . $map_data['lumpname'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
             $source_wad = UPLOADS_FOLDER . $map_file_name;
             $target_wad = PK3_FOLDER . "maps/" . $map_data['lumpname'] . ".WAD";

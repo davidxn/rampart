@@ -1,5 +1,6 @@
 <?php
 require_once('_constants.php');
+require_once('_functions.php');
 require_once('header.php');
 require_once('scripts/catalog_handler.php');
 
@@ -14,7 +15,7 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
         'map_name' => $map_data['map_name'],
         'lumpname' => $map_data['lumpname'],
         'author' => $map_data['author'],
-        'updated' => filemtime(UPLOADS_FOLDER . "MAP" . $map_data['map_number'] . ".WAD"),
+        'updated' => filemtime(UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number'])),
         'map_number' => $map_data['map_number'],
         'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
         'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
@@ -23,13 +24,13 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
 }
 
 usort($file_table, function($a, $b) {
-   return $a['map_number'] > $b['map_number']; 
+   return $a['lumpname'] > $b['lumpname']; 
 });
 
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
-        $table_string .= "<td>" . $file_data['map_number'] . ": " . $file_data['lumpname'] . "</td>";
+        $table_string .= "<td>" . $file_data['lumpname'] . "</td>";
         $table_string .= "<td>" . $file_data['map_name'] . "</td>";
         $table_string .= "<td>" . $file_data['author'] . "</td>";
         $table_string .= "<td>";
@@ -49,7 +50,7 @@ foreach($file_table as $file_data) {
 $table_string .= "</tbody></table>";
 
 ?>
-                <p>You can generate and download a snapshot version of the project here - this will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
+                <p>You can generate and download a snapshot version of the project here. Snapshots will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
                 
                 <p><?=count($file_table)?> maps have been uploaded.</p>
 
