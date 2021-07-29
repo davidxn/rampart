@@ -18,7 +18,18 @@ require_once('_constants.php');
         <div class="outer">
             <div class="header">
                 <div class="titlebox">&nbsp;</div>
-                <div class="bannermessage">&nbsp;</div>
+<?php
+if (!is_writable(WORK_FOLDER)) {
+?>
+                <div class="errormessage">The work folder doesn't seem to be writable! Check its location in _constants.php</div>
+<?php  
+}
+if (!empty(BANNER_MESSAGE)) {
+?>
+                <div class="bannermessage"><?=BANNER_MESSAGE?></div>
+<?php  
+}
+?>
                 <div class="menubox">
                     <a href="/index.php"><div class="menuitem">Home</div></a>
                     <a href="/rules.php"><div class="menuitem">Rules</div></a>

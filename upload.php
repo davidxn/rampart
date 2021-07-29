@@ -19,15 +19,15 @@ require_once('_constants.php');
                 <div id="upload-question-type">
                     <p>I want to...</p>
                     <? if (ALLOW_NEW_UPLOADS) { ?>
-                    <button type="button" id="uploadtype_first">Upload a map for the first time</button>
+                    <button type="button" id="uploadtype_first">Add a new slot for this map</button>
                     <? } ?>
                     <? if (ALLOW_EDIT_UPLOADS) { ?>
-                    <button type="button" id="uploadtype_update">Update a map I've already added</button>
+                    <button type="button" id="uploadtype_update">Put a map in an existing map slot</button>
                     <? } ?>
                 </div>
                 <div id="upload-question-pin">
                     <div id="pin_form" class="lightbox">
-                        <p>Updating an existing map! Please enter the PIN that you got when you first uploaded the map. (If you don't know it, contact the project owner)</p>
+                        <p>Please enter the PIN for the slot you want to update. (If you don't know it, contact the project owner)</p>
                         <div id="pin_status">&nbsp;</div>
                         <input type="text" id="input_pin_to_reupload"></input>
                         <button type="button" id="confirm_pin">That's my PIN</button>
@@ -36,7 +36,7 @@ require_once('_constants.php');
 
                 <div id="upload-question-details">
                     <div id="upload_form" class="lightbox">
-                        <p id="upload_prompt">OK - add your details here and click Upload to submit the map. After submitting, you'll be given a PIN code that will let you update the map in future.</p>
+                        <p id="upload_prompt">OK - add your details here and click Upload to submit the map.</p>
                         <table class="upload_table"><tbody><tr>
                             <td width="200">Map name:</td>
                             <td><input type="text" id="input_map_name"></input></td>

@@ -1,6 +1,7 @@
 <?php
 
 require_once("_constants.php");
+require_once('_functions.php');
 require_once("scripts/catalog_handler.php");
 require_once("scripts/logger.php");
 require_once("scripts/pin_managers.php");
@@ -52,7 +53,7 @@ class Upload_Handler {
         //Finalize the file, if we have one
         if ($tmpname) {
             @mkdir(UPLOADS_FOLDER);
-            $location = UPLOADS_FOLDER . "MAP" . $map_number . ".WAD";
+            $location = UPLOADS_FOLDER . get_source_wad_file_name($map_number);
             Logger::lg("Moving file " . $tmpname . " to " . $location);
             if (file_exists($location)) {
                 unlink($location);

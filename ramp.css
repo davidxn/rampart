@@ -99,6 +99,18 @@ textarea {
     text-align: center;
     padding: 8px;
     background-color: #888;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+}
+
+.errormessage {
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+    background-color: #A00;
+    color: white;
+    border-top: 1px solid #800;
+    border-bottom: 1px solid #800;
 }
 
 .clearme {
@@ -350,3 +362,22 @@ h3 {
 .property-editor {
     display: none;
 }
+
+.property-edit {
+    cursor: pointer;
+    text-decoration-style: dotted;
+    text-decoration-line: underline;
+}
+
+button.property {
+    background-color: transparent;
+    border: none;
+    height: 16px;
+    width: 16px;
+}
+
+button.property-ok {     background-image: url("/img/confirm.png"); }
+button.property-cancel { background-image: url("/img/cancel.png");  }
+button.property-unlocked{background-image: url("/img/unlocked.png");}
+button.property-locked { background-image: url("/img/locked.png");  }
+button.property-download{background-image: url("/img/page_save.png");  }
