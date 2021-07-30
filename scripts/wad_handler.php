@@ -20,6 +20,9 @@ class Wad_Handler {
     }
 
     public function load_wad($wad_file, $load_data = true) {
+        if (!file_exists($wad_file)) {
+            return false;
+        }
         $this->wad_file = fopen($wad_file, "r");
         $this->identification = $this->read_bytes(4, 'str');
         $this->numlumps = $this->read_bytes(4, 'int');
@@ -129,6 +132,10 @@ class Wad_Handler {
     public function add_lump($lump) {
         $this->lumps[] = $lump;
         $this->numlumps++;
+    }
+    
+    public function count_lumps() {
+        return count($this->lumps);
     }
     
     public function write_wad($location) {

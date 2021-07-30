@@ -21,12 +21,13 @@ $total_maps = 0;
 $locked_maps = 0;
 $wip_maps = 0;
 foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
+    $wad_path = UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number']);
     $row_data = [
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
         'lumpname' => isset($map_data['lumpname']) ? $map_data['lumpname'] : ("MAP" . substr("0" . $map_data['map_number'], -2)),
         'author' => $map_data['author'],
-        'updated' => filemtime(UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number'])),
+        'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
         'map_number' => $map_data['map_number'],
         'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
         'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
@@ -58,7 +59,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<img src="/img/special_wip.png"/>';
         } 
         $table_string .= "</td>";
-        $table_string .= "<td>" . date("F j, Y, g:i a T", $file_data['updated']) . "</td>";
+        $table_string .= "<td>" . $file_data['updated'] . "</td>";
         $table_string .= '<td class="editable-property" name="' . $file_data['pin'] . '">';
         if ($file_data['locked']) {
             $table_string .= '<button class="property property-locked"></button>';
