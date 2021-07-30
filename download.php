@@ -60,6 +60,6 @@ $table_string .= "</tbody></table>";
                 <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
                 
                 <?=$table_string?>
-<?
+<?php
 require_once('./footer.php');
 

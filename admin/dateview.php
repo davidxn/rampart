@@ -35,7 +35,7 @@ fclose($fn);
 ?>
 <div id="maptime">&nbsp;</div>
 <table class="mapuploadtable">
-<?
+<?php
 foreach($uploads as $timestamp => $elements) {
     $date = new DateTime();
     $date->setTimestamp($timestamp + (24*60*60)); //Compensate for time zone
@@ -50,5 +50,5 @@ foreach($uploads as $timestamp => $elements) {
 }
 ?>
 </table>
-<?
+<?php
 include_once('footer.php');
