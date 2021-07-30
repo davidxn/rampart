@@ -18,12 +18,12 @@ require_once('_constants.php');
 
                 <div id="upload-question-type">
                     <p>I want to...</p>
-                    <? if (ALLOW_NEW_UPLOADS) { ?>
+                    <?php if (ALLOW_NEW_UPLOADS) { ?>
                     <button type="button" id="uploadtype_first">Add a new slot for this map</button>
-                    <? } ?>
-                    <? if (ALLOW_EDIT_UPLOADS) { ?>
+                    <?php } ?>
+                    <?php if (ALLOW_EDIT_UPLOADS) { ?>
                     <button type="button" id="uploadtype_update">Put a map in an existing map slot</button>
-                    <? } ?>
+                    <?php } ?>
                 </div>
                 <div id="upload-question-pin">
                     <div id="pin_form" class="lightbox">
