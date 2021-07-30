@@ -45,7 +45,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<img src="/img/special_locked.png"/>';
         }
         $table_string .= "</td>";
-        $table_string .= "<td>" . date("F j, Y, g:i a T", $file_data['updated']) . "</td>";
+        $table_string .= "<td>" . $file_data['updated'] . "</td>";
         $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
