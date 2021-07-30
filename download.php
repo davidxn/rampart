@@ -10,12 +10,13 @@ $date_catalog = @filemtime(CATALOG_FILE) or 0;
 $catalog_handler = new Catalog_Handler();
 $file_table = [];
 foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
+    $wad_path = UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number']);
     $file_table[] = [
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
         'lumpname' => $map_data['lumpname'],
         'author' => $map_data['author'],
-        'updated' => filemtime(UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number'])),
+        'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
         'map_number' => $map_data['map_number'],
         'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
         'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
@@ -60,6 +61,6 @@ $table_string .= "</tbody></table>";
                 <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
                 
                 <?=$table_string?>
-<?
+<?php
 require_once('./footer.php');
 

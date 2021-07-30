@@ -48,20 +48,37 @@ class Project_Compiler {
     }
 
     function write_guide_dialogue() {
-        Logger::pg("Rewriting guide dialogue");
+        Logger::pg("Processing hub WAD");
+        if (!GUIDE_ENABLED) {
+            Logger::pg("Guide is not enabled, nothing to fiddle with");
+            return;
+        }
+
         $hub_map_location = PK3_FOLDER . DIRECTORY_SEPARATOR . HUB_MAP_FILE;
         $wad_in = new Wad_Handler($hub_map_location);
         $wad_out = new Wad_Handler();
+
+        if (!$wad_in->count_lumps()) {
+            Logger::pg("There is no hub wad in " . HUB_MAP_FILE . " - skipping");
+            return;
+        }
         
-        //Go through our uploaded WAD and copy all the lumps. Inject our DIALOGUE after BEHAVIOR, and ignore existing DIALOGUE
+        //Go through our uploaded WAD and copy all the lumps. Inject our DIALOGUE after BEHAVIOR, or append it to existing one
+        $has_existing_dialogue = $wad_in->get_lump("DIALOGUE");
         foreach ($wad_in->lumps as $lump) {
             Logger::pg("Got lump " . $lump['name'] . " from hub WAD");
-            if ($lump['name'] == 'DIALOGUE') {
-                Logger::pg("Appending generated DIALOGUE");
+            if ($lump['name'] == 'DIALOGUE' && $has_existing_dialogue) {
+                Logger::pg("Appending generated DIALOGUE to existing lump");
                 $guide_writer = new Guide_Dialogue_Writer();
                 $lump['data'] .= PHP_EOL . $guide_writer->write();
             }
             $wad_out->add_lump($lump);
+            if ($lump['name'] == 'BEHAVIOR' && !$has_existing_dialogue) {
+                Logger::pg("Inserting generated DIALOGUE lump");
+                $guide_writer = new Guide_Dialogue_Writer();
+                $dialogue_lump = ['name' => 'DIALOGUE', 'data' => $guide_writer->write()];
+                $wad_out->add_lump($dialogue_lump);
+            }            
         }
         Logger::pg("Writing new hub WAD");
         $bytes_written = $wad_out->write_wad($hub_map_location);
@@ -187,6 +204,10 @@ class Project_Compiler {
             $source_wad = UPLOADS_FOLDER . $map_file_name;
             $target_wad = PK3_FOLDER . "maps/" . $map_data['lumpname'] . ".WAD";
             $wad_handler = new Wad_Handler($source_wad);
+            if (!$wad_handler->count_lumps()) {
+                Logger::pg(PHP_EOL . ":error: " . $map_file_name . " does not exist in uploads folder, skipping it");
+                continue;
+            }
             Logger::pg($wad_handler->wad_info());
 
             $music_bytes = "";
@@ -359,6 +380,10 @@ class Project_Compiler {
 
         $source = STATIC_CONTENT_FOLDER;
         $dest = PK3_FOLDER;
+        if (!file_exists($source)) {
+            Logger::pg("No static content folder - skipping this step");
+            return;
+        }
 
         foreach (
          $iterator = new \RecursiveIteratorIterator(
@@ -388,7 +413,7 @@ class Project_Compiler {
     }
 
     function deleteAll($str) {      
-        if (is_file($str)) {              
+        if (is_file($str)) {
             return unlink($str);
         }
         elseif (is_dir($str)) {
