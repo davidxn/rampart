@@ -1,4 +1,4 @@
-<?
+<?php
 require_once('header.php');
 
 $constants_file = explode("\n", file_get_contents("../_constants.php")); //Use relative path here! Can't rely on constants file being OK
@@ -20,5 +20,5 @@ $constants_table .= "</table>";
 
 <?=$constants_table?>
 
-<?
+<?php
 require_once('footer.php');
