@@ -55,7 +55,7 @@ class Pin_Handler {
         $filename = 'p' . str_replace(".", "", $ip) . 'p';
         $ip_check_file = IPS_FOLDER . $filename;
         @mkdir(IPS_FOLDER);
-        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < PIN_ATTEMPT_GAP) {
+        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < get_setting("PIN_ATTEMPT_GAP")) {
             Logger::lg("IP " . $ip . " is trying PINs too fast");
             echo json_encode(['error' => 'Hold on a minute before you try another PIN']);
             die();

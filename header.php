@@ -24,9 +24,9 @@ if (!is_writable(WORK_FOLDER)) {
                 <div class="errormessage">The work folder doesn't seem to be writable! Check its location in _constants.php</div>
 <?php  
 }
-if (!empty(BANNER_MESSAGE)) {
+if (!empty(get_setting("BANNER_MESSAGE"))) {
 ?>
-                <div class="bannermessage"><?=BANNER_MESSAGE?></div>
+                <div class="bannermessage"><?=get_setting("BANNER_MESSAGE")?></div>
 <?php  
 }
 ?>
@@ -36,10 +36,10 @@ if (!empty(BANNER_MESSAGE)) {
                     <a href="/guide.php"><div class="menuitem">Getting Started</div></a>
 <?php
 $update_verb = "Submit";
-if (ALLOW_NEW_UPLOADS == false) {
+if (!get_setting("ALLOW_NEW_UPLOADS")) {
     $update_verb = "Update";
 }
-if (ALLOW_NEW_UPLOADS || ALLOW_EDIT_UPLOADS) {
+if (get_setting("ALLOW_NEW_UPLOADS") || get_setting("ALLOW_EDIT_UPLOADS")) {
 ?>
                     <a href="/upload.php"><div class="menuitem"><?=$update_verb?> a Map</div></a>
 <?php

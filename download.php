@@ -4,7 +4,7 @@ require_once('_functions.php');
 require_once('header.php');
 require_once('scripts/catalog_handler.php');
 
-$date_pk3 = @filemtime(PK3_FILE) or 0;
+$date_pk3 = @filemtime(get_project_full_path()) or 0;
 $date_catalog = @filemtime(CATALOG_FILE) or 0;
 
 $catalog_handler = new Catalog_Handler();
