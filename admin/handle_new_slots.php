@@ -14,7 +14,7 @@ if (!is_numeric($slots) || $slots < 1 || $slots > 50) {
 }
 
 $catalog_handler = new Catalog_Handler();
-$pin_manager = PIN_MANAGER_CLASS;
+$pin_manager = get_setting("PIN_MANAGER_CLASS");
 for ($i = 0; $i < $slots; $i++) {
     $pin = $pin_manager::get_new_pin();
     $map_number = $catalog_handler->get_next_available_slot();

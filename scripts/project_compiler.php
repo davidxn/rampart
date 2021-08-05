@@ -18,7 +18,7 @@ class Project_Compiler {
         Logger::clear_pk3_log();
         $this->set_status("Initializing");
         file_put_contents(LOCK_FILE_COMPILE, ":)");
-        @mkdir(PROJECT_OUTPUT_FOLDER, 0777, true);
+        @mkdir(get_setting("PROJECT_OUTPUT_FOLDER"), 0777, true);
 
         Logger::pg("Locked for generating new download");
 
@@ -50,7 +50,7 @@ class Project_Compiler {
     function write_guide_dialogue() {
         Logger::pg("Processing hub WAD");
         if (!GUIDE_ENABLED) {
-            Logger::pg("Guide is not enabled, nothing to fiddle with");
+            Logger::pg("Guide is not enabled, not touching anything");
             return;
         }
 
@@ -134,7 +134,7 @@ class Project_Compiler {
             //Skies. If we haven't got a specific one (which will have been added by the custom properties above),
             //check for a sky written to the folder, then fall back to default
             if (!isset($this->map_additional_mapinfo[$map_data['map_number']]['sky1'])) {
-                Logger::pg("No sky1 set, falling back to default sky1 lump " . DEFAULT_SKY_LUMP . " for map " . $map_data['map_number']);
+                Logger::pg("No sky1 set, falling back to RSKY1 for map " . $map_data['map_number']);
                 $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
             }
 
@@ -200,12 +200,12 @@ class Project_Compiler {
             $this->set_status("Translating uploaded WADs into maps... " . $map_index . "/" . $total_maps);
             $lumpnumber = 0;
             $map_file_name = get_source_wad_file_name($map_data['map_number']);
-            Logger::pg(PHP_EOL . "> " . $map_data['lumpname'] . ": Reading source WAD (" . $map_data['map_name'] . ")");
+            Logger::pg(PHP_EOL . "📦 " . $map_data['lumpname'] . ": Reading source WAD (" . $map_data['map_name'] . ") 📦");
             $source_wad = UPLOADS_FOLDER . $map_file_name;
             $target_wad = PK3_FOLDER . "maps/" . $map_data['lumpname'] . ".WAD";
             $wad_handler = new Wad_Handler($source_wad);
             if (!$wad_handler->count_lumps()) {
-                Logger::pg(PHP_EOL . ":error: " . $map_file_name . " does not exist in uploads folder, skipping it");
+                Logger::pg("❌ " . $map_file_name . " does not exist in uploads folder, skipping it");
                 continue;
             }
             Logger::pg($wad_handler->wad_info());
@@ -216,6 +216,9 @@ class Project_Compiler {
             $sky_found = false;
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] != 'mapdata' && $in_map) {
+                    if (count($map_lumps) <= 1) {
+                        Logger::pg("❌ No lumps read in map, possible malformed WAD");
+                    }
                     Logger::pg("Finished reading map");
                     $in_map = false;
                 }
@@ -228,15 +231,15 @@ class Project_Compiler {
                 if (in_array($lump['type'], ['midi', 'ogg', 'mp3', 'mus']) && !$music_bytes) {
                     $music_bytes = $lump['data'];
                     $music_type = $lump['type'];
-                    Logger::pg("Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . strlen($music_bytes));
+                    Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . strlen($music_bytes));
                     continue;
                 }
                 if (in_array(strtoupper($lump['name']), ['MAPINFO', 'ZMAPINFO'])) {
-                    Logger::pg("Found " . $lump['name'] . " lump, parsing it");
+                    Logger::pg("📜 Found " . $lump['name'] . " lump, parsing it");
                     $mapinfo_handler = new Mapinfo_Handler($lump['data']);
                     $mapinfo_properties = $mapinfo_handler->parse();
                     if (isset($mapinfo_properties['error'])) {
-                        Logger::pg($mapinfo_properties['error']);
+                        Logger::pg("❌ " . $mapinfo_properties['error']);
                         continue;
                     }
                     foreach ($mapinfo_properties as $index => $value) {
@@ -269,9 +272,9 @@ class Project_Compiler {
                     }
                 }
                 //If we have an entry that matches the default sky lump, use that as sky
-                if (strtoupper($lump['name']) == DEFAULT_SKY_LUMP) {
+                if (!empty(get_setting("DEFAULT_SKY_LUMP")) && (strtoupper($lump['name']) == strtoupper(get_setting("DEFAULT_SKY_LUMP")))) {
                     $sky_bytes = $lump['data'];
-                    Logger::pg(DEFAULT_SKY_LUMP . " default sky lump found with size " . strlen($sky_bytes));
+                    Logger::pg(get_setting("DEFAULT_SKY_LUMP") . " default sky lump found with size " . strlen($sky_bytes));
                     $skyfile = $this->write_sky_to_pk3($map_data['map_number'], 1, $sky_bytes);
                     if (!isset($this->map_additional_mapinfo[$map_data['map_number']])) { $this->map_additional_mapinfo[$map_data['map_number']] = []; }
                     $this->map_additional_mapinfo[$map_data['map_number']]['sky1'] = $skyfile;
@@ -331,9 +334,9 @@ class Project_Compiler {
     }
 
     function create_pk3() {
-        if (!empty(ZIP_SCRIPT)) {
+        if (!empty($GLOBALS["ZIP_SCRIPT"])) {
             Logger::pg("--- ASKING EXTERNAL SCRIPT TO ZIP PK3 ---");
-            exec(ZIP_SCRIPT);
+            exec($GLOBALS["ZIP_SCRIPT"]);
             Logger::pg("Script finished");
             return;
         }
@@ -346,7 +349,7 @@ class Project_Compiler {
 
         // Initialize archive object
         $zip = new ZipArchive();
-        $zip->open(PK3_FILE, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->open(get_project_full_path(), ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         // Create recursive directory iterator
         $files = new RecursiveIteratorIterator(
@@ -401,14 +404,16 @@ class Project_Compiler {
 
     function clean() {
         //Guard against this being blank somehow and annihilating the server
-        if (strlen(PK3_FOLDER) < 10) {
+        $path = realpath(PK3_FOLDER);
+        if (strlen($path) < 5) {
+            Logger::pg("❌ Resolved path " . $path . " is fewer than five characters - aborted delete for safety!");
             return;
         }
-        $this->deleteAll(PK3_FOLDER);
+        $this->deleteAll($path . DIRECTORY_SEPARATOR);
         Logger::pg("Cleaned PK3 folder");
-        mkdir(PK3_FOLDER);
+        mkdir($path);
         foreach (PK3_REQUIRED_FOLDERS as $folder) {
-            mkdir(PK3_FOLDER . $folder);
+            mkdir($path . DIRECTORY_SEPARATOR . $folder);
         }
     }
 

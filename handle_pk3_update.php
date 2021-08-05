@@ -9,17 +9,17 @@ require_once("scripts/project_compiler.php");
 $nocache = isset($_GET['nocache']) ? $_GET['nocache'] : false;
 
 $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - filemtime(LOCK_FILE_COMPILE)) < 600;
-$pk3_is_current = file_exists(PK3_FILE) && (filemtime(CATALOG_FILE) < filemtime(PK3_FILE));
+$pk3_is_current = file_exists(get_project_full_path()) && (filemtime(CATALOG_FILE) < filemtime(get_project_full_path()));
 
 if ($lock_file_recent) {
     echo json_encode(['success' => false, 'error' => 'Project is already being generated! Hold on a minute then try again']);
     die();
 }
 if (!$pk3_is_current) {
-    Logger::pg("Catalog is newer than latest build, so an update is required: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
+    Logger::pg("Catalog is newer than latest build, so an update is required: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
 } else {
-    if (file_exists(PK3_FILE)) {
-        Logger::pg("Catalog is older than latest build - will serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(PK3_FILE)));
+    if (file_exists(get_project_full_path())) {
+        Logger::pg("Catalog is older than latest build - will serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
     } else {
         Logger::pg("No snapshot exists - will create one");
     }

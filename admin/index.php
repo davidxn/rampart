@@ -6,10 +6,11 @@ require_once('header.php');
 
 <img src="/davidn.png" class="inlineimg"/>
 
+<p><a href="./settings.php">Edit project settings</a></p>
+<p><a href="./mapstatus.php">Edit map data</a></p>
 <p><a href="/handle_pk3_update.php?nocache=true">Regenerate PK3</a></p>
 <p><a href="./generateguide.php">Show guide conversation script</a></p>
 <p><a href="./makecredits.php">Show credits</a></p>
-<p><a href="./mapstatus.php">Edit map data</a></p>
 
 <div style="clear: both;">&nbsp;</div>
 

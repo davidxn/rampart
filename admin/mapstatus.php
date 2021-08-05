@@ -4,7 +4,7 @@ require_once('_functions.php');
 require_once('header.php');
 require_once('scripts/catalog_handler.php');
 
-$date_pk3 = @filemtime(PK3_FILE) or 0;
+$date_pk3 = @filemtime(get_project_full_path()) or 0;
 $date_catalog = @filemtime(CATALOG_FILE) or 0;
 
 $catalog_handler = new Catalog_Handler();
@@ -82,8 +82,8 @@ function html_property_editor($pin, $property_name, $current_value) {
 }
 
 ?>
-                <p>Creating new map slots is currently <?=(ALLOW_NEW_UPLOADS ? 'ALLOWED' : 'LOCKED')?></p>
-                <p>Updates are currently <?=(ALLOW_EDIT_UPLOADS ? 'ALLOWED' : 'LOCKED')?></p>
+                <p>Creating new map slots is currently <?=(get_setting("ALLOW_NEW_UPLOADS") ? 'ALLOWED' : 'LOCKED')?></p>
+                <p>Updates are currently <?=(get_setting("ALLOW_EDIT_UPLOADS") ? 'ALLOWED' : 'LOCKED')?></p>
                 
                 <p>Total maps: <?=$total_maps?></p>
                 <p>WIP maps: <?=$wip_maps?></p>

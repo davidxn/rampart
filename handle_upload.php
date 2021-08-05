@@ -42,7 +42,7 @@ class Upload_Handler {
             $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ("MAP" . (substr("0" . $map_number, -2)));
         }
         else {
-            $pin_manager = PIN_MANAGER_CLASS;
+            $pin_manager = get_setting("PIN_MANAGER_CLASS");
             $pin = $pin_manager::get_new_pin();
             $map_number = $catalog_handler->get_next_available_slot();
             $map_lumpname = "MAP" . (substr("0" . $map_number, -2));
@@ -138,7 +138,7 @@ class Upload_Handler {
         $filename = 'b' . str_replace(".", "", $ip) . 'b';
         $ip_check_file = IPS_FOLDER . $filename;
         @mkdir(IPS_FOLDER);
-        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < UPLOAD_ATTEMPT_GAP) {
+        if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < get_setting("UPLOAD_ATTEMPT_GAP")) {
             Logger::lg("IP " . $ip . " is submitting too fast");
             echo json_encode(['error' => 'You uploaded just a moment ago - hold on a minute before you submit again']);
             die();
@@ -185,12 +185,12 @@ if (empty($pin) && (empty($filename) || empty($filesize) || empty($tmpname))) {
     die();
 }
 
-if (!$pin && !ALLOW_NEW_UPLOADS) {
+if (!$pin && !get_setting("ALLOW_NEW_UPLOADS")) {
     echo json_encode(['error' => 'New uploads are currently disabled! If you want to edit an existing map, please use a PIN']);
     die();
 }
 
-if ($pin && !ALLOW_EDIT_UPLOADS) {
+if ($pin && !get_setting("ALLOW_EDIT_UPLOADS")) {
     echo json_encode(['error' => 'Edits are currently disabled!']);
     die();
 }

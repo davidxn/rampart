@@ -90,7 +90,7 @@ $(function() {
     $("#download_button").click(function(){
         $('#download_button').attr("disabled", true);
         $('#download_button').addClass("waitingdisabled");
-        $('#download_button').html("Please wait, generating a PK3...<br/>" + loadingSvg);
+        $('#download_button').html("Please wait, generating the project...<br/>" + loadingSvg);
         downloadProject();
     });
 
@@ -122,7 +122,7 @@ function downloadProject() {
                 $('#download_button').text(response.error);
                 return;
             }
-            $('#download_button').text("PK3 generated!");
+            $('#download_button').text("Project generated!");
             window.location.href = './handle_download.php?xcache=' + Math.random();
         }
     });
@@ -140,7 +140,7 @@ function getBuildLog() {
                 setTimeout(getBuildLog, 500);
             }
             else {
-                $('#download_button').text("PK3 generated!");
+                $('#download_button').text("Project generated!");
             }
             lastlogfiletime = response.filetime;
         }

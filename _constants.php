@@ -1,21 +1,46 @@
 <?php
 const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
+const SETTINGS_FILE = RAMPART_HOME . "_settings.json";
 
-//////////////////////////////////////
-// Enable or disable uploads and edits
-//////////////////////////////////////
+$setting_defaults = [
+    "ALLOW_NEW_UPLOADS" => true,
+    "ALLOW_EDIT_UPLOADS" => true,
+    "BANNER_MESSAGE" => "",
+    "PIN_MANAGER_CLASS" => "Pin_Manager_Random",
+    "PIN_ATTEMPT_GAP" => 60,
+    "UPLOAD_ATTEMPT_GAP" => 60,
+    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT.pk3",
+    "DEFAULT_SKY_LUMP" => "RSKY1",
+    "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
+];
 
-const ALLOW_NEW_UPLOADS = true;
-const ALLOW_EDIT_UPLOADS = true;
-const BANNER_MESSAGE = "";
+function get_setting($setting, $type = null) {
+    if (isset($GLOBALS['settings'][$setting])) {
+        //Stupid special cases
+        if ($GLOBALS['settings'][$setting] == "true") { return true; }
+        if ($GLOBALS['settings'][$setting] == "false") { return false; }
+        return $GLOBALS['settings'][$setting];
+    } else if (isset($GLOBALS['setting_defaults'][$setting])) {
+        return $GLOBALS['setting_defaults'][$setting];
+    }
+    return null;
+}    
+
+$string_to_decode = "[]";
+if (file_exists(SETTINGS_FILE)) {            
+    $string_to_decode = file_get_contents(SETTINGS_FILE);
+}
+$settings = json_decode($string_to_decode, true);
+if (json_last_error() != JSON_ERROR_NONE) {
+    die("Settings file appears not to be working - amend or delete _settings.json to reset things");
+}
+if (!$settings) {
+    $settings = [];
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // To protect against spam, limits in seconds for one IP trying PINs and uploading
 //////////////////////////////////////////////////////////////////////////////////
-
-const PIN_MANAGER_CLASS = "Pin_Manager_Random";
-const PIN_ATTEMPT_GAP = 10;
-const UPLOAD_ATTEMPT_GAP = 10;
 
 ///////////////////////////////////////////////////////////
 // Details about your hub map and how to assign map numbers
@@ -29,10 +54,9 @@ const FIRST_USER_MAP_NUMBER = 10;
 // Details about the location and name of the output project
 ////////////////////////////////////////////////////////////
 
-const PROJECT_FILE_NAME     = "PROJECT-SNAPSHOT.pk3";
-const PROJECT_OUTPUT_FOLDER = RAMPART_HOME . "out/";
-const PK3_FILE              = PROJECT_OUTPUT_FOLDER . PROJECT_FILE_NAME;
-const DEFAULT_SKY_LUMP      = "RSKY1";
+function get_project_full_path() {
+    return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME");
+}
 
 ////////////////////////////////////////
 // Which properties to detect in MAPINFO
@@ -91,4 +115,4 @@ const LOCK_FILE_UPLOAD      = WORK_FOLDER . ".uploadlockfile";
 const LOCK_FILE_COMPILE     = WORK_FOLDER . ".compilelockfile";
 const STATUS_FILE           = RAMPART_HOME . "status.log";
 
-const ZIP_SCRIPT            = "cd " . PK3_FOLDER . " && zip -FSr1 " . PK3_FILE . " *";
+$ZIP_SCRIPT                 = "cd " . PK3_FOLDER . " && zip -FSr1 " . get_project_full_path() . " *";

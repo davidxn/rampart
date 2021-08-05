@@ -18,10 +18,10 @@ require_once('_constants.php');
 
                 <div id="upload-question-type">
                     <p>I want to...</p>
-                    <?php if (ALLOW_NEW_UPLOADS) { ?>
+                    <?php if (get_setting("ALLOW_NEW_UPLOADS")) { ?>
                     <button type="button" id="uploadtype_first">Add a new slot for this map</button>
                     <?php } ?>
-                    <?php if (ALLOW_EDIT_UPLOADS) { ?>
+                    <?php if (get_setting("ALLOW_EDIT_UPLOADS")) { ?>
                     <button type="button" id="uploadtype_update">Put a map in an existing map slot</button>
                     <?php } ?>
                 </div>
@@ -76,5 +76,5 @@ require_once('_constants.php');
                     <div id="upload_status">&nbsp;</div>
                 </div>
 <?php
-require_once('./footer.php');
+require_once('footer.php');
 ?>
