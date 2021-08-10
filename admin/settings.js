@@ -9,11 +9,19 @@ $(function() {
             me = $(me);
             var type = me.attr('type');
             var val = me.val();
+            var id = me.attr('id');
             if (type == 'checkbox') {
                 val = (me[0].checked);
             }
-            myFormData.set(me.attr('id'), val);
-            console.log(me.attr('id') + " = " + val);
+            if (type == 'radio') {
+                //Don't send empty radios
+                if (!me[0].checked) {
+                    return;
+                }
+                id = me.attr("name");
+            }
+            myFormData.set(id, val);
+            console.log(id + " = " + val);
         });
         submitSettings(myFormData);
     });
@@ -29,7 +37,7 @@ function submitSettings(formdata, td){
         dataType: 'json',
         success: function(response){
             if (!response.error) {
-                location.reload(true);
+                window.location.href = 'index.php';
             }
         }
     });

@@ -44,6 +44,10 @@ class Upload_Handler {
         else {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
             $pin = $pin_manager::get_new_pin();
+            if (empty($pin)) {
+                echo json_encode(['error' => 'Error creating a PIN! Ask the project owner about this.']);
+                die();
+            }
             $map_number = $catalog_handler->get_next_available_slot();
             $map_lumpname = "MAP" . (substr("0" . $map_number, -2));
             Logger::lg("Assigning PIN: " . $pin);

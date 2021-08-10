@@ -3,15 +3,37 @@ const RAMPART_HOME = __DIR__ . DIRECTORY_SEPARATOR;
 const SETTINGS_FILE = RAMPART_HOME . "_settings.json";
 
 $setting_defaults = [
+    # About the project
+    "PROJECT_FORMAT" => "PK3",
+    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT.pk3",
+    "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
     "ALLOW_NEW_UPLOADS" => true,
     "ALLOW_EDIT_UPLOADS" => true,
+    
+    # About uploads
+    "ALLOW_CONTENT_MAPS" => true,
+    "ALLOW_CONTENT_MUSIC" => true,
+    "ALLOW_CONTENT_SCRIPTS" => true,
+    
+    "ALLOW_GAMEPLAY_JUMP" => false,
+    
+    "DEFAULT_SKY_LUMP" => "RSKY1",
+
+    # About the site
     "BANNER_MESSAGE" => "",
-    "PIN_MANAGER_CLASS" => "Pin_Manager_Random",
     "PIN_ATTEMPT_GAP" => 60,
     "UPLOAD_ATTEMPT_GAP" => 60,
-    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT.pk3",
-    "DEFAULT_SKY_LUMP" => "RSKY1",
-    "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
+    "PIN_MANAGER_CLASS" => "Pin_Manager_Random",
+    
+    # The guide
+    "GUIDE_ENABLED" => false,
+    "HUB_MAP_FILE" => "maps/MAP01.wad",
+    "GUIDE_NAME" => "Map Guide",
+    "GUIDE_TEXT" => "Which map can I help you navigate to today?",
+    "GUIDE_MENU_CLASS" => "",
+    "GUIDE_SCRIPT_NUMBER" => 1,
+    "GUIDE_CLOSE_TEXT" => "Close (ESC)",
+    "MAPS_PER_PAGE" => 8,
 ];
 
 function get_setting($setting, $type = null) {
@@ -46,9 +68,7 @@ if (!$settings) {
 // Details about your hub map and how to assign map numbers
 ///////////////////////////////////////////////////////////
 
-const HUB_MAP_FILE          = "maps/MAP01.wad";
-const HUB_SLOTS             = 200;
-const FIRST_USER_MAP_NUMBER = 10;
+const FIRST_USER_MAP_NUMBER = 1;
 
 ////////////////////////////////////////////////////////////
 // Details about the location and name of the output project
@@ -81,13 +101,6 @@ const ALLOWED_MAPINFO_PROPERTIES = [
 // Details for the computer guide script to add to DIALOGUE
 ///////////////////////////////////////////////////////////
 
-const GUIDE_ENABLED = true;
-const GUIDE_NAME = "Map Guide";
-const GUIDE_TEXT = "Which map can I help you navigate to today?";
-const GUIDE_MENU_CLASS = "";
-const GUIDE_SCRIPT_NUMBER = 1;
-const CLOSE_TEXT = "Close (ESC)";
-const MAPS_PER_PAGE = 8;
 
 ///////////////////////////////////////////////////////////
 // RAMPART constants that you probably don't need to modify
@@ -110,6 +123,7 @@ const LOG_FILE              = WORK_FOLDER . "log.log";
 const PK3_GEN_LOG_FILE      = WORK_FOLDER . "pk3generation.log";
 const PK3_GEN_HISTORY_FILE  = WORK_FOLDER . "pk3history.log";
 const BLANK_MAP             = WORK_FOLDER . "NOMAP.WAD";
+const MAPS_FOLDER           = PK3_FOLDER . "maps/";
 
 const LOCK_FILE_UPLOAD      = WORK_FOLDER . ".uploadlockfile";
 const LOCK_FILE_COMPILE     = WORK_FOLDER . ".compilelockfile";

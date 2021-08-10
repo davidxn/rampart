@@ -8,9 +8,9 @@ require_once('_constants.php');
         <script src="/upload.js?xcache=8" type="text/javascript"></script>
         <link rel="stylesheet" href="/ramp.css?xcache=8">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Exo">
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
         <link rel="manifest" href="/site.webmanifest">
         <title>RAMP</title>
     </head>

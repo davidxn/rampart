@@ -129,7 +129,7 @@ textarea {
 
 .outer {
     background-color: #666;
-    width: 800px;
+    width: 1020px;
     margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0px 0px 8px 0px;
@@ -332,6 +332,26 @@ h3 {
   display: block;
 }
 
+input[type="radio"] {
+    display: none;
+}
+
+input[type="radio"]+label {
+    border: 1px solid #888;
+    border-radius: 6px;
+    height: 25px;
+    padding: 0px 8px;
+    cursor: pointer;
+}
+
+input[type="radio"]:checked+label {
+    font-weight: bold;
+    background-color: #2196F3;
+    background-image: linear-gradient(#2196F3, #0156B3);
+    color: white;
+}
+
+
 /* Style the checkmark/indicator */
 .checkmarkcontainer .checkmark:after {
   left: 9px;
@@ -376,8 +396,9 @@ button.property {
     width: 16px;
 }
 
-button.property-ok {     background-image: url("/img/confirm.png"); }
-button.property-cancel { background-image: url("/img/cancel.png");  }
-button.property-unlocked{background-image: url("/img/unlocked.png");}
-button.property-locked { background-image: url("/img/locked.png");  }
+button.property-ok      {background-image: url("/img/confirm.png");    }
+button.property-cancel  {background-image: url("/img/cancel.png");     }
+button.property-unlocked{background-image: url("/img/unlocked.png");   }
+button.property-locked  {background-image: url("/img/locked.png");     }
 button.property-download{background-image: url("/img/page_save.png");  }
+button.property-delete  {background-image: url("/img/cross.png");      }
