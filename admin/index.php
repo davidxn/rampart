@@ -4,14 +4,13 @@ require_once('header.php');
 ?>
 <h3>Secret Admin Tools</h3>
 
-<img src="/davidn.png" class="inlineimg"/>
-
+<div class="lightbox">
 <p><a href="./settings.php">Edit project settings</a></p>
 <p><a href="./mapstatus.php">Edit map data</a></p>
 <p><a href="/handle_pk3_update.php?nocache=true">Regenerate PK3</a></p>
 <p><a href="./generateguide.php">Show guide conversation script</a></p>
 <p><a href="./makecredits.php">Show credits</a></p>
-
+</div>
 <div style="clear: both;">&nbsp;</div>
 
 <div id="chartContainer" style="height: 300px">&nbsp;</div>

@@ -66,7 +66,8 @@ foreach($file_table as $file_data) {
         } else {
             $table_string .= '<button class="property property-unlocked"></button>';
         }
-        $table_string .= '<a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '"><button class="property property-download"></button></a>';
+        $table_string .= '&nbsp;<a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '"><button class="property property-download"></button></a>';
+        $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;<a href="deletemap.php?mappin=' . $file_data['pin'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
         $table_string .= '</td>';
         $table_string .= "</tr>";
 }
@@ -91,7 +92,7 @@ function html_property_editor($pin, $property_name, $current_value) {
                 
                 <?=$table_string?>
                 
-                <div class="lightbox"><p>Add <input class="number-of-slots" value="1"></input> more map slots </p><button class="new-slots">Go</button></div>
+                <div class="lightbox"><p>Add <input class="number-of-slots" style="width: 50px" type="number" value="1"></input> more map slots </p><button class="new-slots">Add slots</button></div>
                 <script src="admin.js" type="text/javascript"></script>
 <?php
 require_once('footer.php');

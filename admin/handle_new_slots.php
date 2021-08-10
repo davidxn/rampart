@@ -27,7 +27,7 @@ for ($i = 0; $i < $slots; $i++) {
     $catalog_handler->update_map_properties(
         $pin,
         [
-            'map_name' => 'Map ID ' . $map_number,
+            'map_name' => 'Map ' . $map_number,
             'author' => 'Anonymous',
             'map_number' => $map_number,
             'lumpname' => $map_lumpname,

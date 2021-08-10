@@ -34,8 +34,14 @@ class Project_Compiler {
         $this->copy_static_content();
         $this->set_status("Fiddling with DIALOGUE to write guide menus...");
         $this->write_guide_dialogue();
-        $this->set_status("Waiting on the ZIP process (this one always takes a minute or so)");
-        $this->create_pk3();
+        
+        if (get_setting("PROJECT_FORMAT") == "WAD") {
+            $this->set_status("Compiling WAD");
+            $this->create_wad();
+        } else {
+            $this->set_status("Waiting on the ZIP process (this one always takes a minute or so)");
+            $this->create_pk3();
+        }
         //Unmutex
         @unlink(LOCK_FILE_COMPILE);
         $this->set_status("Complete");
@@ -54,12 +60,12 @@ class Project_Compiler {
             return;
         }
 
-        $hub_map_location = PK3_FOLDER . DIRECTORY_SEPARATOR . HUB_MAP_FILE;
+        $hub_map_location = PK3_FOLDER . DIRECTORY_SEPARATOR . get_setting("HUB_MAP_FILE");
         $wad_in = new Wad_Handler($hub_map_location);
         $wad_out = new Wad_Handler();
 
         if (!$wad_in->count_lumps()) {
-            Logger::pg("There is no hub wad in " . HUB_MAP_FILE . " - skipping");
+            Logger::pg("There is no hub wad in " . get_setting("HUB_MAP_FILE") . " - skipping");
             return;
         }
         
@@ -229,6 +235,9 @@ class Project_Compiler {
                     continue;
                 }
                 if (in_array($lump['type'], ['midi', 'ogg', 'mp3', 'mus']) && !$music_bytes) {
+                    if (!get_setting("ALLOW_CONTENT_MUSIC")) {
+                        Logger::pg("Found " . $lump['type'] . " lump but ignoring it due to project settings");
+                    }
                     $music_bytes = $lump['data'];
                     $music_type = $lump['type'];
                     Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . strlen($music_bytes));
@@ -257,8 +266,8 @@ class Project_Compiler {
                             $skylumpname = $mapinfo_properties['sky' . $i];
                             Logger::pg("SKY" . $i . " property found in MAPINFO: " . $skylumpname);
                             $sky_found = true;
-                            //FIRESKY00 exception here is a hack to support the animated sky even if Impboy uploads it in the WAD
-                            if (($skylump = $wad_handler->get_lump($skylumpname)) && $skylumpname != 'FIRESK00') {
+                            //If the sky has been provided in the WAD, copy it in for this map!
+                            if (($skylump = $wad_handler->get_lump($skylumpname))) {
                                 Logger::pg("Found lump " . $skylumpname . " pointed to by SKY" . $i . ", including it");
                                 $skyfile = $this->write_sky_to_pk3($map_data['map_number'], $i, $skylump['data']);
                                 if (!isset($this->map_additional_mapinfo[$map_data['map_number']])) { $this->map_additional_mapinfo[$map_data['map_number']] = []; }
@@ -282,6 +291,9 @@ class Project_Compiler {
                 }
                 //Copy DECORATE or ZSCRIPT into files in the scripts folder, and append the name on to the include file in the root
                 if (in_array(strtoupper($lump['name']), ['DECORATE', 'ZSCRIPT'])) {
+                    if (!get_setting("ALLOW_CONTENT_SCRIPTS")) {
+                        Logger::pg("Found " . $lump['name'] . " lump but ignoring it due to project settings");
+                    }
                     if (strpos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
                         Logger::pg("Found " . $lump['name'] . " lump but refusing it as it performs replacements!");
                     } else {
@@ -331,6 +343,95 @@ class Project_Compiler {
         file_put_contents($sky_file_path, $sky_bytes);
         Logger::pg("Wrote " . strlen($sky_bytes) . " bytes to " . $sky_file_path);
         return $skyfile;
+    }
+    
+    function create_wad() {
+        Logger::pg("--- WRITING WAD ---");
+        $wad_out = new Wad_Handler();
+        
+        // MAPS
+        
+        $files = scandir(MAPS_FOLDER);
+        foreach($files as $file) {
+            if (!is_file(MAPS_FOLDER . $file) || substr($file, 0, 1) == ".") {
+                continue;
+            }
+            $wad_in = new Wad_Handler(MAPS_FOLDER . $file);
+            foreach($wad_in->lumps as $lump) {
+                Logger::pg("Including " . $file . "->" . $lump['name']);
+                //If this is our map marker, the lump name in the WAD must be the file name!
+                if ($lump['type'] == "mapmarker") {
+                    $lump['name'] = substr($file, 0, strpos($file, "."));
+                }
+                $wad_out->add_lump($lump);
+            }
+        }
+        
+        // OTHER STUFF
+        
+        $this->incorporate_lumps($wad_out, "graphics");
+        $this->incorporate_lumps($wad_out, "acs");
+        $this->incorporate_lumps($wad_out, "textures", "TX_START", "TX_END");
+        $this->incorporate_lumps($wad_out, "music");
+        $this->incorporate_lumps($wad_out, "sounds");
+        $this->incorporate_lumps($wad_out, "sprites", "S_START", "S_END");
+        $this->incorporate_lumps($wad_out, "decorate");
+        $this->incorporate_lumps($wad_out, "zscript");
+        $this->incorporate_lumps($wad_out, "flats", "FF_START", "FF_END");
+        $this->incorporate_lumps($wad_out, "patches", "PP_START", "PP_END");
+        
+        // ROOT
+        
+        $files = scandir(PK3_FOLDER);
+        foreach($files as $file) {
+            if (!is_file(PK3_FOLDER . $file) || substr($file, 0, 1) == ".") {
+                continue;
+            }
+            Logger::pg("Including from root folder: " . $file);
+            $lump_name = $this->get_lump_name_from_path($file);
+            $lump = ['name' => $lump_name, 'type' => '', 'data' => file_get_contents(PK3_FOLDER . $file)];
+            $wad_out->add_lump($lump);
+        }
+        
+        // DONE
+        
+        $wad_out->write_wad(get_project_full_path());
+    }
+    
+    function incorporate_lumps($wad_out, $folder, $start_marker = null, $end_marker = null) {
+        
+        if ($start_marker) {
+            $wad_out->add_lump(['name' => $start_marker, 'type' => '', 'data' => '']);
+        }
+        
+        $rootPath = realpath(PK3_FOLDER . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR);
+        if (!$rootPath) {
+            Logger::pg("No " . $folder . " to include");
+            return;
+        }
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($rootPath),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        foreach ($files as $name => $file) {
+            if ($file->isDir()) {
+                continue;
+            }
+            $lump_name = $this->get_lump_name_from_path($file->getRealPath());
+            Logger::pg("Including lump for " . $folder . ": " . $lump_name);
+            $filePath = $file->getRealPath();
+            $lump = ['name' => $lump_name, 'type' => '', 'data' => file_get_contents($filePath)];
+            $wad_out->add_lump($lump);
+        }
+        
+        if ($end_marker) {
+            $wad_out->add_lump(['name' => $end_marker, 'type' => '', 'data' => '']);
+        }
+    }
+    
+    function get_lump_name_from_path($path) {
+        $end_char = strpos(basename($path), ".") ? strpos(basename($path), ".") : 8;
+        return strtoupper(substr(substr(basename($path), 0, $end_char), 0, 8));
     }
 
     function create_pk3() {

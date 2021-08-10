@@ -76,4 +76,10 @@ class Catalog_Handler {
             $this->update_map_property($pin, 'locked', 0);
         }
     }
+    
+    public function delete_map($pin) {
+        unset($this->catalog[$pin]);
+        file_put_contents(CATALOG_FILE, json_encode($this->catalog));    
+    }
+    
 }
