@@ -6,6 +6,7 @@ require_once("_constants.php");
 require_once("scripts/logger.php");
 require_once("scripts/project_compiler.php");
 
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : false;
 $nocache = isset($_GET['nocache']) ? $_GET['nocache'] : false;
 
 $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - filemtime(LOCK_FILE_COMPILE)) < 600;
@@ -33,6 +34,10 @@ if (!$nocache && ($lock_file_recent || $pk3_is_current)) {
 
 $handler = new Project_Compiler();
 if ($handler->compile_project()) {
+    if ($redirect) {
+        header("Location: admin/index.php");
+        die();
+    }
     echo json_encode(['success' => true, 'newpk3' => true]);
     die();
 }

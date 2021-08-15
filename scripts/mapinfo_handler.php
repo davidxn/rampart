@@ -26,7 +26,7 @@ class Mapinfo_Handler {
             $line_tokens = split("=", $line);
 
             $key = $this->clean_token($line_tokens[0]);
-            if (in_array($key, ALLOWED_MAPINFO_PROPERTIES)) {
+            if (in_array($key, ALLOWED_MAPINFO_PROPERTIES) || $key == 'music') {
                 if (!isset($line_tokens[1])) {
                     $value = "_SET_";
                 } else {

@@ -87,6 +87,12 @@ class Upload_Handler {
         //Unmutex
         unlink(LOCK_FILE_UPLOAD);
         Logger::lg("Lock released");
+        
+        if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
+            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: New map added", "A new map '" . $mapname . "' by " . $authorname . " has been added to the project as " . $map_lumpname . ".");
+        } else if ($existing_map && get_setting('NOTIFY_ON_MAPS') == 'all') {
+            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lumpname . " " . $mapname . "' by " . $authorname . " has just been updated.");
+        }
 
         $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is <b>" . $pin . "</b> - use this if you ever need to update your level.";
         if ($existing_map) {
