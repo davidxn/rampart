@@ -6,6 +6,7 @@ require_once("scripts/wad_handler.php");
 require_once("scripts/mapinfo_handler.php");
 require_once("scripts/guide_writer.php");
 require_once("scripts/catalog_handler.php");
+require_once("scripts/build_numberer.php");
 
 class Project_Compiler {
 

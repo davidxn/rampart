@@ -15,9 +15,27 @@ $setting_defaults = [
     "ALLOW_CONTENT_MUSIC" => true,
     "ALLOW_CONTENT_SCRIPTS" => true,
     
-    "ALLOW_GAMEPLAY_JUMP" => false,
+    "ALLOW_GAMEPLAY_JUMP" => 'never',
     
     "DEFAULT_SKY_LUMP" => "RSKY1",
+    
+    "NOTIFY_ON_MAPS" => 'never',
+    "NOTIFY_EMAIL" => "",
+    
+    # About MAPINFO
+    "PROJECT_WRITE_MAPINFO" => true,
+    "PROJECT_MAPINFO_PROPERTIES" => 'lightmode
+map07special
+music
+baronspecial
+cyberdemonspecial
+spidermastermindspecial
+specialaction_exitlevel
+specialaction_opendoor
+specialaction_lowerfloor
+specialaction_killmonsters
+',
+    "PROJECT_QUICK_MUSIC" => true,
 
     # About the site
     "BANNER_MESSAGE" => "",
@@ -39,8 +57,8 @@ $setting_defaults = [
 function get_setting($setting, $type = null) {
     if (isset($GLOBALS['settings'][$setting])) {
         //Stupid special cases
-        if ($GLOBALS['settings'][$setting] == "true") { return true; }
-        if ($GLOBALS['settings'][$setting] == "false") { return false; }
+        if (strtolower($GLOBALS['settings'][$setting]) == "true") { return true; }
+        if (strtolower($GLOBALS['settings'][$setting]) == "false") { return false; }
         return $GLOBALS['settings'][$setting];
     } else if (isset($GLOBALS['setting_defaults'][$setting])) {
         return $GLOBALS['setting_defaults'][$setting];
@@ -111,6 +129,7 @@ const RAMPART_VERSION = "BETA 0.9";
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];
 
 const WORK_FOLDER           = RAMPART_HOME . "work/";
+const DATA_FOLDER           = RAMPART_HOME . "data/";
 
 const CATALOG_FILE          = WORK_FOLDER . "catalog.json";
 const PIN_FILE              = WORK_FOLDER . "pins.txt";
@@ -122,7 +141,12 @@ const PK3_FOLDER            = WORK_FOLDER . "pk3/";
 const LOG_FILE              = WORK_FOLDER . "log.log";
 const PK3_GEN_LOG_FILE      = WORK_FOLDER . "pk3generation.log";
 const PK3_GEN_HISTORY_FILE  = WORK_FOLDER . "pk3history.log";
-const BLANK_MAP             = WORK_FOLDER . "NOMAP.WAD";
+const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
+
+const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
+const MAP_LINKS_DOOM        = DATA_FOLDER . "links_doom.txt";
+const MAP_LINKS_DOOM2       = DATA_FOLDER . "links_doom2.txt";
+
 const MAPS_FOLDER           = PK3_FOLDER . "maps/";
 
 const LOCK_FILE_UPLOAD      = WORK_FOLDER . ".uploadlockfile";

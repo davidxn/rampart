@@ -10,12 +10,10 @@ require_once('header.php');
                             <td width="200">Project format:</td>
                             <td>
                             <div>
-                                <input type="radio" id="radio-format-pk3"
-                                 name="PROJECT_FORMAT" value="PK3" <?=get_setting("PROJECT_FORMAT")=="PK3"?"checked=\"checked\"":""?>>
-                                <label for="radio-format-pk3">PK3</label>
-                                <input type="radio" id="radio-format-wad"
-                                 name="PROJECT_FORMAT" value="WAD" <?=get_setting("PROJECT_FORMAT")=="WAD"?"checked=\"checked\"":""?>>
-                                <label for="radio-format-wad">WAD</label>
+                                <?
+                                echo html_radio_button('PROJECT_FORMAT', 'PK3');
+                                echo html_radio_button('PROJECT_FORMAT', 'WAD');
+                                ?>
                             </td>
                         </tr>
                         <tr>
@@ -74,23 +72,49 @@ require_once('header.php');
                             </td>
                         </tr>
 
-                        <td width="200">Allow jump and crouch:</td>
-                        <td>
-                        <div>
-                            <input type="radio" id="radio-jump-user"
-                             name="ALLOW_GAMEPLAY_JUMP" value="true" <?=get_setting("ALLOW_GAMEPLAY_JUMP")==="user"?"checked=\"checked\"":""?>>
-                            <label for="radio-jump-user">Allow uploader to choose</label>
-                            <input type="radio" id="radio-jump-yes"
-                             name="ALLOW_GAMEPLAY_JUMP" value="true" <?=get_setting("ALLOW_GAMEPLAY_JUMP")===true?"checked=\"checked\"":""?>>
-                            <label for="radio-jump-yes">Yes</label>
-                            <input type="radio" id="radio-jump-no"
-                             name="ALLOW_GAMEPLAY_JUMP" value="false" <?=get_setting("ALLOW_GAMEPLAY_JUMP")==false?"checked=\"checked\"":""?>>
-                            <label for="radio-jump-no">No</label>
-                        </td>
+                        <tr>
+                            <td width="200">Allow jump and crouch:</td>
+                            <td>
+                            <div>
+                                <?
+                                    echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'Uploader choice', 'user');
+                                    echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'Yes', 'always');
+                                    echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'No', 'never');
+                                ?>
+                            </td>
+                        </tr>
                         
                         <tr>
                             <td width="200">Apply this lump as map sky if present:</td>
                             <td><input type="text" id="DEFAULT_SKY_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_SKY_LUMP"))?>"></input></td>
+                        </tr>
+                        
+                        <tr><td colspan="2"><h3>MAPINFO settings</h3></td></tr>
+                        <tr>
+                            <td width="200">MAPINFO behaviour:</td>
+                            <td>
+                            <div>
+                                <?
+                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Generate MAPINFO from uploads', true);
+                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'No MAPINFO, or I\'ll write my own', false);
+                                ?>
+                            </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="200">Use these MAPINFO properties from uploads:</td>
+                            <td><textarea class="code" id="PROJECT_MAPINFO_PROPERTIES"><?=htmlspecialchars(get_setting("PROJECT_MAPINFO_PROPERTIES"))?></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="200">Quick music recognition:</td>
+                            <td>
+                            <div>
+                                <?
+                                    echo html_radio_button('PROJECT_QUICK_MUSIC', 'Use first music lump', true);
+                                    echo html_radio_button('PROJECT_QUICK_MUSIC', 'Only use music in MAPINFO', false);
+                                ?>
+                            </div>
+                            </td>
                         </tr>
                         
                         <tr><td colspan="2"><h3>Site settings</h3></td></tr>
@@ -110,12 +134,27 @@ require_once('header.php');
                             <td width="200">Generate PINs:</td>
                             <td>
                             <div>
-                                <input type="radio" id="radio-pin-random"
-                                 name="PIN_MANAGER_CLASS" value="Pin_Manager_Random" <?=get_setting("PIN_MANAGER_CLASS")=="Pin_Manager_Random"?"checked=\"checked\"":""?>>
-                                <label for="radio-pin-random">Randomly</label>
-                                <input type="radio" id="radio-pin-preset"
-                                 name="PIN_MANAGER_CLASS" value="Pin_Manager_Preset" <?=get_setting("PIN_MANAGER_CLASS")=="Pin_Manager_Preset"?"checked=\"checked\"":""?>>
-                                <label for="radio-pin-preset">From list file</label>
+                            <?
+                                echo html_radio_button('PIN_MANAGER_CLASS', 'Randomly', 'Pin_Manager_Random');
+                                echo html_radio_button('PIN_MANAGER_CLASS', 'From list file', 'Pin_Manager_Preset');
+                            ?>
+                            </td>
+                        </tr>
+                        
+                        <tr><td colspan="2"><h3>Notification settings</h3></td></tr>
+                        <tr>
+                            <td width="200">Email address:</td>
+                            <td><input type="text" id="NOTIFY_EMAIL" value="<?=htmlspecialchars(get_setting("NOTIFY_EMAIL"))?>"></input></td>
+                        </tr>
+                        <tr>
+                            <td width="200">Notify on:</td>
+                            <td>
+                            <div>
+                                <?
+                                    echo html_radio_button('NOTIFY_ON_MAPS', 'None', 'never');
+                                    echo html_radio_button('NOTIFY_ON_MAPS', 'All map uploads', 'all');
+                                    echo html_radio_button('NOTIFY_ON_MAPS', 'New map slots only', 'new');
+                                ?>
                             </td>
                         </tr>
                         
@@ -166,3 +205,13 @@ require_once('header.php');
                 <script src="settings.js" type="text/javascript"></script>
 <?php
 require_once('footer.php');
+
+function html_radio_button($setting, $text, $value = null) {
+    if ($value === null) {
+        $value = $text;
+    }
+    $id = $setting . "__" . strtoupper(str_replace(" ", "", $value));
+    return '<input type="radio" id="'.$id.'"' . PHP_EOL .
+            'name="'.$setting.'" value="'.$value.'"' . (get_setting($setting)==$value?" checked=\"checked\"":"") . '">' . PHP_EOL .
+            '<label for="'.$id.'">'.$text.'</label>' . PHP_EOL;
+}

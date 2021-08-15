@@ -23,7 +23,14 @@ $(function() {
             myFormData.set(id, val);
             console.log(id + " = " + val);
         });
+        $("textarea").each(function(index, me) {
+            me = $(me);
+            var val = me.val();
+            var id = me.attr('id');
+            myFormData.set(id, val);
+        });
         submitSettings(myFormData);
+        console.log(id + " = " + val);
     });
 });
 

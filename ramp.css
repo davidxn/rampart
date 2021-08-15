@@ -259,8 +259,8 @@ table.maps_table th {
 }
 
 .success {
-    border: 2px solid #22A;
-    background-color: #44F;
+    border: 2px solid #44A;
+    background-color: #66F;
 }
 
 h3 {
@@ -402,3 +402,7 @@ button.property-unlocked{background-image: url("/img/unlocked.png");   }
 button.property-locked  {background-image: url("/img/locked.png");     }
 button.property-download{background-image: url("/img/page_save.png");  }
 button.property-delete  {background-image: url("/img/cross.png");      }
+
+textarea {
+    height: 200px;
+}
