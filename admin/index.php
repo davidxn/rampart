@@ -6,7 +6,7 @@ require_once('header.php');
 
 <div class="lightbox">
 <p><a href="./settings.php">Edit project settings</a></p>
-<p><a href="./mapstatus.php">Edit map data</a></p>
+<p><a href="./mapstatus.php">Edit map slots</a></p>
 <p><a href="/handle_pk3_update.php?nocache=true&redirect=true">Generate new snapshot</a></p>
 <p><a href="./makecredits.php">Create map credits text</a></p>
 </div>
@@ -70,7 +70,7 @@ chart.render();
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 
 <div class="code">
-<?php include_once(PK3_GEN_LOG_FILE); ?>
+<?php if (is_file(PK3_GEN_LOG_FILE)) { include_once(PK3_GEN_LOG_FILE); } ?>
 </div>
 
 <?php

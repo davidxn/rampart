@@ -91,7 +91,7 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
         } else if ($type == 'textarea') {
             $table_string .= "<textarea class=\"code\" name=\"" . $property_name . "\">" . $current_value . "</textarea>";
         }
-        $table_string .= "<button class=\"property property-ok\"></button><span>&nbsp;</span><button class=\"property property-cancel\"></button></div>";
+        $table_string .= "<br/><button class=\"property property-ok\"></button><span>&nbsp;</span><button class=\"property property-cancel\"></button></div>";
         if ($type == 'text') {
             $table_string .= "<span class=\"property-edit\">" . $current_value . "</span>";
         } else if ($type == 'textarea') {

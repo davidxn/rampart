@@ -50,7 +50,7 @@ class Project_Compiler {
         $this->set_status("Complete");
         Logger::pg("Download generating lock released");
         $seconds = time() - $start_time;
-        Logger::pg("PK3 generated in " . $seconds . " seconds, build number " . $new_build_number);
+        Logger::pg("Project generated in " . $seconds . " seconds, build number " . $new_build_number);
         Logger::record_pk3_generation($start_time, $seconds);
         $numberer->set_new_build_number($new_build_number);
         
@@ -534,7 +534,7 @@ class Project_Compiler {
             return;
         }
         $this->deleteAll($path . DIRECTORY_SEPARATOR);
-        Logger::pg("Cleaned PK3 folder");
+        Logger::pg("Cleaned target folder");
         mkdir($path);
         foreach (PK3_REQUIRED_FOLDERS as $folder) {
             mkdir($path . DIRECTORY_SEPARATOR . $folder);
