@@ -57,6 +57,10 @@ input {
     width: 90%;
 }
 
+.property-editor input {
+    width: 100px;
+}
+
 textarea {
     width: 90%;
     height: 50px;
