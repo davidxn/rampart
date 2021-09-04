@@ -7,7 +7,7 @@ require_once("scripts/pin_managers.php");
 require_once("scripts/logger.php");
 
 $slots = $_POST['slots'];
-$template_name = $_POST['template'];
+$template_name = isset($_POST['template']) ? $_POST['template'] : '';
 
 if (!is_numeric($slots) || $slots < 1 || $slots > 50) {
     echo(json_encode(['success' => 'false', 'error' => 'Invalid number of slots']));
@@ -15,10 +15,12 @@ if (!is_numeric($slots) || $slots < 1 || $slots > 50) {
 }
 
 //If we've been given a template file, use those to create our links
+if ($template_name) {
 $template_file = '../data/' . $template_name . '.links';
 $template_entries = [];
-if (is_file($template_file)) {
-    $template_entries = file($template_file);
+    if (is_file($template_file)) {
+        $template_entries = file($template_file);
+    }
 }
 
 $catalog_handler = new Catalog_Handler();
