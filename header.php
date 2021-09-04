@@ -1,5 +1,9 @@
 <?php
 require_once('_constants.php');
+if (!file_exists(SETTINGS_FILE) && !$GLOBALS['SKIP_SETTINGS_CHECK']) {
+    header('Location: /admin/settings.php');
+    die();
+}
 ?>
 <!doctype html>
 <html>

@@ -1,11 +1,12 @@
 <?php
 require_once('header.php');
 ?>
-<p>Put any project rules on this page. Think about:</p>
+<p>This is <b>rules.php</b> - put any project rules and guidelines on this page. Think about:</p>
 <ul>
 <li>Which IWAD and map format you're targeting</li>
 <li>Whether custom content is accepted</li>
 <li>How many maps will be allowed</li>
+<li>Any restrictions that maps should adhere to</li>
 </ul>
 <h3>How to submit</h3>
 
