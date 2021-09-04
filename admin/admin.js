@@ -86,7 +86,7 @@ function submitEdit(formdata, td){
             } else {
                 td.children('div.property-editor').hide();
                 var texta = td.children("span.property-edit").children("pre");
-                if (texta) {
+                if (texta.length > 0) {
                     $(texta).text(newValue);
                 } else {
                     td.children('span.property-edit').text(newValue);

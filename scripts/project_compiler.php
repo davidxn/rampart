@@ -423,10 +423,6 @@ class Project_Compiler {
     
     function incorporate_lumps($wad_out, $folder, $start_marker = null, $end_marker = null) {
         
-        if ($start_marker) {
-            $wad_out->add_lump(['name' => $start_marker, 'type' => '', 'data' => '']);
-        }
-        
         $rootPath = realpath(PK3_FOLDER . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR);
         if (!$rootPath) {
             Logger::pg("No " . $folder . " to include");
@@ -436,9 +432,17 @@ class Project_Compiler {
             new RecursiveDirectoryIterator($rootPath),
             RecursiveIteratorIterator::LEAVES_ONLY
         );
+        
+        //Start marker is checked in this strange way so that we only write it if we have at least one file (not folder) under consideration
+        $wrote_start_marker = false;
+       
         foreach ($files as $name => $file) {
             if ($file->isDir()) {
                 continue;
+            }
+            if ($start_marker && !$wrote_start_marker) {
+                $wad_out->add_lump(['name' => $start_marker, 'type' => '', 'data' => '']);
+                $wrote_start_marker = true;
             }
             $lump_name = $this->get_lump_name_from_path($file->getRealPath());
             Logger::pg("Including lump for " . $folder . ": " . $lump_name);
@@ -447,7 +451,7 @@ class Project_Compiler {
             $wad_out->add_lump($lump);
         }
         
-        if ($end_marker) {
+        if ($wrote_start_marker && $end_marker) {
             $wad_out->add_lump(['name' => $end_marker, 'type' => '', 'data' => '']);
         }
     }
@@ -528,14 +532,17 @@ class Project_Compiler {
 
     function clean() {
         //Guard against this being blank somehow and annihilating the server
-        $path = realpath(PK3_FOLDER);
-        if (strlen($path) < 5) {
-            Logger::pg("❌ Resolved path " . $path . " is fewer than five characters - aborted delete for safety!");
-            return;
+        if (file_exists(PK3_FOLDER)) {
+            $path = realpath(PK3_FOLDER);
+            if (strlen($path) < 5) {
+                Logger::pg("❌ Resolved path " . $path . " is fewer than five characters - aborted delete for safety!");
+                return;
+            }
+            $this->deleteAll($path . DIRECTORY_SEPARATOR);
+            Logger::pg("Cleaned target folder");
         }
-        $this->deleteAll($path . DIRECTORY_SEPARATOR);
-        Logger::pg("Cleaned target folder");
-        mkdir($path);
+        mkdir(PK3_FOLDER);
+        $path = realpath(PK3_FOLDER);
         foreach (PK3_REQUIRED_FOLDERS as $folder) {
             mkdir($path . DIRECTORY_SEPARATOR . $folder);
         }
