@@ -17,12 +17,12 @@ if ($lock_file_recent) {
     die();
 }
 if (!$pk3_is_current) {
-    Logger::pg("Catalog is newer than latest build, so an update is required: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
+    Logger::lg("Catalog is newer than latest build, so an update is required: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
 } else {
     if (file_exists(get_project_full_path())) {
-        Logger::pg("Catalog is older than latest build - will serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
+        Logger::lg("Catalog is older than latest build - will serve existing one: " . (filemtime(CATALOG_FILE) - filemtime(get_project_full_path())));
     } else {
-        Logger::pg("No snapshot exists - will create one");
+        Logger::lg("No snapshot exists - will create one");
     }
 }
 

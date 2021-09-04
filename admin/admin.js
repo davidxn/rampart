@@ -16,11 +16,21 @@ $(function() {
         td.children('span.property-edit').show();
     });
 
-    // Cancel property edit buttons
+    // New slot button - custom
     $(".new-slots").click(function(){
         var number = $('.number-of-slots').val();
         myFormData = new FormData();
         myFormData.set('slots', number);
+        submitNewSlots(myFormData);
+    });
+    
+    // New slot button - fixed
+    $(".template-slots").click(function(){
+        var template = $(this).attr('name');
+        var slots = $(this).data('slots');
+        myFormData = new FormData();
+        myFormData.set('template', template);
+        myFormData.set('slots', slots);
         submitNewSlots(myFormData);
     });
 
@@ -30,6 +40,10 @@ $(function() {
         var pin = td.attr("name");
         var field = td.children("div").children("input").attr("name");
         var value = td.children("div").children("input").val();
+        if (field == null) {
+            field = td.children("div").children("textarea").attr("name");
+            value = td.children("div").children("textarea").val();
+        }
         myFormData = new FormData();
         myFormData.set('pin', pin);
         myFormData.set('field', field);
@@ -56,6 +70,7 @@ $(function() {
 
 function submitEdit(formdata, td){
     var newValue = formdata.get("value");
+    var field = formdata.get("field");
 
     $.ajax({
         url: './handle_data_edit.php',
@@ -70,9 +85,18 @@ function submitEdit(formdata, td){
                 td.children('span.property-edit').show();
             } else {
                 td.children('div.property-editor').hide();
-                td.children('span.property-edit').text(newValue);
+                var texta = td.children("span.property-edit").children("pre");
+                if (texta) {
+                    $(texta).text(newValue);
+                } else {
+                    td.children('span.property-edit').text(newValue);
+                }
                 td.children('input').val(newValue);
                 td.children('span.property-edit').show();
+                //Just reload if we've changed PIN, too much to hack around
+                if (field == 'pin') {
+                    window.location.reload();
+                }
             }
         }
     });

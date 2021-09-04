@@ -53,7 +53,7 @@ $table_string .= "</tbody></table>";
 ?>
                 <p>You can generate and download a snapshot version of the project here. Snapshots will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
                 
-                <p><?=count($file_table)?> maps have been uploaded.</p>
+                <p>There are <?=count($file_table)?> maps in the project.</p>
 
                 <center><button type="button" id="download_button">Download a snapshot version!</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>

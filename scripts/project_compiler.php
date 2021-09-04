@@ -21,9 +21,10 @@ class Project_Compiler {
         file_put_contents(LOCK_FILE_COMPILE, ":)");
         @mkdir(get_setting("PROJECT_OUTPUT_FOLDER"), 0777, true);
 
-        Logger::pg("Locked for generating new download");
-
         $catalog_handler = new Catalog_Handler();
+        $numberer = new Build_Numberer();
+        $new_build_number = $numberer->get_current_build() + 1;
+        Logger::pg("Locked for generating new download, build number " . $new_build_number);
 
         $this->set_status("Clearing old work folder");
         $this->clean();
@@ -35,6 +36,7 @@ class Project_Compiler {
         $this->copy_static_content();
         $this->set_status("Fiddling with DIALOGUE to write guide menus...");
         $this->write_guide_dialogue();
+        file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
         
         if (get_setting("PROJECT_FORMAT") == "WAD") {
             $this->set_status("Compiling WAD");
@@ -48,8 +50,9 @@ class Project_Compiler {
         $this->set_status("Complete");
         Logger::pg("Download generating lock released");
         $seconds = time() - $start_time;
-        Logger::pg("PK3 generated in " . $seconds . " seconds");
+        Logger::pg("PK3 generated in " . $seconds . " seconds, build number " . $new_build_number);
         Logger::record_pk3_generation($start_time, $seconds);
+        $numberer->set_new_build_number($new_build_number);
         
         return true;
     }
@@ -107,21 +110,48 @@ class Project_Compiler {
         $mapinfo = "";
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
 
+        $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
+        $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
+
         foreach ($catalog_handler->get_catalog() as $map_data) {
             $map_index++;
             $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
+
+            //Check flags set by user
+            $map_allows_jump = 0;
+            if (
+                (
+                    ($allow_jump == 'always') ||
+                    ((isset($map_data['jumpcrouch']) && $map_data['jumpcrouch'] == 1))
+                )
+                && ($allow_jump != 'never')
+            ) {
+                $map_allows_jump = 1;
+            }
+            $map_is_wip = 0;
+            if (isset($map_data['wip']) && $map_data['wip'] == 1) {
+                $map_is_wip = 1;
+            }
+
+            $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "SP_JUMP = \"" . $map_allows_jump . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "SP_WIP = \"" . $map_is_wip . "\";" . PHP_EOL;
+            $language .= PHP_EOL;
+
+            if (!$write_mapinfo) {
+                continue;
+            }
             
             //Header
             $mapinfo .= "map " . $map_data['lumpname'] . " \"" . $map_data['map_name'] . "\"" . PHP_EOL;
             
             //The basics - include the name, author, and point everything to go back to MAP01
             $mapinfo .= "{" . PHP_EOL;
-            $mapinfo .= "\t" . "author = \"" . $map_data['author'] . "\"" . PHP_EOL;
-            $mapinfo .= "\t" . "levelnum = " . $map_data['map_number'] . PHP_EOL;
-            $mapinfo .= "\t" . "cluster = 1" . PHP_EOL;
-            $mapinfo .= "\t" . "next = MAP01" . PHP_EOL;
+            $mapinfo .= "author = \"" . $map_data['author'] . "\"" . PHP_EOL;
+            $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
             
-            //Include any allowed custom properties
+            //Include any allowed custom properties from original upload
             Logger::pg("Checking for custom properties for map number " .$map_data['map_number']);
             if (isset($this->map_additional_mapinfo[$map_data['map_number']])) {
                 $custom_properties = $this->map_additional_mapinfo[$map_data['map_number']];
@@ -156,11 +186,6 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "music = D_RUNNIN" . PHP_EOL;
             }
 
-            //Default is to disallow jump/crouch, so add exceptions here if specified
-            $map_allows_jump = 0;
-            if (isset($map_data['jumpcrouch']) && $map_data['jumpcrouch'] == 1) {
-                $map_allows_jump = 1;
-            }
             if ($map_allows_jump) {
                 $mapinfo .= "\t" . "AllowJump" . PHP_EOL;
                 $mapinfo .= "\t" . "AllowCrouch" . PHP_EOL;
@@ -168,31 +193,28 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "NoJump" . PHP_EOL;
                 $mapinfo .= "\t" . "NoCrouch" . PHP_EOL;
             }
+
+            //Finally, include properties specified by map data
+            $mapinfo .= $map_data['mapinfo'] . PHP_EOL;
+
             $mapinfo .= "}" . PHP_EOL;
             $mapinfo .= PHP_EOL;
-            
-            $map_is_wip = 0;
-            if (isset($map_data['wip']) && $map_data['wip'] == 1) {
-                $map_is_wip = 1;
-            }
-
-            //Now write the map properties we need to read from in the game
-            $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "SP_JUMP = \"" . $map_allows_jump . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "SP_WIP = \"" . $map_is_wip . "\";" . PHP_EOL;
-            $language .= PHP_EOL;
         }
         
         //All done - output the files
         $language_filename = PK3_FOLDER . "LANGUAGE.rampart";
+        @unlink($language_filename);
+        file_put_contents($language_filename, $language);
+        Logger::pg("Wrote " . $language_filename);
+        
+        if (!$write_mapinfo) {
+            return;
+        }
+
         $mapinfo_filename = PK3_FOLDER . "MAPINFO.rampart";
         @unlink($mapinfo_filename);
         file_put_contents($mapinfo_filename, $mapinfo);
         Logger::pg("Wrote " . $mapinfo_filename);
-        @unlink($language_filename);
-        file_put_contents($language_filename, $language);
-        Logger::pg("Wrote " . $language_filename);
     }
 
     function generate_map_wads($catalog_handler) {

@@ -12,15 +12,26 @@ class Map_Data_Editor {
             die();
         }
         
-        $value = $this->clean_text($value);
+        if ($field != 'mapinfo') {
+            $value = $this->clean_text($value);
+        }
         if (!$value) {
             echo(json_encode(['success' => false, 'error' => 'No value provided']));
             die();
         }
 
         $catalog_handler = new Catalog_Handler();
-        if (in_array($field, ['lumpname', 'map_name', 'author'])) {
+        if (in_array($field, ['lumpname', 'map_name', 'author', 'mapinfo'])) {
             $catalog_handler->update_map_property($pin, $field, $value);
+            echo(json_encode(['success' => true]));
+            die();
+        }
+        else if ($field == 'pin') {
+            $success = $catalog_handler->change_pin($pin, $value);
+            if (!$success) {
+                echo(json_encode(['success' => false, 'error' => 'Already a map with this PIN']));
+                die();
+            }
             echo(json_encode(['success' => true]));
             die();
         }

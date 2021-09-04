@@ -20,8 +20,6 @@ class Catalog_Handler {
     }
     
     public function get_next_available_slot() {
-        //Start from 10 so we have some space for defaults in maps 1-9
-        //(and to be honest so that I don't have to do a special case adding a 0 to single digit maps)
         $occupied_slots = [];
         foreach($this->catalog as $mapdata) {
             $occupied_slots[$mapdata['map_number']] = true;
@@ -80,6 +78,16 @@ class Catalog_Handler {
     public function delete_map($pin) {
         unset($this->catalog[$pin]);
         file_put_contents(CATALOG_FILE, json_encode($this->catalog));    
+    }
+    
+    public function change_pin($pin, $new_pin) {
+        $new_pin = strtoupper($new_pin);
+        if ($this->catalog[$new_pin]) {
+            return false;
+        }
+        $this->catalog[$new_pin] = $this->catalog[$pin];
+        $this->delete_map($pin);
+        return true;
     }
     
 }

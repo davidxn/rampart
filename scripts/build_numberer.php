@@ -17,9 +17,9 @@ class Build_Numberer {
         return $this->current_build_number;
     }
     
-    public function get_new_build_number() {
-        $current_build_number++;
-        file_put_contents(SNAPSHOT_ID_FILE, $current_build_number);
+    public function set_new_build_number($number) {
+        $this->current_build_number = $number;
+        file_put_contents(SNAPSHOT_ID_FILE, $this->current_build_number);
     }
     
     public function get_current_build_filename($number) {

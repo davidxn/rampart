@@ -4,6 +4,7 @@ const SETTINGS_FILE = RAMPART_HOME . "_settings.json";
 
 $setting_defaults = [
     # About the project
+    "PROJECT_TITLE" => "Rampart Project",
     "PROJECT_FORMAT" => "PK3",
     "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT.pk3",
     "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
@@ -24,7 +25,8 @@ $setting_defaults = [
     
     # About MAPINFO
     "PROJECT_WRITE_MAPINFO" => true,
-    "PROJECT_MAPINFO_PROPERTIES" => 'lightmode
+    "PROJECT_MAPINFO_PROPERTIES" =>
+'lightmode
 map07special
 music
 baronspecial
@@ -93,7 +95,7 @@ const FIRST_USER_MAP_NUMBER = 1;
 ////////////////////////////////////////////////////////////
 
 function get_project_full_path() {
-    return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME");
+    return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME") . "." . strtolower(get_setting("PROJECT_FORMAT"));
 }
 
 ////////////////////////////////////////

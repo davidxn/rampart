@@ -26,6 +26,7 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
         'lumpname' => isset($map_data['lumpname']) ? $map_data['lumpname'] : ("MAP" . substr("0" . $map_data['map_number'], -2)),
+        'mapinfo' => isset($map_data['mapinfo']) ? $map_data['mapinfo'] : '',
         'author' => $map_data['author'],
         'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
         'map_number' => $map_data['map_number'],
@@ -43,15 +44,23 @@ usort($file_table, function($a, $b) {
    return $a['lumpname'] > $b['lumpname']; 
 });
 
-$table_string = "<table class=\"maps_table\"><thead><tr><th>Lump</th><th>ID</th><th>PIN</th><th>Name</th><th>Author</th><th>Special</th><th>Updated</th><th></th></tr></thead><tbody>";
+$table_string = "<table class=\"maps_table\"><thead><tr><th>ID</th><th>Lump</th><th>PIN</th><th>Name</th><th>Author</th>";
+if (get_setting("PROJECT_WRITE_MAPINFO")) {
+    $table_string .= "<th>MAPINFO</th>";
+}
+$table_string .= "<th>Updated</th><th></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
-        $table_string .= html_property_editor($file_data['pin'], 'lumpname', $file_data['lumpname']);
         $table_string .= "<td>" . $file_data['map_number'] . "</td>";
-        $table_string .= "<td>" . $file_data['pin'] . "</td>";
+        $table_string .= html_property_editor($file_data['pin'], 'lumpname', $file_data['lumpname']);
+        $table_string .= html_property_editor($file_data['pin'], 'pin', $file_data['pin']);
         $table_string .= html_property_editor($file_data['pin'], 'map_name', $file_data['map_name']);
         $table_string .= html_property_editor($file_data['pin'], 'author', $file_data['author']);
-        $table_string .= "<td>";
+        if (get_setting("PROJECT_WRITE_MAPINFO")) {
+            $table_string .= html_property_editor($file_data['pin'], 'mapinfo', $file_data['mapinfo'], 'textarea');
+        }
+
+        /**$table_string .= "<td>";
         if ($file_data['jumpcrouch']) {
             $table_string .= '<img src="/img/special_jump.png"/>';
         }
@@ -59,6 +68,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<img src="/img/special_wip.png"/>';
         } 
         $table_string .= "</td>";
+        */
         $table_string .= "<td>" . $file_data['updated'] . "</td>";
         $table_string .= '<td class="editable-property" name="' . $file_data['pin'] . '">';
         if ($file_data['locked']) {
@@ -73,11 +83,21 @@ foreach($file_table as $file_data) {
 }
 $table_string .= "</tbody></table>";
 
-function html_property_editor($pin, $property_name, $current_value) {
+function html_property_editor($pin, $property_name, $current_value, $type = 'text') {
         $table_string = '';
-        $table_string .= "<td name=\"" . $pin . "\" class=\"editable-property\">";
-        $table_string .= "<div class=\"property-editor\"><input name=\"" . $property_name . "\" value=\"" . $current_value . "\"></input><button class=\"property property-ok\"></button><span>&nbsp;</span><button class=\"property property-cancel\"></button></div>";
-        $table_string .= "<span class=\"property-edit\">" . $current_value . "</span>";
+        $table_string .= "<td name=\"" . $pin . "\" class=\"editable-property\"><div class=\"property-editor\">";
+        if ($type == 'text') {
+            $table_string .= "<input name=\"" . $property_name . "\" value=\"" . $current_value . "\"></input>";
+        } else if ($type == 'textarea') {
+            $table_string .= "<textarea class=\"code\" name=\"" . $property_name . "\">" . $current_value . "</textarea>";
+        }
+        $table_string .= "<button class=\"property property-ok\"></button><span>&nbsp;</span><button class=\"property property-cancel\"></button></div>";
+        if ($type == 'text') {
+            $table_string .= "<span class=\"property-edit\">" . $current_value . "</span>";
+        } else if ($type == 'textarea') {
+            $table_string .= "<span class=\"property-edit\"><pre class=\"code\">" . $current_value . "</textarea></span>";
+        }
+        
         $table_string .= "</td>";
         return $table_string;
 }
@@ -90,9 +110,23 @@ function html_property_editor($pin, $property_name, $current_value) {
                 <p>WIP maps: <?=$wip_maps?></p>
                 <p>Locked maps: <?=$locked_maps?></p>
                 
-                <?=$table_string?>
+                <?php if ($total_maps == 0) {
+                    echo('<p>No maps slots are in the project yet.</p>');
+                }
+                else {
+                    echo($table_string);
+                }
+                ?>
                 
-                <div class="lightbox"><p>Add <input class="number-of-slots" style="width: 50px" type="number" value="1"></input> more map slots </p><button class="new-slots">Add slots</button></div>
+                <div class="lightbox">
+                
+                <?php if ($total_maps == 0) { ?>
+                <button class="template-slots" name="udoom" data-slots="36">Create map slots for Ultimate Doom</button>
+                <button class="template-slots" name="doom2" data-slots="32">Create map slots for Doom 2</button>
+                <p>or...</p>
+                <?php } ?>
+                
+                <p>Add <input class="number-of-slots" style="width: 50px" type="number" value="1"></input> more map slots </p><button class="new-slots">Add slots</button></div>
                 <script src="admin.js" type="text/javascript"></script>
 <?php
 require_once('footer.php');
