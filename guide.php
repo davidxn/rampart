@@ -1,7 +1,7 @@
 <?php
 require_once('header.php');
 ?>
-<p>Use this page to show contributors how to get started with Doom and how to upload their maps. My own introduction is below - you're welcome to use as much of it as you like!</p>
+<p>This is <b>guide.php</b> - use this page to show contributors how to get started with Doom and how to upload their maps. My own introduction is below - you're welcome to use as much of it as you like!</p>
 
 <p>There are a ton of guides for editing Doom out on Youtube - here are a few resources to get you started!</p>
 

@@ -1,4 +1,5 @@
 <?php
+$SKIP_SETTINGS_CHECK = true;
 require_once('header.php');
 ?>
                 <div id="settings_1">

@@ -44,6 +44,7 @@ require_once('_constants.php');
                             <td>Author name:</td>
                             <td><input type="text" id="input_author_name"></input></td>
                         </tr><tr>
+                        <?php if (get_setting('ALLOW_GAMEPLAY_JUMP') == 'user') { ?>
                             <td>Allow jump and crouch:</td>
                             <td>
                                 <label class="checkmarkcontainer">
@@ -51,6 +52,7 @@ require_once('_constants.php');
                                     <span class="checkmark"></span>
                                 </label>
                             </td>
+                        <?php } ?>
                         </tr><tr>
                             <td>Map is a work-in-progress:</td>
                             <td>

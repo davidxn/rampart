@@ -5,10 +5,10 @@ const SETTINGS_FILE = RAMPART_HOME . "_settings.json";
 $setting_defaults = [
     # About the project
     "PROJECT_TITLE" => "Rampart Project",
-    "PROJECT_FORMAT" => "PK3",
-    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT.pk3",
+    "PROJECT_FORMAT" => "WAD",
+    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT",
     "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
-    "ALLOW_NEW_UPLOADS" => true,
+    "ALLOW_NEW_UPLOADS" => false,
     "ALLOW_EDIT_UPLOADS" => true,
     
     # About uploads
@@ -24,7 +24,7 @@ $setting_defaults = [
     "NOTIFY_EMAIL" => "",
     
     # About MAPINFO
-    "PROJECT_WRITE_MAPINFO" => true,
+    "PROJECT_WRITE_MAPINFO" => false,
     "PROJECT_MAPINFO_PROPERTIES" =>
 'lightmode
 map07special
@@ -37,7 +37,7 @@ specialaction_opendoor
 specialaction_lowerfloor
 specialaction_killmonsters
 ',
-    "PROJECT_QUICK_MUSIC" => true,
+    "PROJECT_QUICK_MUSIC" => false,
 
     # About the site
     "BANNER_MESSAGE" => "",
@@ -80,27 +80,12 @@ if (!$settings) {
     $settings = [];
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// To protect against spam, limits in seconds for one IP trying PINs and uploading
-//////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////
-// Details about your hub map and how to assign map numbers
-///////////////////////////////////////////////////////////
-
 const FIRST_USER_MAP_NUMBER = 1;
-
-////////////////////////////////////////////////////////////
-// Details about the location and name of the output project
-////////////////////////////////////////////////////////////
 
 function get_project_full_path() {
     return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME") . "." . strtolower(get_setting("PROJECT_FORMAT"));
 }
 
-////////////////////////////////////////
-// Which properties to detect in MAPINFO
-////////////////////////////////////////
 
 // Must be lowercase!!
 const ALLOWED_MAPINFO_PROPERTIES = [
@@ -116,11 +101,6 @@ const ALLOWED_MAPINFO_PROPERTIES = [
     'cyberdemonspecial',
     'spidermastermindspecial'
 ];
-
-///////////////////////////////////////////////////////////
-// Details for the computer guide script to add to DIALOGUE
-///////////////////////////////////////////////////////////
-
 
 ///////////////////////////////////////////////////////////
 // RAMPART constants that you probably don't need to modify
