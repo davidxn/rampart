@@ -7,18 +7,15 @@ require_once('header.php');
                         
                         <tr><td colspan="2"><h3>Project settings</h3></td></tr>
                         <tr>
-                            <td width="200">Project format:</td>
-                            <td>
-                            <div>
-                                <?
-                                echo html_radio_button('PROJECT_FORMAT', 'PK3');
-                                echo html_radio_button('PROJECT_FORMAT', 'WAD');
-                                ?>
-                            </td>
+                            <td width="200">Project title:</td>
+                            <td><input type="text" id="PROJECT_TITLE" value="<?=htmlspecialchars(get_setting("PROJECT_TITLE"))?>"></input></td>
                         </tr>
                         <tr>
                             <td width="200">Project file name:</td>
-                            <td><input type="text" id="PROJECT_FILE_NAME" value="<?=htmlspecialchars(get_setting("PROJECT_FILE_NAME"))?>"></input></td>
+                            <td><input type="text" style="width: 200px" id="PROJECT_FILE_NAME" value="<?=htmlspecialchars(get_setting("PROJECT_FILE_NAME"))?>">                                <?
+                                echo html_radio_button('PROJECT_FORMAT', '.PK3', 'PK3');
+                                echo html_radio_button('PROJECT_FORMAT', '.WAD', 'WAD');
+                                ?></input></td>
                         </tr>
                         <tr>
                             <td width="200">Project output folder:</td>
@@ -27,6 +24,7 @@ require_once('header.php');
                         <tr>
                             <td>Allow users to add new map slots:</td>
                             <td>
+                                <div class="smallnote">Use this if you're making a project with a hub that anyone can submit a level to. Turn it off if you want to manage the available level slots yourself.</div>
                                 <label class="checkmarkcontainer">
                                     <input type="checkbox" id="ALLOW_NEW_UPLOADS" <?=get_setting("ALLOW_NEW_UPLOADS", "checkbox")?"checked=\"checked\"":""?>>
                                     <span class="checkmark"></span>
@@ -34,7 +32,7 @@ require_once('header.php');
                             </td>
                         </tr>
                         <tr>
-                            <td>Allow users to update maps:</td>
+                            <td>Allow users to submit maps:</td>
                             <td>
                                 <label class="checkmarkcontainer">
                                     <input type="checkbox" id="ALLOW_EDIT_UPLOADS" <?=get_setting("ALLOW_EDIT_UPLOADS", "checkbox")?"checked=\"checked\"":""?>>

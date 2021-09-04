@@ -7,7 +7,7 @@ require_once('header.php');
 <div class="lightbox">
 <p><a href="./settings.php">Edit project settings</a></p>
 <p><a href="./mapstatus.php">Edit map data</a></p>
-<p><a href="/handle_pk3_update.php?nocache=true&redirect=true">Regenerate PK3</a></p>
+<p><a href="/handle_pk3_update.php?nocache=true&redirect=true">Generate new snapshot</a></p>
 <p><a href="./generateguide.php">Show guide conversation script</a></p>
 <p><a href="./makecredits.php">Show credits</a></p>
 </div>

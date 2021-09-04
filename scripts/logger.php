@@ -37,6 +37,6 @@ class Logger {
     }
     
     public static function record_pk3_generation($start_time, $seconds) {
-        file_put_contents(PK3_GEN_HISTORY_FILE, $start_time . "," . $seconds . "," . @filesize(get_project_full_path()) . PHP_EOL, FILE_APPEND);
+        file_put_contents(PK3_GEN_HISTORY_FILE, $start_time . "," . max($seconds, 1) . "," . @filesize(get_project_full_path()) . PHP_EOL, FILE_APPEND);
     }
 }
