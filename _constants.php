@@ -6,7 +6,7 @@ $setting_defaults = [
     # About the project
     "PROJECT_TITLE" => "Rampart Project",
     "PROJECT_FORMAT" => "WAD",
-    "PROJECT_FILE_NAME" => "PROJECT-SNAPSHOT",
+    "PROJECT_FILE_NAME" => "MYPROJECT",
     "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
     "ALLOW_NEW_UPLOADS" => false,
     "ALLOW_EDIT_UPLOADS" => true,

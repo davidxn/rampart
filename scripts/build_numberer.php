@@ -28,7 +28,7 @@ class Build_Numberer {
         if ($extension == ".pk3" || $extension == ".wad") {
             $name = substr($name, 0, -4);
         }
-        $name .= "-" . $this->get_current_build();
+        $name .= "-SNAPSHOT-" . $this->get_current_build();
         $name .= get_setting('PROJECT_FORMAT') == 'PK3' ? ".pk3" : ".wad";
         
         return $name;
