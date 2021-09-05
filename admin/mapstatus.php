@@ -1,8 +1,8 @@
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_handler.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_handler.php');
 
 $date_pk3 = @filemtime(get_project_full_path()) or 0;
 $date_catalog = @filemtime(CATALOG_FILE) or 0;
@@ -129,5 +129,5 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
                 <p>Add <input class="number-of-slots" style="width: 50px" type="number" value="1"></input> more map slots </p><button class="new-slots">Add slots</button></div>
                 <script src="admin.js" type="text/javascript"></script>
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
 

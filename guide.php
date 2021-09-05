@@ -1,5 +1,5 @@
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <p>This is <b>guide.php</b> - use this page to show contributors how to get started with Doom and how to upload their maps. My own introduction is below - you're welcome to use as much of it as you like!</p>
 
@@ -36,5 +36,5 @@ require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 <center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/WpReo8UB4Ps" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
 
