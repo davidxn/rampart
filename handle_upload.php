@@ -1,7 +1,7 @@
 <?php
 
 require_once("_constants.php");
-require_once('_functions.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 require_once("scripts/catalog_handler.php");
 require_once("scripts/logger.php");
 require_once("scripts/pin_managers.php");

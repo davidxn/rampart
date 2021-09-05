@@ -1,6 +1,6 @@
 <?php
-require_once('_constants.php');
-require_once('header.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <h3>Secret Admin Tools</h3>
 
@@ -74,5 +74,5 @@ chart.render();
 </div>
 
 <?php
-require_once('footer.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
 

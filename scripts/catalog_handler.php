@@ -1,5 +1,5 @@
 <?php
-require_once('_constants.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 
 class Catalog_Handler {
     

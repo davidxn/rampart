@@ -1,6 +1,6 @@
 <?php
-require_once('header.php');
-require_once('_constants.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 ?>
 <h3>Edit catalog.json</h3>
 
@@ -15,5 +15,5 @@ echo($catalog);
 </textarea>
 
 <?php
-require_once('footer.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
 
