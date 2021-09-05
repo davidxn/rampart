@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 work/
+out/
+_settings.json
