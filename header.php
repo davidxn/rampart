@@ -28,6 +28,11 @@ if (!is_writable(WORK_FOLDER)) {
                 <div class="errormessage">The work folder doesn't seem to be writable! Check its location in _constants.php</div>
 <?php  
 }
+if (!is_writable(get_setting("PROJECT_OUTPUT_FOLDER"))) {
+?>
+                <div class="errormessage">The project output folder doesn't seem to be writable! Check its location in the settings page</div>
+<?php  
+}
 if (!empty(get_setting("BANNER_MESSAGE"))) {
 ?>
                 <div class="bannermessage"><?=get_setting("BANNER_MESSAGE")?></div>
