@@ -10,8 +10,7 @@ This was originally written for the RAMP project at https://ramp.teamouse.net - 
 # Setup
 
 - Extract all files to your webserver
-```php_value include_path ".:/path/to/rampart/folder"```
+- Change the password in admin/rampartpass to the password you want to use for the admin pages (default is rampartadmin)
 - Create a folder for RAMPART to work in (expects it to be in (RAMPART root)/work by default)
-- Create a folder for RAMPART to create the finished project in (expects (RAMPART root)/out by default)
-- Create .htaccess and .htpasswd files in the admin folder to limit access to admin functions
+- Create a folder for RAMPART to write the finished project in (expects (RAMPART root)/out by default)
 - Navigate to the home page and set up your project
