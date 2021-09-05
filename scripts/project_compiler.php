@@ -59,7 +59,7 @@ class Project_Compiler {
 
     function write_guide_dialogue() {
         Logger::pg("Processing hub WAD");
-        if (!GUIDE_ENABLED) {
+        if (!get_setting('GUIDE_ENABLED')) {
             Logger::pg("Guide is not enabled, not touching anything");
             return;
         }

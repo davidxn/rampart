@@ -42,6 +42,7 @@ for ($i = 0; $i < $slots; $i++) {
         $mapinfo = "next = " . $nextmap . "\nsecretnext = " . $secretnextmap;
     }
     
+    @mkdir(UPLOADS_FOLDER);
     $location = UPLOADS_FOLDER . get_source_wad_file_name($map_number);
     if (file_exists($location)) {
         unlink($location);
