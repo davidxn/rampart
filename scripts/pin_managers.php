@@ -27,7 +27,7 @@ class Pin_Manager_Random {
     public static function get_new_pin() {
         $pin = "";        
         for ($i = 0; $i < 6; $i++) {
-            $pin .= substr(self::$source_chars, rand(0, strlen(self::$source_chars)), 1);
+            $pin .= substr(self::$source_chars, rand(0, strlen(self::$source_chars)-1), 1);
         }
         return $pin;
     }

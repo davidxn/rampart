@@ -82,7 +82,7 @@ class Catalog_Handler {
     
     public function change_pin($pin, $new_pin) {
         $new_pin = strtoupper($new_pin);
-        if ($this->catalog[$new_pin]) {
+        if (isset($this->catalog[$new_pin])) {
             return false;
         }
         $this->catalog[$new_pin] = $this->catalog[$pin];

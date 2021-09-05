@@ -41,7 +41,7 @@ if (!empty(get_setting("BANNER_MESSAGE"))) {
 <?php
 $update_verb = "Submit";
 if (!get_setting("ALLOW_NEW_UPLOADS")) {
-    $update_verb = "Update";
+    $update_verb = "Upload";
 }
 if (get_setting("ALLOW_NEW_UPLOADS") || get_setting("ALLOW_EDIT_UPLOADS")) {
 ?>

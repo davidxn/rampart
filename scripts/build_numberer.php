@@ -22,7 +22,7 @@ class Build_Numberer {
         file_put_contents(SNAPSHOT_ID_FILE, $this->current_build_number);
     }
     
-    public function get_current_build_filename($number) {
+    public function get_current_build_filename() {
         $name = get_setting('PROJECT_FILE_NAME');
         $extension = strtolower(substr($name, -4));
         if ($extension == ".pk3" || $extension == ".wad") {

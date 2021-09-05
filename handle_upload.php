@@ -86,6 +86,7 @@ class Upload_Handler {
 
         //Unmutex
         unlink(LOCK_FILE_UPLOAD);
+        Logger::record_upload(time(), $map_number, filesize($location));
         Logger::lg("Lock released");
         
         if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
