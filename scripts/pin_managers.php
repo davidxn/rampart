@@ -1,6 +1,6 @@
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/logger.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/logger.php');
 
 class Pin_Manager_Preset {
 

@@ -1,5 +1,5 @@
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 
 <p>This is <b>index.php</b>, the index page for your Doom community project! Edit this file and add some introduction here, such as:</p>
@@ -12,5 +12,5 @@ require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <p>Later on, you could also put a public download link here.</p>
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
 

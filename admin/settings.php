@@ -1,6 +1,6 @@
 <?php
 $SKIP_SETTINGS_CHECK = true;
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
                 <div id="settings_1">
                     <div id="settings_1" class="lightbox">
@@ -203,7 +203,7 @@ require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                 </div>
                 <script src="settings.js" type="text/javascript"></script>
 <?php
-require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
 
 function html_radio_button($setting, $text, $value = null) {
     if ($value === null) {
