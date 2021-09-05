@@ -1,8 +1,9 @@
 <?php
 set_time_limit(6000);
 
-require_once("_constants.php");
-require_once("_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 
 if (!is_numeric($_GET['mapnum'])) {
     die("Not a valid map number");

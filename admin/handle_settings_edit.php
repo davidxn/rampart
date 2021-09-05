@@ -1,6 +1,7 @@
 <?php
 
-require_once("_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 
 # Rewrite entire settings file
 

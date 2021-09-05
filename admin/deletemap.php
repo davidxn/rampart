@@ -1,7 +1,8 @@
 <?php
-require_once("_constants.php");
-require_once("_functions.php");
-require_once("scripts/catalog_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/catalog_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 
 $catalog = new Catalog_Handler();
 $pin = $_GET['mappin'];
