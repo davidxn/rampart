@@ -1,5 +1,5 @@
 <?php
-require_once('header.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <p>This is <b>rules.php</b> - put any project rules and guidelines on this page. Think about:</p>
 <ul>
@@ -13,5 +13,5 @@ require_once('header.php');
 <p>Use the <a href="./upload.php"/>Upload</a> page on this site! Submit a WAD containing a single map (of any Doom format), and the site backend will incorporate the map into the complete project so far. With the PIN you'll get the first time you upload, you can submit any further edits to your map you like.</p>
 
 <?php
-require_once('./footer.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
 ?>

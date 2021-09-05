@@ -1,5 +1,5 @@
 <?php
-require_once('_constants.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 ?>
             </div>
             <div class="footerspacer">&nbsp;</div>

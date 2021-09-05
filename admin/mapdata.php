@@ -1,7 +1,7 @@
 <?php
-require_once('header.php');
-require_once('_constants.php');
-require_once('_functions.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 require_once("scripts/wad_handler.php");
 
 $catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
@@ -44,4 +44,4 @@ $table_string .= "</tbody></table>";
 <?php
 print_r($map_types);
 
-require_once('footer.php');
+require_once($SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
