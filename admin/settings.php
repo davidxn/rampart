@@ -1,6 +1,7 @@
 <?php
 $SKIP_SETTINGS_CHECK = true;
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 ?>
                 <div id="settings_1">
                     <div id="settings_1" class="lightbox">

@@ -1,6 +1,7 @@
 <?php
-include_once('header.php');
-include_once('_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 
 $earliest_timestamp = null;
 $latest_timestamp = null;
@@ -51,4 +52,4 @@ foreach($uploads as $timestamp => $elements) {
 ?>
 </table>
 <?php
-include_once('footer.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');

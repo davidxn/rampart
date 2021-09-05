@@ -134,4 +134,6 @@ const LOCK_FILE_UPLOAD      = WORK_FOLDER . ".uploadlockfile";
 const LOCK_FILE_COMPILE     = WORK_FOLDER . ".compilelockfile";
 const STATUS_FILE           = RAMPART_HOME . "status.log";
 
+const PASSWORD_FILE         = RAMPART_HOME . "admin/rampartpass";
+
 $ZIP_SCRIPT                 = "cd " . PK3_FOLDER . " && zip -FSr1 " . get_project_full_path() . " *";
