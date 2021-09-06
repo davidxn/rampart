@@ -36,6 +36,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                         <tr>
                             <td>Allow users to submit maps:</td>
                             <td>
+                                <div class="smallnote">Turn this off if you want to freeze the project and disallow uploads and edits.</div>
                                 <label class="checkmarkcontainer">
                                     <input type="checkbox" id="ALLOW_EDIT_UPLOADS" <?=get_setting("ALLOW_EDIT_UPLOADS", "checkbox")?"checked=\"checked\"":""?>>
                                     <span class="checkmark"></span>
@@ -84,36 +85,42 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             </td>
                         </tr>
                         
-                        <tr>
-                            <td width="200">Apply this lump as map sky if present:</td>
-                            <td><input type="text" id="DEFAULT_SKY_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_SKY_LUMP"))?>"></input></td>
-                        </tr>
-                        
                         <tr><td colspan="2"><h3>MAPINFO settings</h3></td></tr>
                         <tr>
                             <td width="200">MAPINFO behaviour:</td>
                             <td>
                             <div>
                                 <?
-                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Generate MAPINFO from uploads', true);
-                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'No MAPINFO, or I\'ll write my own', false);
+                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Do not use MAPINFO (or I\'ll write my own)', false);
+                                    echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Create a MAPINFO in this project', true);
                                 ?>
                             </div>
                             </td>
                         </tr>
                         <tr>
-                            <td width="200">Use these MAPINFO properties from uploads:</td>
-                            <td><textarea class="code" id="PROJECT_MAPINFO_PROPERTIES"><?=htmlspecialchars(get_setting("PROJECT_MAPINFO_PROPERTIES"))?></textarea></td>
+                            <td width="200">MAPINFO properties allowed in uploads:</td>
+                            <td>
+                                <div class="smallnote">If a contributor includes a MAPINFO in their WAD, allow these properties to transfer into the final project's MAPINFO</div>
+                                <textarea class="code" id="PROJECT_MAPINFO_PROPERTIES"><?=htmlspecialchars(get_setting("PROJECT_MAPINFO_PROPERTIES"))?></textarea>
+                            </td>
                         </tr>
                         <tr>
-                            <td width="200">Quick music recognition:</td>
+                            <td width="200">Use music from upload:</td>
                             <td>
+                            <div class="smallnote">You can set RAMPART to use the first music lump in the WAD as the map's background music, or only include music if it's pointed to by the MAPINFO.</div>
                             <div>
                                 <?
                                     echo html_radio_button('PROJECT_QUICK_MUSIC', 'Use first music lump', true);
                                     echo html_radio_button('PROJECT_QUICK_MUSIC', 'Only use music in MAPINFO', false);
                                 ?>
                             </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="200">Sky lump:</td>
+                            <td>
+                                <div class="smallnote">If a lump by this name is present in an uploaded WAD, it will be included as the map's sky for the project.</div>
+                                <input type="text" id="DEFAULT_SKY_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_SKY_LUMP"))?>"></input>
                             </td>
                         </tr>
                         
@@ -133,6 +140,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                         <tr>
                             <td width="200">Generate PINs:</td>
                             <td>
+                            <div class="smallnote">If using the list option, provide a file called 'pins-master.txt' in the RAMPART work folder with one PIN on each line.</div>
                             <div>
                             <?
                                 echo html_radio_button('PIN_MANAGER_CLASS', 'Randomly', 'Pin_Manager_Random');
@@ -159,7 +167,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                         </tr>
                         
                         <tr><td colspan="2"><h3>Guide settings</h3>
-                        <div class="smallnote">RAMPART can create a DIALOGUE tree for a hub level that lists the available maps. When the player selects a map name, it will call the given ACS script number with the mapnum as a parameter - you can code this script to add a marker to their map, or transport them there directly.</div>
+                        <div class="smallnote">If you're using a hub level, RAMPART can create a DIALOGUE tree that lists the available maps. When the player selects a map name, it will call the given ACS script number with the mapnum as a parameter - you can code this script to add a marker to their map, or transport them there directly.</div>
                         </td></tr>
                         <tr>
                             <td>Enable guide:</td>
