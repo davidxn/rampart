@@ -1,12 +1,12 @@
 <?php
 
-require_once("_constants.php");
-require_once("_functions.php");
-require_once("scripts/wad_handler.php");
-require_once("scripts/mapinfo_handler.php");
-require_once("scripts/guide_writer.php");
-require_once("scripts/catalog_handler.php");
-require_once("scripts/build_numberer.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/wad_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/mapinfo_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/guide_writer.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/catalog_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/build_numberer.php");
 
 class Project_Compiler {
 
