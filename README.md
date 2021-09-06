@@ -9,6 +9,6 @@ This was originally written for the RAMP project at https://ramp.teamouse.net - 
 
 # Setup
 
-- Extract all files to your webserver
+- Git clone (or download and extract) all files to your webserver
 - Change the password in admin/rampartpass to the password you want to use for the admin pages (default is rampartadmin)
 - Navigate to the home page and set up your project
