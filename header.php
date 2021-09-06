@@ -26,6 +26,11 @@ if (!file_exists(SETTINGS_FILE) && !$GLOBALS['SKIP_SETTINGS_CHECK']) {
 if (!is_writable(WORK_FOLDER)) {
 ?>
                 <div class="errormessage">The work folder doesn't seem to be writable! Check its location in _constants.php</div>
+<?php
+}
+if (!is_writable(RAMPART_HOME)) {
+?>
+                <div class="errormessage">The RAMPART home folder isn't writable - you won't be able to save settings. Check your folder permissions!</div>
 <?php  
 }
 if (!is_writable(get_setting("PROJECT_OUTPUT_FOLDER"))) {
