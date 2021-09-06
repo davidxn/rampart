@@ -11,6 +11,4 @@ This was originally written for the RAMP project at https://ramp.teamouse.net - 
 
 - Extract all files to your webserver
 - Change the password in admin/rampartpass to the password you want to use for the admin pages (default is rampartadmin)
-- Create a folder for RAMPART to work in (expects it to be in (RAMPART root)/work by default)
-- Create a folder for RAMPART to write the finished project in (expects (RAMPART root)/out by default)
 - Navigate to the home page and set up your project
