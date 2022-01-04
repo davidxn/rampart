@@ -176,14 +176,14 @@ class Project_Compiler {
             }
 
             //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to D_RUNNIN
-            if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
-                $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
+            if (file_exists(PK3_FOLDER . "music/" . "D_" . $map_data['lumpname'] )) {
+                $mapinfo .= "\t" . "music = D_" . $map_data['lumpname'] . PHP_EOL;
             } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
                 $music_lump = $this->map_additional_mapinfo[$map_data['map_number']]['music'];
                 Logger::pg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number']);
                 $mapinfo .= "\t" . "music = " . $music_lump . PHP_EOL;
             } else {
-                $mapinfo .= "\t" . "music = D_RUNNIN" . PHP_EOL;
+                $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
             }
 
             if ($map_allows_jump) {
@@ -337,7 +337,7 @@ class Project_Compiler {
             
             //Write our music if we have it
             if ($music_bytes) {
-                $music_path = PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'];
+                $music_path = PK3_FOLDER . "music/" . "D_" . $map_data['lumpname'];
                 file_put_contents($music_path, $music_bytes);
                 Logger::pg("Wrote " . strlen($music_bytes) . " bytes to " . $music_path);
             }
@@ -372,8 +372,22 @@ class Project_Compiler {
         Logger::pg("--- WRITING WAD ---");
         $wad_out = new Wad_Handler();
         
-        // MAPS
+        //Include contents of any resource WADs
+        if (file_exists(RESOURCE_WAD_FOLDER)) {
+            $resource_wads = scandir(RESOURCE_WAD_FOLDER);
+            foreach($resource_wads as $resource_wad) {
+                if (!is_file(RESOURCE_WAD_FOLDER . $resource_wad) || substr($resource_wad, 0, 1) == ".") {
+                    continue;
+                }
+                $wad_in = new Wad_Handler(RESOURCE_WAD_FOLDER . $resource_wad);
+                foreach($wad_in->lumps as $lump) {
+                    Logger::pg("Including resource WAD " . $resource_wad . "->" . $lump['name']);
+                    $wad_out->add_lump($lump);
+                }
+            }
+        }
         
+        // MAPS
         $files = scandir(MAPS_FOLDER);
         foreach($files as $file) {
             if (!is_file(MAPS_FOLDER . $file) || substr($file, 0, 1) == ".") {
