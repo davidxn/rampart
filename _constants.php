@@ -19,6 +19,7 @@ $setting_defaults = [
     "ALLOW_GAMEPLAY_JUMP" => 'never',
     
     "DEFAULT_SKY_LUMP" => "RSKY1",
+    "DEFAULT_MUSIC_LUMP" => "D_RUNNIN",
     
     "NOTIFY_ON_MAPS" => 'never',
     "NOTIFY_EMAIL" => "",
@@ -127,6 +128,7 @@ const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
+const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads/";
 
 const MAPS_FOLDER           = PK3_FOLDER . "maps/";
 
