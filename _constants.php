@@ -19,6 +19,7 @@ $setting_defaults = [
     "ALLOW_GAMEPLAY_JUMP" => 'never',
     
     "DEFAULT_SKY_LUMP" => "RSKY1",
+    "DEFAULT_MUSIC_LUMP" => "D_RUNNIN",
     
     "NOTIFY_ON_MAPS" => 'never',
     "NOTIFY_EMAIL" => "",
@@ -106,7 +107,7 @@ const ALLOWED_MAPINFO_PROPERTIES = [
 // RAMPART constants that you probably don't need to modify
 ///////////////////////////////////////////////////////////
 
-const RAMPART_VERSION = "BETA 0.9";
+const RAMPART_VERSION = "BETA v1";
 
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];
 
@@ -127,6 +128,7 @@ const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
+const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads/";
 
 const MAPS_FOLDER           = PK3_FOLDER . "maps/";
 

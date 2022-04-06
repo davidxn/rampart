@@ -33,6 +33,12 @@ $(function() {
         myFormData.set('slots', slots);
         submitNewSlots(myFormData);
     });
+    
+    // Renumber slots button
+    $(".renumber-slots").click(function(){
+        myFormData = new FormData();
+        renumberSlots(myFormData);
+    });
 
     // Confirm property edit buttons
     $(".property-ok").click(function(){
@@ -128,6 +134,23 @@ function submitNewSlots(formdata){
     
     $.ajax({
         url: './handle_new_slots.php',
+        type: 'post',
+        data: formdata,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            if (!response.error) {
+                location.reload(true);
+            }
+        }
+    });
+}
+
+function renumberSlots(formdata){
+    
+    $.ajax({
+        url: './handle_renumber.php',
         type: 'post',
         data: formdata,
         contentType: false,

@@ -35,7 +35,12 @@ class Catalog_Handler {
     }
     
     public function update_map_properties($pin, $properties) {
-        $this->catalog[$pin] = $properties;
+        if (!isset($this->catalog[$pin])) {
+            $this->catalog[$pin] = [];
+        }
+        foreach ($properties as $property => $value) {
+            $this->catalog[$pin][$property] = $value;
+        }
         file_put_contents(CATALOG_FILE, json_encode($this->catalog));
     }
     
