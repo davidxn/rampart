@@ -183,7 +183,7 @@ class Project_Compiler {
                 Logger::pg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number']);
                 $mapinfo .= "\t" . "music = " . $music_lump . PHP_EOL;
             } else {
-                $mapinfo .= "\t" . "music = D_RUNNIN" . PHP_EOL;
+                $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
             }
 
             if ($map_allows_jump) {
@@ -371,6 +371,21 @@ class Project_Compiler {
     function create_wad() {
         Logger::pg("--- WRITING WAD ---");
         $wad_out = new Wad_Handler();
+        
+        //Include contents of any resource WADs
+        if (file_exists(RESOURCE_WAD_FOLDER)) {
+            $resource_wads = scandir(RESOURCE_WAD_FOLDER);
+            foreach($resource_wads as $resource_wad) {
+                if (!is_file(RESOURCE_WAD_FOLDER . $resource_wad) || substr($resource_wad, 0, 1) == ".") {
+                    continue;
+                }
+                $wad_in = new Wad_Handler(RESOURCE_WAD_FOLDER . $resource_wad);
+                foreach($wad_in->lumps as $lump) {
+                    Logger::pg("Including resource WAD " . $resource_wad . "->" . $lump['name']);
+                    $wad_out->add_lump($lump);
+                }
+            }
+        }
         
         // MAPS
         

@@ -123,6 +123,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                                 <input type="text" id="DEFAULT_SKY_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_SKY_LUMP"))?>"></input>
                             </td>
                         </tr>
+                        <tr>
+                            <td width="200">Default music lump:</td>
+                            <td>
+                                <div class="smallnote">If no music is specified for a map, it will use this lump instead.</div>
+                                <input type="text" id="DEFAULT_MUSIC_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_MUSIC_LUMP"))?>"></input>
+                            </td>
+                        </tr>
                         
                         <tr><td colspan="2"><h3>Site settings</h3></td></tr>
                         <tr>
