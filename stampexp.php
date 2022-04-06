@@ -1,6 +1,6 @@
 <?php
-require_once("_constants.php");
-require_once("_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
 
 $png_image = imagecreatefrompng(STATIC_CONTENT_FOLDER . "graphics/TITLEPIC.png");
 

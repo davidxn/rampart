@@ -1,8 +1,8 @@
 <?php
 
-require_once("_constants.php");
-require_once("scripts/catalog_handler.php");
-require_once("scripts/logger.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/catalog_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
 
 class Pin_Handler {
     
