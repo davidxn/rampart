@@ -1,5 +1,4 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
 
 class Wad_Handler {
     
@@ -13,13 +12,13 @@ class Wad_Handler {
     public $infotable_offset = 0;
     public $lumps = [];
 
-    public function __construct($file_name = null, $load_data = true) {
+    public function __construct($file_name = null, $load_data = true, $parse_map_lumps = false) {
         if ($file_name) {
-            $this->load_wad($file_name, $load_data);
+            $this->load_wad($file_name, $load_data, $parse_map_lumps);
         }
     }
 
-    public function load_wad($wad_file, $load_data = true) {
+    public function load_wad($wad_file, $load_data = true, $parse_map_lumps = false) {
         if (!file_exists($wad_file)) {
             return false;
         }
@@ -43,6 +42,9 @@ class Wad_Handler {
                 $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
                 $this->lumps[$i]['type'] = $type;
                 $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
+                if ($parse_map_lumps) {
+                    $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
+                }
             }
         }
         fclose($this->wad_file);
@@ -97,6 +99,24 @@ class Wad_Handler {
         }
         return 'unknown';
     }
+    
+    public function parse_lump($lump) {
+        $parsed_array = [];
+        $bytes = $lump['data'];
+        if ($lump['name'] == 'THINGS') {
+            for ($i = 0; $i < strlen($bytes); $i += 10) {
+                $thing = [];
+                $entry = substr($bytes, $i, 10);
+                $thing['x'] = unpack("s", substr($entry, 0, 2))[1];
+                $thing['y'] = unpack("s", substr($entry, 2, 2))[1];
+                $thing['angle'] = unpack("s", substr($entry, 4, 2))[1];
+                $thing['type'] = unpack("s", substr($entry, 6, 2))[1];
+                $thing['doomflags'] = unpack("s", substr($entry, 8, 2))[1];
+                $parsed_array[] = $thing;                
+            }
+        }
+        return $parsed_array;
+    }
 
     public function read_bytes($num, $type = null) {
         if (!$num) {
@@ -136,6 +156,44 @@ class Wad_Handler {
     
     public function count_lumps() {
         return count($this->lumps);
+    }
+    
+    public function get_lump_for_map($mapname, $lumpname) {
+        $i = 0;
+        $foundmap = "";
+        $foundlump = null;
+        while ($foundmap == "") {
+            $examinedlump = $this->lumps[$i]['name'];
+            if ($examinedlump == $mapname) {
+                $foundmap = $mapname;
+            }
+            $i++;
+        }
+        if (!$foundmap) {
+            return false;
+        }
+
+        while ($foundlump == null) {
+            $examinedlump = $this->lumps[$i]['name'];
+            if ($examinedlump == $lumpname) {
+                return $this->lumps[$i];
+            }
+            if (!in_array($examinedlump, $this->map_lump_names)) {
+                return false;
+            }
+        }
+        //Didn't find a map lump
+        return false;
+    }
+    
+    public function get_map_markers() {
+        $mapmarkers = [];
+        foreach ($this->lumps as $lump) {
+            if ($lump['type'] == 'mapmarker') {
+                $mapmarkers[] = $lump['name'];
+            }
+        }
+        return $mapmarkers;
     }
     
     public function write_wad($location) {
