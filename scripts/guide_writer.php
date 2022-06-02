@@ -4,7 +4,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_
 
 class Guide_Dialogue_Writer {
     
-    function write() {
+    function write($has_existing_dialogue) {
 
         $catalog_handler = new Catalog_Handler();
 
@@ -21,7 +21,7 @@ class Guide_Dialogue_Writer {
         foreach ($maps as $tag => $map) {
             $paged_maps[$page_number][$tag] = $map;
             $maps_this_page++;
-            if ($maps_this_page == MAPS_PER_PAGE) {
+            if ($maps_this_page == get_setting("MAPS_PER_PAGE")) {
                 $maps_this_page = 0;
                 $page_number++;
             }
@@ -30,24 +30,32 @@ class Guide_Dialogue_Writer {
         $end_page_number = count($paged_maps)+1;
 
         //Got paged maps! Let's write the conversation script
+        $text = "";
+        
+        //If we didn't have existing data in the lump we'll need to add a namespace first
+        if (!$has_existing_dialogue) {
+            $text .= "namespace = \"ZDoom\";
+            ";
+        }
 
-        $text = "
+        //Here's the rest
+        $text .= "
 
         conversation {
-            actor = \"" . GUIDE_NAME . "\";
+            actor = \"" . get_setting("GUIDE_NAME") . "\";
         ";
-        if (GUIDE_MENU_CLASS) {
+        if (get_setting("GUIDE_MENU_CLASS")) {
         $text .= "
-            class = \"" . GUIDE_MENU_CLASS . "\";
+            class = \"" . get_setting("GUIDE_MENU_CLASS") . "\";
         ";
         }
 
         $page_number = 1;
         foreach ($paged_maps as $page) {
             $text .= "    page { // page " . $page_number . "
-                name = \"" . GUIDE_NAME . "\";
-                dialog = \"" . GUIDE_TEXT . "\";
-                goodbye = \"" . CLOSE_TEXT . "\";
+                name = \"" . get_setting("GUIDE_NAME") . "\";
+                dialog = \"" . get_setting("GUIDE_TEXT") . "\";
+                goodbye = \"" . get_setting("CLOSE_TEXT") . "\";
         ";
             if ($page_number != 1) {
                 $text .= "        choice { text = \"<< PREVIOUS <<\"; nextpage = " . ($page_number - 1) . ";
