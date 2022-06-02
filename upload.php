@@ -43,6 +43,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
                         </tr><tr>
                             <td>Author name:</td>
                             <td><input type="text" id="input_author_name"></input></td>
+                        </tr><tr>
+                            <td>Music credit:</td>
+                            <td><input type="text" id="input_music_credit"></input>
+                            <div class="smallnote">Not needed, just if you want to add a "Rondo in D# by Flynn Taggart" note on level start</div></td>
                         </tr><tr
                         <?php if (!(get_setting('ALLOW_GAMEPLAY_JUMP') == 'user')) {
                             echo(' style="display: none"');
@@ -61,7 +65,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
                                     <input type="checkbox" id="input_map_wip">
                                     <span class="checkmark"></span>
                                 </label>
-                                <div class="smallnote">This does nothing in-game, it's just a useful indicator that a map hasn't been finished yet. You'll still be able to upload new versions even if this box isn't checked</div>
+                                <div class="smallnote">Check this box to indicate a map isn't ready to be fully played yet. You'll still be able to upload new versions even if this box isn't checked</div>
                             </td>
                         </tr><tr>
                         <td>Map file:</td><td>
