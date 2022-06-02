@@ -139,3 +139,4 @@ const STATUS_FILE           = RAMPART_HOME . "status.log";
 const PASSWORD_FILE         = RAMPART_HOME . "admin/rampartpass";
 
 $ZIP_SCRIPT                 = "cd " . PK3_FOLDER . " && zip -FSr1 " . get_project_full_path() . " *";
+$STATIC_CONTENT_MTIME_SCRIPT= "find " . STATIC_CONTENT_FOLDER . " -type f -printf \"%T@\\n\" | sort | tail -1";
