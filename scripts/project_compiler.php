@@ -80,13 +80,13 @@ class Project_Compiler {
             if ($lump['name'] == 'DIALOGUE' && $has_existing_dialogue) {
                 Logger::pg("Appending generated DIALOGUE to existing lump");
                 $guide_writer = new Guide_Dialogue_Writer();
-                $lump['data'] .= PHP_EOL . $guide_writer->write();
+                $lump['data'] .= PHP_EOL . $guide_writer->write($has_existing_dialogue);
             }
             $wad_out->add_lump($lump);
             if ($lump['name'] == 'BEHAVIOR' && !$has_existing_dialogue) {
                 Logger::pg("Inserting generated DIALOGUE lump");
                 $guide_writer = new Guide_Dialogue_Writer();
-                $dialogue_lump = ['name' => 'DIALOGUE', 'data' => $guide_writer->write()];
+                $dialogue_lump = ['name' => 'DIALOGUE', 'data' => $guide_writer->write($has_existing_dialogue)];
                 $wad_out->add_lump($dialogue_lump);
             }            
         }
