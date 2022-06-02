@@ -75,6 +75,7 @@ $(function() {
     $("#upload_wad").click(function(){
         uploadFormData.set('mapname', $('#input_map_name').val());
         uploadFormData.set('authorname', $('#input_author_name').val());
+        uploadFormData.set('musiccredit', $('#input_music_credit').val());
         uploadFormData.set('pin', $('#input_pin_to_reupload').val());
         uploadFormData.set('jumpcrouch', ($('#input_map_jumpcrouch')[0].checked ? 1 : 0));
         uploadFormData.set('wip', ($('#input_map_wip')[0].checked ? 1 : 0));
@@ -217,6 +218,7 @@ function populateMapInfo(response) {
         $("#upload-question-details").show();
         $("#input_map_name").val(response.mapname);
         $("#input_author_name").val(response.author);
+        $("#input_music_credit").val(response.musiccredit);
         $('#input_map_jumpcrouch')[0].checked = response.jumpcrouch == 0 ? false : true;
         $('#input_map_wip')[0].checked = response.wip == 0 ? false : true;
         $("#upload_prompt").html('OK - alter your details and attach a new map here if you need to.');
