@@ -128,4 +128,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# RAMP customizations
+admin/rampartpass
+img/
 _settings.json
+index.php
+guide.php
+header.php
+rules.php
