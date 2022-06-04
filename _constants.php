@@ -49,6 +49,7 @@ specialaction_killmonsters
     # The guide
     "GUIDE_ENABLED" => false,
     "HUB_MAP_FILE" => "maps/MAP01.wad",
+    "GUIDE_CLASS" => "MapGuide",
     "GUIDE_NAME" => "Map Guide",
     "GUIDE_TEXT" => "Which map can I help you navigate to today?",
     "GUIDE_MENU_CLASS" => "",
