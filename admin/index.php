@@ -8,7 +8,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
 <div class="lightbox">
 <p><a href="./settings.php">Edit project settings</a></p>
 <p><a href="./mapstatus.php">Edit map slots</a></p>
-<p><a href="/handle_pk3_update.php?nocache=true&redirect=true">Generate new snapshot</a></p>
+<p><a href="./handle_settings_touch.php">Force new snapshot generation</a></p>
 <p><a href="./makecredits.php">Create map credits text</a></p>
 </div>
 <div style="clear: both;">&nbsp;</div>
