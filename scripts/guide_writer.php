@@ -42,7 +42,7 @@ class Guide_Dialogue_Writer {
         $text .= "
 
         conversation {
-            actor = \"" . get_setting("GUIDE_NAME") . "\";
+            actor = \"" . get_setting("GUIDE_CLASS") . "\";
         ";
         if (get_setting("GUIDE_MENU_CLASS")) {
         $text .= "
@@ -67,7 +67,7 @@ class Guide_Dialogue_Writer {
         ";
             }
             foreach($page as $index => $map) {
-                $text .= "        choice { text = \" $map\"; special = 80; arg0 = " . GUIDE_SCRIPT_NUMBER . "; arg1 = 0; arg2 = $index; }
+                $text .= "        choice { text = \" $map\"; special = 80; arg0 = " . get_setting("GUIDE_SCRIPT_NUMBER") . "; arg1 = 0; arg2 = $index; }
         ";
             }
             if ($page_number != $end_page_number-1) {

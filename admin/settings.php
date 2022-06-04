@@ -190,6 +190,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td><input type="text" id="HUB_MAP_FILE" value="<?=htmlspecialchars(get_setting("HUB_MAP_FILE"))?>"></input></td>
                         </tr>
                         <tr>
+                            <td width="200">Actor class for guide:</td>
+                            <td><input type="text" id="GUIDE_CLASS" value="<?=htmlspecialchars(get_setting("GUIDE_CLASS"))?>"></input></td>
+                        </tr>
+                        <tr>
                             <td width="200">Name for conversation:</td>
                             <td><input type="text" id="GUIDE_NAME" value="<?=htmlspecialchars(get_setting("GUIDE_NAME"))?>"></input></td>
                         </tr>
