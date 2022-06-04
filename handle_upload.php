@@ -17,6 +17,7 @@ class Upload_Handler {
 
         $mapname = $this->clean_text($_POST['mapname']);
         $authorname = $this->clean_text($_POST['authorname']);
+        $musiccredit = $this->clean_text($_POST['musiccredit']);
         $jumpcrouch = $this->clean_text($_POST['jumpcrouch']);
         $wip = 0;
         if (isset($_POST['wip'])) { $wip = $this->clean_text($_POST['wip']); }
@@ -76,6 +77,7 @@ class Upload_Handler {
             [
                 'map_name' => $mapname,
                 'author' => $authorname,
+                'music_credit' => $musiccredit,
                 'map_number' => $map_number,
                 'lumpname' => $map_lumpname,
                 'jumpcrouch' => $jumpcrouch,
