@@ -11,6 +11,7 @@ require_once("scripts/build_numberer.php");
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
+    public $custom_defined_doomednums = [];
 
     function compile_project() {
 
@@ -96,7 +97,7 @@ class Project_Compiler {
     }
     
     /**
-     * Writes the MAPINFO and LANGUAGE lumps using the map properties and whether we've found music, skies, etc
+     * Writes the MAPINFO, LANGUAGE and other data lumps using the map properties and whether we've found music, skies, etc
      */
     function generate_info($catalog_handler) {
         
@@ -109,6 +110,7 @@ class Project_Compiler {
         //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
         $mapinfo = "";
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
+        $rampdata = "";
 
         $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
         $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
@@ -135,20 +137,21 @@ class Project_Compiler {
 
             $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
             $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "SP_JUMP = \"" . $map_allows_jump . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "SP_WIP = \"" . $map_is_wip . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "MUSC = \"" . $map_data['music_credit'] . "\";" . PHP_EOL;
             $language .= PHP_EOL;
+            
+            $rampdata .= implode(",", [$map_allows_jump, $map_is_wip]);
 
             if (!$write_mapinfo) {
                 continue;
             }
             
             //Header
-            $mapinfo .= "map " . $map_data['lumpname'] . " \"" . $map_data['map_name'] . "\"" . PHP_EOL;
+            $mapinfo .= "map " . $map_data['lumpname'] . " lookup " . $map_data['lumpname'] . "NAME" . PHP_EOL;
             
             //The basics - include the name, author, and point everything to go back to MAP01
             $mapinfo .= "{" . PHP_EOL;
-            $mapinfo .= "author = \"" . $map_data['author'] . "\"" . PHP_EOL;
+            $mapinfo .= "author = \"$" . $map_data['lumpname'] . "AUTH\"" . PHP_EOL;
             $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
             
             //Include any allowed custom properties from original upload
@@ -175,7 +178,7 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
             }
 
-            //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to D_RUNNIN
+            //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to our default
             if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
                 $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
             } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
@@ -195,10 +198,20 @@ class Project_Compiler {
             }
 
             //Finally, include properties specified by map data
-            $mapinfo .= $map_data['mapinfo'] . PHP_EOL;
+            //Hack to support just HUBMAP - fix this!
+            $mapinfo .= (isset($map_data['mapinfo']) ? $map_data['mapinfo'] : 'next = HUBMAP') . PHP_EOL;
 
             $mapinfo .= "}" . PHP_EOL;
             $mapinfo .= PHP_EOL;
+        }
+        
+        // If we have any DoomEdNums, define them now
+        if ($this->custom_defined_doomednums) {
+            $mapinfo .= "doomednums {" . PHP_EOL;
+            foreach ($this->custom_defined_doomednums as $dnum => $classname) {
+                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
+            }
+            $mapinfo .= "}" . PHP_EOL;
         }
         
         //All done - output the files
@@ -215,6 +228,11 @@ class Project_Compiler {
         @unlink($mapinfo_filename);
         file_put_contents($mapinfo_filename, $mapinfo);
         Logger::pg("Wrote " . $mapinfo_filename);
+        
+        $rampdata_filename = PK3_FOLDER . "RAMPDATA.rampart";
+        @unlink($rampdata_filename);
+        file_put_contents($rampdata_filename, $rampdata);
+        Logger::pg("Wrote " . $rampdata_filename);
     }
 
     function generate_map_wads($catalog_handler) {
@@ -274,7 +292,21 @@ class Project_Compiler {
                         Logger::pg("❌ " . $mapinfo_properties['error']);
                         continue;
                     }
+                    // Doomednums will all be added at the end
+                    if (isset($mapinfo_properties['doomednums'])) {
+                        foreach($mapinfo_properties['doomednums'] as $dnum => $classname) {
+                            if (isset($this->custom_defined_doomednums[$dnum])) {
+                                Logger::pg("❌ DoomedNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->custom_defined_doomednums[$dnum]);
+                            }
+                            $this->custom_defined_doomednums[$dnum] = $classname;
+                            Logger::pg("DoomEdNum " . $dnum . " = " . $classname);
+                        }
+                    }
+                    // For any other index-value pair, as long as it's a string, check it against the allowed properties and add it if it's OK
                     foreach ($mapinfo_properties as $index => $value) {
+                        if (!is_string($value)) {
+                            continue;
+                        }
                         Logger::pg("\t" . $index . ": " . $value);
                         if(in_array($index, ALLOWED_MAPINFO_PROPERTIES)) {
                             if (!isset($this->map_additional_mapinfo[$map_data['map_number']])) { $this->map_additional_mapinfo[$map_data['map_number']] = []; }

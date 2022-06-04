@@ -36,6 +36,7 @@ class Pin_Handler {
         echo json_encode([
             "mapname" => $map['map_name'],
             "author" => $map['author'],
+            "musiccredit" => $map['music_credit'],
             "jumpcrouch" => $jumpcrouch,
             "wip" => $wip
         ]);
