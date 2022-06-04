@@ -4,7 +4,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
             </div>
             <div class="footerspacer">&nbsp;</div>
             <div class="footer">
-                <span>Running on RAMPART version <?=RAMPART_VERSION?></span>
+                <span>Running on <a href="https://github.com/davidxn/rampart">RAMPART</a> version <?=RAMPART_VERSION?></span>
                 <a href="/admin"><svg version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="width: 16px; height: 16px" xml:space="preserve">
     <g>
         <path d="M500.6,212.6l-59.9-14.7c-3.3-10.5-7.5-20.7-12.6-30.6l30.6-51c3.6-6,2.7-13.5-2.1-18.3L414,55.4
