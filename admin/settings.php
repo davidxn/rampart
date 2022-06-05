@@ -64,12 +64,35 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             </td>
                         </tr>
                         <tr>
+                            <td width="200">ZSCRIPT version:</td>
+                            <td>
+                                <div class="smallnote">This version number will be declared on the ZSCRIPT includes file</div>
+                                <input type="text" id="ZSCRIPT_VERSION" value="<?=htmlspecialchars(get_setting("ZSCRIPT_VERSION"))?>"></input>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>Include uploaded music:</td>
                             <td>
                                 <label class="checkmarkcontainer">
                                     <input type="checkbox" id="ALLOW_CONTENT_MUSIC" <?=get_setting("ALLOW_CONTENT_MUSIC", "checkbox")?"checked=\"checked\"":""?>>
                                     <span class="checkmark"></span>
                                 </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Include SNDINFO and uploaded sounds:</td>
+                            <td>
+                                <label class="checkmarkcontainer">
+                                    <input type="checkbox" id="ALLOW_CONTENT_SOUND" <?=get_setting("ALLOW_CONTENT_SOUND", "checkbox")?"checked=\"checked\"":""?>>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="200">Hub map name:</td>
+                            <td>
+                                <div class="smallnote">Lump name for the hub map, if players are to be returned to a hub after each level. Otherwise leave blank</div>
+                                <input type="text" id="HUB_MAP_NAME" value="<?=htmlspecialchars(get_setting("HUB_MAP_NAME"))?>"></input>
                             </td>
                         </tr>
 
@@ -184,10 +207,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                                     <span class="checkmark"></span>
                                 </label>
                             </td>
-                        </tr>
-                        <tr>
-                            <td width="200">Hub map file path:</td>
-                            <td><input type="text" id="HUB_MAP_FILE" value="<?=htmlspecialchars(get_setting("HUB_MAP_FILE"))?>"></input></td>
                         </tr>
                         <tr>
                             <td width="200">Actor class for guide:</td>
