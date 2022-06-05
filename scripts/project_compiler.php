@@ -7,11 +7,14 @@ require_once("scripts/mapinfo_handler.php");
 require_once("scripts/guide_writer.php");
 require_once("scripts/catalog_handler.php");
 require_once("scripts/build_numberer.php");
+require_once("scripts/sndinfo_handler.php");
 
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
     public $custom_defined_doomednums = [];
+    public $custom_defined_sound_lumps = [];
+    public $compiled_sndinfo_lines = [];
 
     function compile_project() {
 
@@ -65,12 +68,12 @@ class Project_Compiler {
             return;
         }
 
-        $hub_map_location = PK3_FOLDER . DIRECTORY_SEPARATOR . get_setting("HUB_MAP_FILE");
+        $hub_map_location = PK3_FOLDER . DIRECTORY_SEPARATOR . "maps" . DIRECTORY_SEPARATOR . get_setting("HUB_MAP_NAME") . ".wad";
         $wad_in = new Wad_Handler($hub_map_location);
         $wad_out = new Wad_Handler();
 
         if (!$wad_in->count_lumps()) {
-            Logger::pg("There is no hub wad in " . get_setting("HUB_MAP_FILE") . " - skipping");
+            Logger::pg("There is no hub wad in " . get_setting("HUB_MAP_NAME") . ".wad" . " - skipping");
             return;
         }
         
@@ -96,145 +99,6 @@ class Project_Compiler {
         Logger::pg("Wrote " . $bytes_written . " bytes to new hub WAD");
     }
     
-    /**
-     * Writes the MAPINFO, LANGUAGE and other data lumps using the map properties and whether we've found music, skies, etc
-     */
-    function generate_info($catalog_handler) {
-        
-        Logger::pg("--- GENERATING INFO LUMPS ---");
-        
-        $catalog = $catalog_handler->get_catalog();
-        $total_maps = count($catalog);
-        $map_index = 0;
-
-        //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
-        $mapinfo = "";
-        $language = "[enu default]" . PHP_EOL . PHP_EOL;
-        $rampdata = "";
-
-        $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
-        $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
-
-        foreach ($catalog_handler->get_catalog() as $map_data) {
-            $map_index++;
-            $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
-
-            //Check flags set by user
-            $map_allows_jump = 0;
-            if (
-                (
-                    ($allow_jump == 'always') ||
-                    ((isset($map_data['jumpcrouch']) && $map_data['jumpcrouch'] == 1))
-                )
-                && ($allow_jump != 'never')
-            ) {
-                $map_allows_jump = 1;
-            }
-            $map_is_wip = 0;
-            if (isset($map_data['wip']) && $map_data['wip'] == 1) {
-                $map_is_wip = 1;
-            }
-
-            $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "MUSC = \"" . $map_data['music_credit'] . "\";" . PHP_EOL;
-            $language .= PHP_EOL;
-            
-            $rampdata .= implode(",", [$map_allows_jump, $map_is_wip]);
-
-            if (!$write_mapinfo) {
-                continue;
-            }
-            
-            //Header
-            $mapinfo .= "map " . $map_data['lumpname'] . " lookup " . $map_data['lumpname'] . "NAME" . PHP_EOL;
-            
-            //The basics - include the name, author, and point everything to go back to MAP01
-            $mapinfo .= "{" . PHP_EOL;
-            $mapinfo .= "author = \"$" . $map_data['lumpname'] . "AUTH\"" . PHP_EOL;
-            $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
-            
-            //Include any allowed custom properties from original upload
-            Logger::pg("Checking for custom properties for map number " .$map_data['map_number']);
-            if (isset($this->map_additional_mapinfo[$map_data['map_number']])) {
-                $custom_properties = $this->map_additional_mapinfo[$map_data['map_number']];
-                foreach ($custom_properties as $index => $property) {
-                    if (in_array($index, ['music'])) {
-                        continue; //We'll handle music specifically later
-                    }
-                    Logger::pg("Including custom property " . $index . " as " . $property);
-                    if ($property == '_SET_') { //Used to flag properties that take no value
-                        $mapinfo .= "\t" . $index . PHP_EOL;
-                    } else {
-                        $mapinfo .= "\t" . $index . " = " . $property . PHP_EOL;
-                    }
-                }
-            }
-            
-            //Skies. If we haven't got a specific one (which will have been added by the custom properties above),
-            //check for a sky written to the folder, then fall back to default
-            if (!isset($this->map_additional_mapinfo[$map_data['map_number']]['sky1'])) {
-                Logger::pg("No sky1 set, falling back to RSKY1 for map " . $map_data['map_number']);
-                $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
-            }
-
-            //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to our default
-            if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
-                $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
-            } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
-                $music_lump = $this->map_additional_mapinfo[$map_data['map_number']]['music'];
-                Logger::pg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number']);
-                $mapinfo .= "\t" . "music = " . $music_lump . PHP_EOL;
-            } else {
-                $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
-            }
-
-            if ($map_allows_jump) {
-                $mapinfo .= "\t" . "AllowJump" . PHP_EOL;
-                $mapinfo .= "\t" . "AllowCrouch" . PHP_EOL;
-            } else {
-                $mapinfo .= "\t" . "NoJump" . PHP_EOL;
-                $mapinfo .= "\t" . "NoCrouch" . PHP_EOL;
-            }
-
-            //Finally, include properties specified by map data
-            //Hack to support just HUBMAP - fix this!
-            $mapinfo .= (isset($map_data['mapinfo']) ? $map_data['mapinfo'] : 'next = HUBMAP') . PHP_EOL;
-
-            $mapinfo .= "}" . PHP_EOL;
-            $mapinfo .= PHP_EOL;
-        }
-        
-        // If we have any DoomEdNums, define them now
-        if ($this->custom_defined_doomednums) {
-            $mapinfo .= "doomednums {" . PHP_EOL;
-            foreach ($this->custom_defined_doomednums as $dnum => $classname) {
-                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
-            }
-            $mapinfo .= "}" . PHP_EOL;
-        }
-        
-        //All done - output the files
-        $language_filename = PK3_FOLDER . "LANGUAGE.rampart";
-        @unlink($language_filename);
-        file_put_contents($language_filename, $language);
-        Logger::pg("Wrote " . $language_filename);
-        
-        if (!$write_mapinfo) {
-            return;
-        }
-
-        $mapinfo_filename = PK3_FOLDER . "MAPINFO.rampart";
-        @unlink($mapinfo_filename);
-        file_put_contents($mapinfo_filename, $mapinfo);
-        Logger::pg("Wrote " . $mapinfo_filename);
-        
-        $rampdata_filename = PK3_FOLDER . "RAMPDATA.rampart";
-        @unlink($rampdata_filename);
-        file_put_contents($rampdata_filename, $rampdata);
-        Logger::pg("Wrote " . $rampdata_filename);
-    }
-
     function generate_map_wads($catalog_handler) {
         
         Logger::pg("--- GENERATING MAPS ---");
@@ -249,7 +113,7 @@ class Project_Compiler {
             $map_file_name = get_source_wad_file_name($map_data['map_number']);
             Logger::pg(PHP_EOL . "📦 " . $map_data['lumpname'] . ": Reading source WAD (" . $map_data['map_name'] . ") 📦");
             $source_wad = UPLOADS_FOLDER . $map_file_name;
-            $target_wad = PK3_FOLDER . "maps/" . $map_data['lumpname'] . ".WAD";
+            $target_wad = PK3_FOLDER . "maps" . DIRECTORY_SEPARATOR . $map_data['lumpname'] . ".WAD";
             $wad_handler = new Wad_Handler($source_wad);
             if (!$wad_handler->count_lumps()) {
                 Logger::pg("❌ " . $map_file_name . " does not exist in uploads folder, skipping it");
@@ -259,8 +123,22 @@ class Project_Compiler {
 
             $music_bytes = "";
             $map_lumps = [];
+            $sound_lumps_to_extract = [];
             $in_map = false;
             $sky_found = false;
+            
+            //Get any SNDINFO definition and flag the lumps we need to watch for
+            $sndinfo_lump = $wad_handler->get_lump("SNDINFO");
+            if ($sndinfo_lump) {
+                Logger::pg("Found SNDINFO, attempting to parse it");
+                $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
+                $sndinfo_result = $sndinfo_handler->parse();
+                $this->compiled_sndinfo_lines[] = ("// " . $map_data['lumpname'] . ": " . $map_data['map_name']);
+                Logger::pg(print_r($sndinfo_result[0], true));
+                $this->compiled_sndinfo_lines = array_merge($this->compiled_sndinfo_lines, $sndinfo_result[0]);
+                $sound_lumps_to_extract = $sndinfo_result[1];
+            }
+            
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] != 'mapdata' && $in_map) {
                     if (count($map_lumps) <= 1) {
@@ -273,6 +151,16 @@ class Project_Compiler {
                     $in_map = true;
                     $map_lumps[] = $lump;
                     Logger::pg("Read map lump " . $lump['name'] . " with size " . strlen($lump['data']));
+                    continue;
+                }
+                if (in_array($lump['name'], $sound_lumps_to_extract)) {
+                    //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
+                    $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds";
+                    @mkdir(PK3_FOLDER);
+                    @mkdir($sound_folder);
+                    $sound_path = $sound_folder . DIRECTORY_SEPARATOR . $lump["name"];
+                    file_put_contents($sound_path, $lump["data"]);
+                    Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $sound_path);
                     continue;
                 }
                 if (in_array($lump['type'], ['midi', 'ogg', 'mp3', 'mus']) && !$music_bytes) {
@@ -391,7 +279,154 @@ class Project_Compiler {
             Logger::pg("Wrote " . $bytes_written . " bytes to " . $target_wad);
         }
     }
-    
+
+    /**
+     * Writes the MAPINFO, LANGUAGE and other data lumps using the map properties and whether we've found music, skies, etc
+     */
+    function generate_info($catalog_handler) {
+        
+        Logger::pg("--- GENERATING INFO LUMPS ---");
+        
+        $catalog = $catalog_handler->get_catalog();
+        $total_maps = count($catalog);
+        $map_index = 0;
+
+        //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
+        $mapinfo = "";
+        $language = "[enu default]" . PHP_EOL . PHP_EOL;
+        $rampdata = "";
+
+        $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
+        $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
+
+        foreach ($catalog_handler->get_catalog() as $map_data) {
+            $map_index++;
+            $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
+
+            //Check flags set by user
+            $map_allows_jump = 0;
+            if (
+                (
+                    ($allow_jump == 'always') ||
+                    ((isset($map_data['jumpcrouch']) && $map_data['jumpcrouch'] == 1))
+                )
+                && ($allow_jump != 'never')
+            ) {
+                $map_allows_jump = 1;
+            }
+            $map_is_wip = 0;
+            if (isset($map_data['wip']) && $map_data['wip'] == 1) {
+                $map_is_wip = 1;
+            }
+
+            $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "MUSC = \"" . $map_data['music_credit'] . "\";" . PHP_EOL;
+            $language .= PHP_EOL;
+            
+            $rampdata .= implode(",", [$map_allows_jump, $map_is_wip]);
+
+            if (!$write_mapinfo) {
+                continue;
+            }
+            
+            //Header
+            $mapinfo .= "map " . $map_data['lumpname'] . " lookup " . $map_data['lumpname'] . "NAME" . PHP_EOL;
+            
+            //The basics - include the name, author, and point everything to go back to MAP01
+            $mapinfo .= "{" . PHP_EOL;
+            $mapinfo .= "author = \"$" . $map_data['lumpname'] . "AUTH\"" . PHP_EOL;
+            $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
+            
+            //Include any allowed custom properties from original upload
+            Logger::pg("Checking for custom properties for map number " .$map_data['map_number']);
+            if (isset($this->map_additional_mapinfo[$map_data['map_number']])) {
+                $custom_properties = $this->map_additional_mapinfo[$map_data['map_number']];
+                foreach ($custom_properties as $index => $property) {
+                    if (in_array($index, ['music'])) {
+                        continue; //We'll handle music specifically later
+                    }
+                    Logger::pg("Including custom property " . $index . " as " . $property);
+                    if ($property == '_SET_') { //Used to flag properties that take no value
+                        $mapinfo .= "\t" . $index . PHP_EOL;
+                    } else {
+                        $mapinfo .= "\t" . $index . " = " . $property . PHP_EOL;
+                    }
+                }
+            }
+            
+            //Skies. If we haven't got a specific one (which will have been added by the custom properties above),
+            //check for a sky written to the folder, then fall back to default
+            if (!isset($this->map_additional_mapinfo[$map_data['map_number']]['sky1'])) {
+                Logger::pg("No sky1 set, falling back to RSKY1 for map " . $map_data['map_number']);
+                $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
+            }
+
+            //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to our default
+            if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
+                $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
+            } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
+                $music_lump = $this->map_additional_mapinfo[$map_data['map_number']]['music'];
+                Logger::pg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number']);
+                $mapinfo .= "\t" . "music = " . $music_lump . PHP_EOL;
+            } else {
+                $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
+            }
+
+            if ($map_allows_jump) {
+                $mapinfo .= "\t" . "AllowJump" . PHP_EOL;
+                $mapinfo .= "\t" . "AllowCrouch" . PHP_EOL;
+            } else {
+                $mapinfo .= "\t" . "NoJump" . PHP_EOL;
+                $mapinfo .= "\t" . "NoCrouch" . PHP_EOL;
+            }
+
+            //Finally, include properties specified by map data. If there is nothing in MAPINFO, default to setting the next level to the hub
+            $mapinfo .= (isset($map_data['mapinfo']) ? $map_data['mapinfo'] : 'next = ' . get_setting("HUB_MAP_NAME")) . PHP_EOL;
+
+            $mapinfo .= "}" . PHP_EOL;
+            $mapinfo .= PHP_EOL;
+        }
+        
+        // If we have any DoomEdNums, define them now
+        if ($this->custom_defined_doomednums) {
+            $mapinfo .= "doomednums {" . PHP_EOL;
+            foreach ($this->custom_defined_doomednums as $dnum => $classname) {
+                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
+            }
+            $mapinfo .= "}" . PHP_EOL;
+        }
+        
+        //All done - output the files
+        $language_filename = PK3_FOLDER . "LANGUAGE.rampart";
+        @unlink($language_filename);
+        file_put_contents($language_filename, $language);
+        Logger::pg("Wrote " . $language_filename);
+        
+        if (!$write_mapinfo) {
+            return;
+        }
+        
+        
+        if ($this->compiled_sndinfo_lines) {
+            $sndinfo_filename = PK3_FOLDER . "SNDINFO.rampart";
+            @unlink($sndinfo_filename);
+            Logger::pg(print_r($this->compiled_sndinfo_lines, true));
+            file_put_contents($sndinfo_filename, implode(PHP_EOL, $this->compiled_sndinfo_lines));
+            Logger::pg("Wrote " . $sndinfo_filename);
+        }
+
+        $mapinfo_filename = PK3_FOLDER . "MAPINFO.rampart";
+        @unlink($mapinfo_filename);
+        file_put_contents($mapinfo_filename, $mapinfo);
+        Logger::pg("Wrote " . $mapinfo_filename);
+        
+        $rampdata_filename = PK3_FOLDER . "RAMPDATA.rampart";
+        @unlink($rampdata_filename);
+        file_put_contents($rampdata_filename, $rampdata);
+        Logger::pg("Wrote " . $rampdata_filename);
+    }
+
     function write_sky_to_pk3($mapnum, $skynum, $sky_bytes) {
         $skyfile = "MSKY";
         if ($skynum == 2) {
