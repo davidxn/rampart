@@ -10,11 +10,14 @@ $setting_defaults = [
     "PROJECT_OUTPUT_FOLDER" => RAMPART_HOME . "out",
     "ALLOW_NEW_UPLOADS" => false,
     "ALLOW_EDIT_UPLOADS" => true,
+    "HUB_MAP_NAME" => "",
     
     # About uploads
     "ALLOW_CONTENT_MAPS" => true,
     "ALLOW_CONTENT_MUSIC" => true,
     "ALLOW_CONTENT_SCRIPTS" => true,
+    "ALLOW_CONTENT_SOUND" => true,
+    "ZSCRIPT_VERSION" => "4.7.1",
     
     "ALLOW_GAMEPLAY_JUMP" => 'never',
     
@@ -48,7 +51,6 @@ specialaction_killmonsters
     
     # The guide
     "GUIDE_ENABLED" => false,
-    "HUB_MAP_FILE" => "maps/MAP01.wad",
     "GUIDE_CLASS" => "MapGuide",
     "GUIDE_NAME" => "Map Guide",
     "GUIDE_TEXT" => "Which map can I help you navigate to today?",
