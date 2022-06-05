@@ -361,7 +361,13 @@ class Project_Compiler {
                         file_put_contents($script_file_path, $lump['data']);
                         Logger::pg("Wrote " . strlen($lump['data']) . " bytes to " . $script_file_path);
                         
-                        file_put_contents(PK3_FOLDER . strtoupper($lump['name']) . ".custom", "#include \"" . strtoupper($lump['name']) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
+                        //If this is our first ZSCRIPT inclusion, we need to add the version declaration
+                        $script_include_file_path = PK3_FOLDER . strtoupper($lump['name']) . ".custom";
+                        if (strtoupper($lump['name']) == "ZSCRIPT" && !file_exists($script_include_file_path)) {
+                            file_put_contents($script_include_file_path, "version \"4.7.1\"" . PHP_EOL . PHP_EOL);
+                        }
+                        
+                        file_put_contents($script_include_file_path, "#include \"" . strtoupper($lump['name']) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
                     }
                 }
                 $lumpnumber++;
