@@ -236,4 +236,15 @@ class Wad_Handler {
         }
         return null;
     }
+    
+    public function get_lumps($lumpname) {
+        $lumps = [];
+        $lumpname = strtolower($lumpname);
+        foreach ($this->lumps as $lump) {
+            if (strtolower($lump['name']) == $lumpname) {
+                $lumps[] = $lump;
+            }
+        }
+        return $lumps;
+    }
 }
