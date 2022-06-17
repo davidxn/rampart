@@ -56,6 +56,14 @@ class Catalog_Handler {
         return false;
     }
     
+    public function get_map_by_number($map_number) {
+        foreach ($this->catalog as $pin => $data) {
+            if ($data['map_number'] == $map_number) {
+                return $data;
+            }
+        }
+    }
+    
     public function is_map_locked($pin) {
         $map = $this->get_map($pin);
         if (!$map) {
