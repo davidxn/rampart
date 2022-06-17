@@ -40,6 +40,8 @@ class Project_Compiler {
         $this->copy_static_content();
         $this->set_status("Fiddling with DIALOGUE to write guide menus...");
         $this->write_guide_dialogue();
+        $this->set_status("Generating marquee textures...");
+        $this->generate_marquees($catalog_handler);
         file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
         
         if (get_setting("PROJECT_FORMAT") == "WAD") {
@@ -125,18 +127,25 @@ class Project_Compiler {
             $map_lumps = [];
             $sound_lumps_to_extract = [];
             $in_map = false;
+            $in_patches = false;
+            $in_textures = false;
+            $in_sprites = false;
             $sky_found = false;
             
             //Get any SNDINFO definition and flag the lumps we need to watch for
-            $sndinfo_lump = $wad_handler->get_lump("SNDINFO");
-            if ($sndinfo_lump) {
-                Logger::pg("Found SNDINFO, attempting to parse it");
-                $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
-                $sndinfo_result = $sndinfo_handler->parse();
+            $sndinfo_lumps = $wad_handler->get_lumps("SNDINFO");
+            if ($sndinfo_lumps) {
                 $this->compiled_sndinfo_lines[] = ("// " . $map_data['lumpname'] . ": " . $map_data['map_name']);
-                Logger::pg(print_r($sndinfo_result[0], true));
-                $this->compiled_sndinfo_lines = array_merge($this->compiled_sndinfo_lines, $sndinfo_result[0]);
-                $sound_lumps_to_extract = $sndinfo_result[1];
+                foreach ($sndinfo_lumps as $sndinfo_lump) {
+                    Logger::pg("Found SNDINFO, attempting to parse it");
+                    $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
+                    $sndinfo_result = $sndinfo_handler->parse();
+                    
+                    //sndinfo lumps come back with [0] the lines to add to the combined sndinfo, [1] the sound lump names it needs
+                    Logger::pg(print_r($sndinfo_result[0], true));
+                    $this->compiled_sndinfo_lines = array_merge($this->compiled_sndinfo_lines, $sndinfo_result[0]);
+                    $sound_lumps_to_extract = array_merge($sound_lumps_to_extract, $sndinfo_result[1]);
+                }
             }
             
             foreach ($wad_handler->lumps as $lump) {
@@ -153,15 +162,63 @@ class Project_Compiler {
                     Logger::pg("Read map lump " . $lump['name'] . " with size " . strlen($lump['data']));
                     continue;
                 }
+                if ($lump['name'] == 'P_START' || in_array($lump['name'], ['P_START', 'PP_START', 'PPSTART'])) {
+                    $in_patches = true;
+                    continue;
+                }
+                if ($lump['name'] == 'TX_START') {
+                    $in_textures = true;
+                    continue;
+                }
+                if (in_array($lump['name'], ['SS_START', 'S_START'])) {
+                    $in_sprites = true;
+                    continue;
+                }
+                if ($in_patches && in_array($lump['name'], ['P_END', 'PP_END', 'PPEND'])) {
+                    $in_patches = false;
+                }
+                if ($in_textures && $lump['name'] == 'TX_END') {
+                    $in_textures = false;
+                }
+                if ($in_sprites && in_array($lump['name'], ['SS_END', 'S_END'])) {
+                    $in_sprites = false;
+                }
+                if ($in_patches) {
+                    //Presumably, this is a patch
+                    $patch_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "patches" . DIRECTORY_SEPARATOR . "MAP" . $map_data['map_number'] . DIRECTORY_SEPARATOR;
+                    @mkdir($patch_folder, 0755, true);
+                    file_put_contents($patch_folder . DIRECTORY_SEPARATOR . $lump['name'], $lump['data']);
+                    Logger::pg("Included patch " . $lump['name']);
+                    continue;
+                }
+                if ($in_textures) {
+                    $tex_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "textures" . DIRECTORY_SEPARATOR . "MAP" . $map_data['map_number'] . DIRECTORY_SEPARATOR;
+                    @mkdir($tex_folder, 0755, true);
+                    file_put_contents($tex_folder . DIRECTORY_SEPARATOR . $lump['name'], $lump['data']);
+                    Logger::pg("Included texture " . $lump['name']);
+                    continue;
+                }
+                if ($in_sprites) {
+                    $sprite_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sprites" . DIRECTORY_SEPARATOR . "MAP" . $map_data['map_number'] . DIRECTORY_SEPARATOR;
+                    @mkdir($sprite_folder, 0755, true);
+                    file_put_contents($sprite_folder . DIRECTORY_SEPARATOR . $lump['name'], $lump['data']);
+                    Logger::pg("Included sprite " . $lump['name']);
+                    continue;
+                }
                 if (in_array($lump['name'], $sound_lumps_to_extract)) {
                     //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
                     $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds";
-                    @mkdir(PK3_FOLDER);
-                    @mkdir($sound_folder);
+                    @mkdir($sound_folder, 0755, true);
                     $sound_path = $sound_folder . DIRECTORY_SEPARATOR . $lump["name"];
                     file_put_contents($sound_path, $lump["data"]);
                     Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $sound_path);
                     continue;
+                }
+                if (in_array($lump['name'], ['TEXTURES', 'GLDEFS', 'ANIMDEFS'])) {
+                    @mkdir(PK3_FOLDER, 0755, true);
+                    $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'];
+                    file_put_contents($data_path, $lump['data']);
+                    Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path);
                 }
                 if (in_array($lump['type'], ['midi', 'ogg', 'mp3', 'mus']) && !$music_bytes) {
                     if (!get_setting("ALLOW_CONTENT_MUSIC")) {
@@ -242,8 +299,7 @@ class Project_Compiler {
                     } else {
                         Logger::pg("Found " . $lump['name'] . " lump, adding it to our script folder");
                         $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump['name']);
-                        @mkdir(PK3_FOLDER);
-                        @mkdir($script_folder);
+                        @mkdir($script_folder, 0755, true);
                         $script_file_name = strtoupper($lump['name']) . "-" . $map_data['map_number'] . "-" . $lumpnumber . ".txt";
                         $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
                         file_put_contents($script_file_path, $lump['data']);
@@ -277,6 +333,26 @@ class Project_Compiler {
             @unlink($target_wad);
             $bytes_written = $wad_writer->write_wad($target_wad);
             Logger::pg("Wrote " . $bytes_written . " bytes to " . $target_wad);
+        }
+    }
+    
+    function generate_marquees($catalog_handler) {
+        Logger::pg("Generating marquee textures");
+        $marquee_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "textures" . DIRECTORY_SEPARATOR . "marquee";
+        @mkdir($marquee_folder, 0755, true);
+        
+        $catalog = $catalog_handler->get_catalog();
+        foreach ($catalog as $map_data) {
+            
+            $map_name = $map_data['map_name'];
+            foreach([0, 1] as $is_blue) {
+                $params = urlencode(json_encode(["name" => $map_name, "active" => !$is_blue]));
+                $image_bytes = file_get_contents("http://trackthet.com/services/marquee/generate_marquees.php?params=" . $params);
+                $marquee_prefix = $is_blue ? "MARX" : "MARQ";
+                $marquee_file = $marquee_folder . DIRECTORY_SEPARATOR . $marquee_prefix . $map_data['map_number'] . ".png";
+                file_put_contents($marquee_file, $image_bytes);
+                Logger::pg("Wrote " . $marquee_file);
+            }
         }
     }
 
@@ -434,7 +510,7 @@ class Project_Compiler {
         }
         $skyfile .= $mapnum;
         $folder = PK3_FOLDER . "textures/MAP" . $mapnum;
-        @mkdir($folder);
+        @mkdir($folder, 0755, true);
         $sky_file_path = $folder . "/" . $skyfile;
         file_put_contents($sky_file_path, $sky_bytes);
         Logger::pg("Wrote " . strlen($sky_bytes) . " bytes to " . $sky_file_path);
