@@ -55,6 +55,7 @@ class Upload_Handler {
             Logger::lg("Assigning map number: " . $map_number);
         }
         
+        $location = null;
         //Finalize the file, if we have one
         if ($tmpname) {
             @mkdir(UPLOADS_FOLDER);
@@ -88,7 +89,7 @@ class Upload_Handler {
 
         //Unmutex
         unlink(LOCK_FILE_UPLOAD);
-        Logger::record_upload(time(), $map_number, filesize($location));
+        Logger::record_upload(time(), $map_number, $location ? filesize($location) : 0);
         Logger::lg("Lock released");
         
         if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
