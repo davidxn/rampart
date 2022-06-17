@@ -126,6 +126,7 @@ const STATIC_CONTENT_FOLDER = WORK_FOLDER . "fixedcontent/";
 const PK3_FOLDER            = WORK_FOLDER . "pk3/";
 const LOG_FILE              = WORK_FOLDER . "log.log";
 const PK3_GEN_LOG_FILE      = WORK_FOLDER . "pk3generation.log";
+const PK3_GEN_LOG_FOLDER    = WORK_FOLDER . "pk3genlogs";
 const PK3_GEN_HISTORY_FILE  = WORK_FOLDER . "pk3history.log";
 const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";

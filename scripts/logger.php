@@ -26,16 +26,45 @@ class Logger {
     }
     
     //PK3 generation log
-    public static function pg($string) {
+    public static function pg($string, $map_number = 0, $is_error = false) {
         $logger = self::get_instance();
         $time = date("F d Y H:i:s", time());
-        file_put_contents(PK3_GEN_LOG_FILE, $time . " " . $logger->txid . " " . $string . PHP_EOL, FILE_APPEND);
+        $log_line = $time . " " . $logger->txid . " " . $string . PHP_EOL;
+        file_put_contents(PK3_GEN_LOG_FILE, $log_line, FILE_APPEND);
+        @mkdir(PK3_GEN_LOG_FOLDER, 0777, true);
+        if ($map_number > 0) {
+            file_put_contents(Logger::get_map_log_file($map_number), $log_line, FILE_APPEND);
+            if ($is_error) {
+                touch(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err");
+            }
+        }
     }
     
+    //Individual map generation files
     public static function clear_pk3_log() {
         @unlink(PK3_GEN_LOG_FILE);
+        @mkdir(PK3_GEN_LOG_FOLDER, 0777, true);
+        $logfiles = scandir(PK3_GEN_LOG_FOLDER);
+        foreach ($logfiles as $logfile) {
+            if (substr($logfile, 0, 10) == "rampartlog") {
+                @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . $logfile);
+            }
+        }
     }
     
+    public static function map_has_log($map_number) {
+        return file_exists(Logger::get_map_log_file($map_number));
+    }
+
+    public static function map_has_errors($map_number) {
+        return file_exists(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err");
+    }
+    
+    public static function get_map_log_file($map_number) {
+        return PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".log";
+    }
+
+        
     public static function record_pk3_generation($start_time, $seconds) {
         file_put_contents(PK3_GEN_HISTORY_FILE, $start_time . "," . max($seconds, 1) . "," . @filesize(get_project_full_path()) . PHP_EOL, FILE_APPEND);
     }
