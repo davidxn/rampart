@@ -119,6 +119,7 @@ class Project_Compiler {
 
             Logger::pg($wad_handler->wad_info(), $map_data['map_number']);
             
+            $this->warn_unsupported_lumps($map_data, $wad_handler);
             $this->import_map($map_data, $wad_handler);
             $this->import_sndinfo_and_sounds($map_data, $wad_handler);
             $this->import_between_markers($map_data, $wad_handler, ['P_START', 'PP_START', 'PPSTART'], ['P_END', 'PP_END', 'PPEND'], 'patches', 'patch');
@@ -129,6 +130,24 @@ class Project_Compiler {
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
+        }
+    }
+    
+    function warn_unsupported_lumps($map_data, $wad_handler) {
+        $map_number = $map_data['map_number'];
+        foreach ($wad_handler->lumps as $lump) {
+            if (in_array($lump['name'], ['TEXTURE1', 'TEXTURE2'])) {
+                Logger::pg("❌ TEXTUREx lumps are unsupported - convert to TEXTURES with SLADE3", $map_number, true);
+            }
+            if (in_array($lump['name'], ['ANIMATED', 'SWITCHES', 'SWANTBLS'])) {
+                Logger::pg("❌ " . $lump['name'] . " lumps are unsupported - convert to ANIMDEFS with SLADE3", $map_number, true);
+            }
+            if (in_array($lump['name'], ['PLAYPAL', 'COLORMAP'])) {
+                Logger::pg("❌ " . $lump['name'] . " lumps are unsupported", $map_number, true);
+            }
+            if (in_array($lump['name'], ['C_START', 'C_END'])) {
+                Logger::pg("❌ " . $lump['name'] . ": Colormaps are unsupported", $map_number, true);
+            }
         }
     }
     
@@ -218,7 +237,7 @@ class Project_Compiler {
                 $in_zone = false;
                 continue;
             }
-            if ($in_zone) {
+            if ($in_zone && $lump['data']) {
                 //If we're between start and stop names, import these lumps
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . "MAP" . $map_data['map_number'] . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
