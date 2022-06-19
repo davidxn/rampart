@@ -295,6 +295,13 @@ class Project_Compiler {
                     @mkdir($script_folder, 0755, true);
                     $script_file_name = strtoupper($lump['name']) . "-" . $map_data['map_number'] . "-" . $lumpnumber . ".txt";
                     $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
+                    
+                    //If this is a ZSCRIPT file and it begins with a version declaration, we have to strip that out
+                    if ($lump['name'] == 'ZSCRIPT' && substr($lump['data'], 0, 7) == "version") {
+                        $first_newline_position = strpos($lump['data'], PHP_EOL);
+                        $lump['data'] = substr($lump['data'], $first_newline_position);
+                    }
+                    
                     file_put_contents($script_file_path, $lump['data']);
                     Logger::pg("Wrote " . strlen($lump['data']) . " bytes to " . $script_file_path, $map_data['map_number']);
                     
