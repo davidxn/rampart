@@ -16,7 +16,9 @@ class Sndinfo_Handler {
         while ($this->current_line_number < count($this->input_lines)) {
             $current_line = $this->input_lines[$this->current_line_number];
             $tokens = preg_split('/\s+/', trim($current_line));
-            if (count($tokens) == 2 && substr($tokens[0], 0, 1) != "$") {
+            $is_command = substr($tokens[0], 0, 1) == "$";
+            $is_comment = substr($tokens[0], 0, 2) == "//";
+            if (count($tokens) == 2 && !$is_command && !$is_comment) {
                 //We're going to assume this is a sound name followed by a lump name. Add the lump name to our requested sounds.
                 $this->requested_sound_lump_names[] = strtoupper($tokens[1]);
                 Logger::pg("Added " . strtoupper($tokens[1]) . " to requested sound lump names");
