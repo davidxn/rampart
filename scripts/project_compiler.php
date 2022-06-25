@@ -126,7 +126,7 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['TX_START'], ['TX_END'], 'textures', 'texture');
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS']);
+            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
@@ -161,7 +161,7 @@ class Project_Compiler {
             
             // Get all lines we want to include
             foreach ($sndinfo_lumps as $sndinfo_lump) {
-                Logger::pg("Found SNDINFO, attempting to parse it", $map_data['map_number']);
+                Logger::pg("🔊 Found SNDINFO, attempting to parse it", $map_data['map_number']);
                 $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
                 $sndinfo_result = $sndinfo_handler->parse();
                 //sndinfo lumps come back with [0] the lines to add to the combined sndinfo, [1] the sound lump names it needs
@@ -172,6 +172,7 @@ class Project_Compiler {
             // We have the sound lumps we want to extract - let's look through and do that
             foreach ($wad_handler->lumps as $lump) {
                 if (in_array($lump['name'], $sound_lumps_to_extract)) {
+                    Logger::pg("🔈 Found " . $lump['name'] . " mentioned in SNDINFO - assuming it's a sound", $map_data['map_number']);
                     //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
                     $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds";
                     @mkdir($sound_folder, 0755, true);
@@ -187,7 +188,7 @@ class Project_Compiler {
                 $sndinfo_filename = PK3_FOLDER . "SNDINFO." . $map_data['map_number'];
                 @unlink($sndinfo_filename);
                 file_put_contents($sndinfo_filename, implode(PHP_EOL, $sndinfo_lines_to_import));
-                Logger::pg("Wrote " . $sndinfo_filename, $map_data['map_number']);
+                Logger::pg("🔊 Wrote " . $sndinfo_filename, $map_data['map_number']);
             }
         }
     }
@@ -217,6 +218,7 @@ class Project_Compiler {
         
         //Construct a new WAD using only the map lumps
         $target_wad = PK3_FOLDER . "maps" . DIRECTORY_SEPARATOR . $map_data['lumpname'] . ".WAD";
+        Logger::pg("🗺 Writing map WAD as " . $target_wad, $map_data['map_number']);
         $wad_writer = new Wad_Handler();
         foreach ($map_lumps as $lump) {
             $wad_writer->add_lump($lump);
@@ -231,9 +233,11 @@ class Project_Compiler {
         foreach ($wad_handler->lumps as $lump) {
             if (in_array($lump['name'], $start_names)) {
                 $in_zone = true;
+                Logger::pg("🔽 Found starting marker for " . $folder_name, $map_data['map_number']);
                 continue;
             }
             if ($in_zone && in_array($lump['name'], $stop_names)) {
+                Logger::pg("🔼 Found ending marker for " . $folder_name, $map_data['map_number']);
                 $in_zone = false;
                 continue;
             }
@@ -253,10 +257,28 @@ class Project_Compiler {
     }
     
     function import_lumps_directly($map_data, $wad_handler, $allowed_lump_names) {
+        
+        $included_lump_counts = [];
+        
         foreach ($wad_handler->lumps as $lump) {
             if (in_array($lump['name'], $allowed_lump_names)) {
+                
+                //Special case - reject LOCKDEFS if it tries to clear locks
+                if ($lump['name'] == 'LOCKDEFS' && strpos(strtolower($lump['data']), 'clearlocks') !== false) {
+                    Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it performs CLEARLOCKS!", $map_data['map_number'], true);
+                    continue;
+                }
+                
+                Logger::pg("💾 Including " . $lump["name"] . " lump", $map_data['map_number']);
+                if (!isset($included_lump_counts[$lump["name"]])) {
+                    $included_lump_counts[$lump["name"]] = 1;
+                }
+                else {
+                    $included_lump_counts[$lump["name"]]++;
+                }
+                
                 @mkdir(PK3_FOLDER, 0755, true);
-                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'];
+                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "." . $included_lump_counts[$lump['name']];
                 file_put_contents($data_path, $lump['data']);
                 Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path, $map_data['map_number']);
             }
@@ -264,7 +286,27 @@ class Project_Compiler {
     }
     
     function import_music($map_data, $wad_handler) {
-        //Prioritize MIDI first - then check others later
+        //If we have more than one MIDI, assume that MAPINFO will handle everything
+        $number_of_midis = 0;
+        $midis_imported = 0;
+        foreach ($wad_handler->lumps as $lump) {
+            if ($lump['type'] == 'midi') {
+                $number_of_midis++;
+            }
+        }
+        if ($number_of_midis > 1) {
+            foreach ($wad_handler->lumps as $lump) {
+                if ($lump['type'] == 'midi') {
+                    $midis_imported++;
+                    Logger::pg("🎵 Importing " . $midis_imported . " of " . $number_of_midis . " MIDIs found in WAD: " . $lump['name'], $map_data['map_number']);
+                    $music_path = PK3_FOLDER . "music/" . $lump['name'] . ".mid";
+                    file_put_contents($music_path, $lump['data']);
+                }
+            }
+            return;
+        }
+
+        //If not, find our first music then rename it to MUSxxx - prioritize MIDI first then check others later
         $possible_music_types = ['midi', 'mus', 'mp3', 'ogg'];
         foreach ($possible_music_types as $looking_for_music_type) {
             foreach ($wad_handler->lumps as $lump) {
@@ -288,31 +330,33 @@ class Project_Compiler {
             if (in_array(strtoupper($lump['name']), ['DECORATE', 'ZSCRIPT'])) {
                 if (strpos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
                     Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it performs replacements!", $map_data['map_number'], true);
-                } else {
-                    Logger::pg("Found " . $lump['name'] . " lump, adding it to our script folder", $map_data['map_number']);
-                    $lumpnumber++;
-                    $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump['name']);
-                    @mkdir($script_folder, 0755, true);
-                    $script_file_name = strtoupper($lump['name']) . "-" . $map_data['map_number'] . "-" . $lumpnumber . ".txt";
-                    $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
-                    
-                    //If this is a ZSCRIPT file and it begins with a version declaration, we have to strip that out
-                    if ($lump['name'] == 'ZSCRIPT' && substr($lump['data'], 0, 7) == "version") {
-                        $first_newline_position = strpos($lump['data'], PHP_EOL);
-                        $lump['data'] = substr($lump['data'], $first_newline_position);
-                    }
-                    
-                    file_put_contents($script_file_path, $lump['data']);
-                    Logger::pg("Wrote " . strlen($lump['data']) . " bytes to " . $script_file_path, $map_data['map_number']);
-                    
-                    //If this is our first ZSCRIPT inclusion, we need to add the version declaration
-                    $script_include_file_path = PK3_FOLDER . strtoupper($lump['name']) . ".custom";
-                    if (strtoupper($lump['name']) == "ZSCRIPT" && !file_exists($script_include_file_path)) {
-                        file_put_contents($script_include_file_path, "version \"4.7.1\"" . PHP_EOL . PHP_EOL);
-                    }
-                    
-                    file_put_contents($script_include_file_path, "#include \"" . strtoupper($lump['name']) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
+                    continue;
                 }
+                Logger::pg("📜 Found " . $lump['name'] . " lump, adding it to our script folder", $map_data['map_number']);
+                $lumpnumber++;
+                $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump['name']);
+                @mkdir($script_folder, 0755, true);
+                $script_file_name = strtoupper($lump['name']) . "-" . $map_data['map_number'] . "-" . $lumpnumber . ".txt";
+                $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
+                
+                //If this is a ZSCRIPT file and it begins with a version declaration, we have to strip that out
+                if ($lump['name'] == 'ZSCRIPT' && substr($lump['data'], 0, 7) == "version") {
+                    Logger::pg("Taking version declaration out of ZSCRIPT lump");
+                    $first_newline_position = strpos($lump['data'], PHP_EOL);
+                    $lump['data'] = substr($lump['data'], $first_newline_position);
+                }
+                
+                file_put_contents($script_file_path, $lump['data']);
+                Logger::pg("Wrote " . strlen($lump['data']) . " bytes to " . $script_file_path, $map_data['map_number']);
+                
+                //If this is our first ZSCRIPT inclusion, we need to add the version declaration
+                $script_include_file_path = PK3_FOLDER . strtoupper($lump['name']) . ".custom";
+                if (strtoupper($lump['name']) == "ZSCRIPT" && !file_exists($script_include_file_path)) {
+                    file_put_contents($script_include_file_path, "version \"4.7.1\"" . PHP_EOL . PHP_EOL);
+                }
+                
+                file_put_contents($script_include_file_path, "#include \"" . strtoupper($lump['name']) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
+
             }
         }
     }
@@ -354,10 +398,10 @@ class Project_Compiler {
                 for ($i = 1; $i <= 2; $i++) {
                     if (isset($mapinfo_properties['sky' . $i])) {
                         $skylumpname = $mapinfo_properties['sky' . $i];
-                        Logger::pg("SKY" . $i . " property found in MAPINFO: " . $skylumpname, $map_data['map_number']);
+                        Logger::pg("⛅ SKY" . $i . " property found in MAPINFO: " . $skylumpname, $map_data['map_number']);
                         //If the sky has been provided in the WAD, copy it in for this map!
                         if ($skylump = $wad_handler->get_lump($skylumpname)) {
-                            Logger::pg("Found lump " . $skylumpname . " pointed to by SKY" . $i . ", including it", $map_data['map_number']);
+                            Logger::pg("⛅ Found lump " . $skylumpname . " pointed to by SKY" . $i . ", including it", $map_data['map_number']);
                             $skyfile = $this->write_sky_to_pk3($map_data['map_number'], $i, $skylump['data']);
                             $this->write_map_variable($map_data['map_number'], 'sky' . $i, $skyfile); // Set the sky file name decided on by the sky writer
                         } else {
@@ -369,7 +413,7 @@ class Project_Compiler {
             }
             //If we have an entry that matches the default sky lump, use that as sky
             if (!empty(get_setting("DEFAULT_SKY_LUMP")) && (strtoupper($lump['name']) == strtoupper(get_setting("DEFAULT_SKY_LUMP")))) {
-                Logger::pg(get_setting("DEFAULT_SKY_LUMP") . " default sky lump found with size " . strlen($lump['data']), $map_data['map_number']);
+                Logger::pg("⛅ " . get_setting("DEFAULT_SKY_LUMP") . " default sky lump found with size " . strlen($lump['data']) . " - including it", $map_data['map_number']);
                 $skyfile = $this->write_sky_to_pk3($map_data['map_number'], 1, $lump['data']);
                 if (!isset($this->map_additional_mapinfo[$map_data['map_number']])) { $this->map_additional_mapinfo[$map_data['map_number']] = []; }
                 $this->map_additional_mapinfo[$map_data['map_number']]['sky1'] = $skyfile;

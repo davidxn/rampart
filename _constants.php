@@ -103,7 +103,8 @@ const ALLOWED_MAPINFO_PROPERTIES = [
     'specialaction_killmonsters',
     'baronspecial',
     'cyberdemonspecial',
-    'spidermastermindspecial'
+    'spidermastermindspecial',
+    'eventhandlers'
 ];
 
 ///////////////////////////////////////////////////////////
