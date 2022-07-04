@@ -2,7 +2,8 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 $authfailstring = '<center><img src="/img/authfail.png"></img></center>';
 $password = '';
-$password = file_get_contents(PASSWORD_FILE);
+require_once(PASSWORD_FILE);
+
 if (!empty($password)) {
     if (!isset($_SERVER['PHP_AUTH_USER']) && !isset($_SERVER['PHP_AUTH_PW'])) {
         header('WWW-Authenticate: Basic realm="RAMPART"');
