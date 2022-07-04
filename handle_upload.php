@@ -40,7 +40,7 @@ class Upload_Handler {
         if ($pin) {
             $existing_map = $this->validate_pin($pin, $catalog_handler);
             $map_number = $existing_map['map_number'];
-            $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ("MAP" . (substr("0" . $map_number, -2)));
+            $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
         }
         else {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
@@ -50,7 +50,7 @@ class Upload_Handler {
                 die();
             }
             $map_number = $catalog_handler->get_next_available_slot();
-            $map_lumpname = "MAP" . (substr("0" . $map_number, -2));
+            $map_lumpname = ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
             Logger::lg("Assigning PIN: " . $pin);
             Logger::lg("Assigning map number: " . $map_number);
         }
@@ -91,6 +91,9 @@ class Upload_Handler {
         unlink(LOCK_FILE_UPLOAD);
         Logger::record_upload(time(), $map_number, $location ? filesize($location) : 0);
         Logger::lg("Lock released");
+        
+        //Remove any existing logs for this map
+        Logger::clear_log_for_map($map_number);
         
         if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
             mail(get_setting('NOTIFY_EMAIL'), "RAMPART: New map added", "A new map '" . $mapname . "' by " . $authorname . " has been added to the project as " . $map_lumpname . ".");
