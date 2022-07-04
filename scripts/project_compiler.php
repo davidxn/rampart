@@ -12,16 +12,57 @@ require_once("scripts/sndinfo_handler.php");
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
-    public $wad_variables = ['custom_defined_doomednums' => []];
+    public $wad_variables = ['custom_defined_doomednums' => [], 'custom_defined_spawnnums' => []];
+    public $global_lump_list = [];
+    
+    function add_lump_to_global_list($lumpname, $data_hash, $owning_map) {
+        //If we have no lump by this name recorded, add it
+        if (!isset($this->global_lump_list[$lumpname])) {
+            $this->global_lump_list[$lumpname] = [];
+            $this->global_lump_list[$lumpname]['owner'] = $owning_map;
+            $this->global_lump_list[$lumpname]['hash'] = $data_hash;
+            return true;
+        }
+        //We already had a lump with this name. Look to see if it belongs to our base resources or a map, and if it's identical to the existing one
+        //IWAD overwrites are never allowed
+        if ($this->global_lump_list[$lumpname]['owner'] == "IWAD") {
+            Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from the project's base IWAD. Please rename it", $owning_map, true);
+            return false;
+        }
+        
+        //If the hash matches, notify but don't count as error
+        $existing_hash = $this->global_lump_list[$lumpname]['hash'];
+        if ($existing_hash == $data_hash) {
+            Logger::pg("Lump " . $lumpname . " matches same name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". The data is identical", $owning_map);
+            return true;
+        }
+        
+        Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". Please rename it to make sure both maps work correctly", $owning_map, true);
+        return false;
+    }
+    
+    function add_doom2_lumps_to_global_list() {
+        $lumpnames = explode("\n", file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.lumps"));
+        Logger::pg("Found " . count($lumpnames) . " to add to global list");
+        foreach ($lumpnames as $lumpname) {
+            $lumpname = trim($lumpname);
+            if ($lumpname != "") {
+                $this->add_lump_to_global_list($lumpname, "", "IWAD");
+            }
+        }
+    }
 
     function compile_project() {
-
+        
         //Begin!
         $start_time = time();
         Logger::clear_pk3_log();
         $this->set_status("Initializing");
         file_put_contents(LOCK_FILE_COMPILE, ":)");
         @mkdir(get_setting("PROJECT_OUTPUT_FOLDER"), 0777, true);
+
+        //Temporary: Add some DOOM2 lump names to our global list. We'll make this configurable
+        $this->add_doom2_lumps_to_global_list();
 
         $catalog_handler = new Catalog_Handler();
         $numberer = new Build_Numberer();
@@ -100,7 +141,7 @@ class Project_Compiler {
     }
     
     function generate_map_wads($catalog_handler) {
-        Logger::pg("--- GENERATING MAPS WITH NEW FUNCTION ---");
+        Logger::pg("--- IMPORTING MAPS AND RESOURCES FROM UPLOADED WADS ---");
         $catalog = $catalog_handler->get_catalog();
         $total_maps = count($catalog);
         $map_index = 0;
@@ -124,9 +165,11 @@ class Project_Compiler {
             $this->import_sndinfo_and_sounds($map_data, $wad_handler);
             $this->import_between_markers($map_data, $wad_handler, ['P_START', 'PP_START', 'PPSTART'], ['P_END', 'PP_END', 'PPEND'], 'patches', 'patch');
             $this->import_between_markers($map_data, $wad_handler, ['TX_START'], ['TX_END'], 'textures', 'texture');
+            $this->import_between_markers($map_data, $wad_handler, ['VX_START'], ['VX_END'], 'voxels', 'voxel');
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL']);
+            $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
+            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
@@ -173,8 +216,11 @@ class Project_Compiler {
             foreach ($wad_handler->lumps as $lump) {
                 if (in_array($lump['name'], $sound_lumps_to_extract)) {
                     Logger::pg("🔈 Found " . $lump['name'] . " mentioned in SNDINFO - assuming it's a sound", $map_data['map_number']);
+                    if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                        continue;
+                    }
                     //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
-                    $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds";
+                    $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds" . DIRECTORY_SEPARATOR . $map_data['lumpname'];
                     @mkdir($sound_folder, 0755, true);
                     $sound_path = $sound_folder . DIRECTORY_SEPARATOR . $lump["name"];
                     file_put_contents($sound_path, $lump["data"]);
@@ -243,10 +289,14 @@ class Project_Compiler {
             }
             if ($in_zone && $lump['data']) {
                 //If we're between start and stop names, import these lumps
-                $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . "MAP" . $map_data['map_number'] . DIRECTORY_SEPARATOR;
+                if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                    continue;
+                }
+                $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
                 $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'];
                 file_put_contents($output_file, $lump['data']);
+
                 Logger::pg("Wrote " . $type_to_display . " " . $output_file, $map_data['map_number']);
             }
         }
@@ -278,7 +328,7 @@ class Project_Compiler {
                 }
                 
                 @mkdir(PK3_FOLDER, 0755, true);
-                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "." . $included_lump_counts[$lump['name']];
+                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $included_lump_counts[$lump['name']];
                 file_put_contents($data_path, $lump['data']);
                 Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path, $map_data['map_number']);
             }
@@ -297,6 +347,9 @@ class Project_Compiler {
         if ($number_of_midis > 1) {
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] == 'midi') {
+                    if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                        continue;
+                    }
                     $midis_imported++;
                     Logger::pg("🎵 Importing " . $midis_imported . " of " . $number_of_midis . " MIDIs found in WAD: " . $lump['name'], $map_data['map_number']);
                     $music_path = PK3_FOLDER . "music/" . $lump['name'] . ".mid";
@@ -307,7 +360,7 @@ class Project_Compiler {
         }
 
         //If not, find our first music then rename it to MUSxxx - prioritize MIDI first then check others later
-        $possible_music_types = ['midi', 'mus', 'mp3', 'ogg'];
+        $possible_music_types = ['midi', 'mus', 'module', 'mp3', 'ogg'];
         foreach ($possible_music_types as $looking_for_music_type) {
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] == $looking_for_music_type) {
@@ -380,6 +433,16 @@ class Project_Compiler {
                         }
                         $this->wad_variables['custom_defined_doomednums'][$dnum] = $classname;
                         Logger::pg("DoomEdNum " . $dnum . " = " . $classname, $map_data['map_number']);
+                    }
+                }
+                if (isset($mapinfo_properties['spawnnums'])) {
+                    foreach($mapinfo_properties['spawnnums'] as $dnum => $classname) {
+                        if (isset($this->wad_variables['custom_defined_spawnnums'][$dnum])) {
+                            Logger::pg("❌ SpawnNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->wad_variables['custom_defined_spawnnums'][$dnum], $map_data['map_number'], true);
+                            continue;
+                        }
+                        $this->wad_variables['custom_defined_spawnnums'][$dnum] = $classname;
+                        Logger::pg("SpawnNum " . $dnum . " = " . $classname, $map_data['map_number']);
                     }
                 }
                 // For any other index-value pair, as long as it's a string, check it against the allowed properties and add it if it's OK
@@ -461,7 +524,7 @@ class Project_Compiler {
         //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
         $mapinfo = "";
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
-        $rampdata = "";
+        $rampdata = [];
 
         $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
         $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
@@ -491,7 +554,7 @@ class Project_Compiler {
             $language .= $map_data['lumpname'] . "MUSC = \"" . $map_data['music_credit'] . "\";" . PHP_EOL;
             $language .= PHP_EOL;
 
-            $rampdata .= implode(",", [$map_allows_jump, $map_is_wip]) . PHP_EOL;
+            $rampdata[$map_data['map_number']] = implode(",", [$map_allows_jump, $map_is_wip, $map_data['map_number'], $map_data['lumpname']]);
 
             if (!$write_mapinfo) {
                 continue;
@@ -563,6 +626,13 @@ class Project_Compiler {
             }
             $mapinfo .= "}" . PHP_EOL;
         }
+        if ($this->wad_variables['custom_defined_spawnnums']) {
+            $mapinfo .= "spawnnums {" . PHP_EOL;
+            foreach ($this->wad_variables['custom_defined_spawnnums'] as $dnum => $classname) {
+                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
+            }
+            $mapinfo .= "}" . PHP_EOL;
+        }
         
         //All done - output the files
         $language_filename = PK3_FOLDER . "LANGUAGE.rampart";
@@ -579,9 +649,10 @@ class Project_Compiler {
         file_put_contents($mapinfo_filename, $mapinfo);
         Logger::pg("Wrote " . $mapinfo_filename);
         
+        ksort($rampdata);
         $rampdata_filename = PK3_FOLDER . "RAMPDATA.rampart";
         @unlink($rampdata_filename);
-        file_put_contents($rampdata_filename, $rampdata);
+        file_put_contents($rampdata_filename, implode(PHP_EOL, $rampdata));
         Logger::pg("Wrote " . $rampdata_filename);
     }
 
