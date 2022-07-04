@@ -52,6 +52,12 @@ class Logger {
         }
     }
     
+    public static function clear_log_for_map($map_number) {
+        @mkdir(PK3_GEN_LOG_FOLDER, 0777, true);
+        @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".log");
+        @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err");
+    }
+    
     public static function map_has_log($map_number) {
         return file_exists(Logger::get_map_log_file($map_number));
     }
