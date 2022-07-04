@@ -86,6 +86,9 @@ class Wad_Handler {
             if ($string == 'OggS') {
                 return 'ogg';
             }
+            if ($string == 'IMPM') {
+                return 'module';
+            }
         }
         if ($lump['size'] >= 3) {
             fseek($this->wad_file, $lump['position']);
