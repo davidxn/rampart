@@ -26,6 +26,12 @@ class Mapinfo_Handler {
                 $parsed_data['doomednums'] = $this->parseDoomedNums();
                 continue;
             }
+            
+            if(substr($this->clean_token($line), 0, 10) == "spawnnums") {
+                Logger::pg("Found spawnnums");
+                $parsed_data['spawnnums'] = $this->parseSpawnNums();
+                continue;
+            }
 
             if ($this->clean_token($line) == 'nojump' || $this->clean_token($line) == 'nocrouch') {
                 $parsed_data['jumpcrouch'] = 0;
@@ -92,6 +98,31 @@ class Mapinfo_Handler {
             $this->current_line_number++;
         }
         return $doomedNums;
+    }
+    
+    public function parseSpawnNums() {
+        
+        $spawnNums = [];
+        $this->current_line_number++;
+        $line = "";
+        while ($line != "}" && $this->current_line_number < count($this->mapinfo_lines)) {
+            $line = trim($this->mapinfo_lines[$this->current_line_number]);
+            $line_tokens = split("=", $line);
+            if (count($line_tokens) < 2) {
+                //Doesn't have two tokens around equals? Forget it
+                $this->current_line_number++;
+                continue;
+            }
+            $number = $this->clean_token($line_tokens[0]);
+            $classname = $this->strip_quotes($this->clean_token($line_tokens[1]));
+            if (!is_numeric($number)) {
+                $this->current_line_number++;
+                continue;
+            }
+            $spawnNums[$number] = $classname;
+            $this->current_line_number++;
+        }
+        return $spawnNums;
     }
     
     public function strip_quotes($str) {
