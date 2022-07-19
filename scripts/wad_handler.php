@@ -89,6 +89,9 @@ class Wad_Handler {
             if ($string == 'IMPM') {
                 return 'module';
             }
+            if ($string == 'fLaC') {
+                return 'flac';
+            }
         }
         if ($lump['size'] >= 3) {
             fseek($this->wad_file, $lump['position']);

@@ -360,7 +360,7 @@ class Project_Compiler {
         }
 
         //If not, find our first music then rename it to MUSxxx - prioritize MIDI first then check others later
-        $possible_music_types = ['midi', 'mus', 'module', 'mp3', 'ogg'];
+        $possible_music_types = ['midi', 'mus', 'module', 'mp3'];
         foreach ($possible_music_types as $looking_for_music_type) {
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] == $looking_for_music_type) {
@@ -372,6 +372,19 @@ class Project_Compiler {
                     Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data['map_number']);
                     return;
                 }
+            }
+        }
+        
+        //If we still don't have a music, check for OGGs and FLACs
+        foreach ($wad_handler->lumps as $lump) {
+            if (in_array($lump['type'], ['flac', 'ogg'])) {
+                $music_type = $lump['type'];
+                $music_length = strlen($lump['data']);
+                Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . $music_length, $map_data['map_number']);
+                $music_path = PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'];
+                file_put_contents($music_path, $lump['data']);
+                Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data['map_number']);
+                return;
             }
         }
     }
