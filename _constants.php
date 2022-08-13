@@ -70,10 +70,10 @@ function get_setting($setting, $type = null) {
         return $GLOBALS['setting_defaults'][$setting];
     }
     return null;
-}    
+}
 
 $string_to_decode = "[]";
-if (file_exists(SETTINGS_FILE)) {            
+if (file_exists(SETTINGS_FILE)) {
     $string_to_decode = file_get_contents(SETTINGS_FILE);
 }
 $settings = json_decode($string_to_decode, true);
@@ -123,7 +123,6 @@ const PIN_FILE              = WORK_FOLDER . "pins.txt";
 const PIN_MASTER_FILE       = WORK_FOLDER . "pins-master.txt";
 const IPS_FOLDER            = WORK_FOLDER . "ips/";
 const UPLOADS_FOLDER        = WORK_FOLDER . "uploads/";
-const STATIC_CONTENT_FOLDER = WORK_FOLDER . "fixedcontent/";
 const PK3_FOLDER            = WORK_FOLDER . "pk3/";
 const LOG_FILE              = WORK_FOLDER . "log.log";
 const PK3_GEN_LOG_FILE      = WORK_FOLDER . "pk3generation.log";
@@ -134,6 +133,7 @@ const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
 const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads/";
+const STATIC_CONTENT_FOLDER = DATA_FOLDER . "fixedcontent/";
 
 const MAPS_FOLDER           = PK3_FOLDER . "maps/";
 
