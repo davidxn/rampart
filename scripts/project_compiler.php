@@ -580,6 +580,7 @@ class Project_Compiler {
             $mapinfo .= "{" . PHP_EOL;
             $mapinfo .= "author = \"$" . $map_data['lumpname'] . "AUTH\"" . PHP_EOL;
             $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
+            $mapinfo .= "cluster = 1" . PHP_EOL;
             
             //Include any allowed custom properties from original upload
             Logger::pg("Checking for custom properties for map number " .$map_data['map_number'], $map_data['map_number']);

@@ -75,6 +75,12 @@ textarea {
     white-space: pre-wrap;
     padding: 8px;
     font-size: 8pt;
+    text-align: left;
+}
+
+.code.minitextarea {
+    max-width: 200px;
+    overflow: hidden;
 }
 
 .footer {
@@ -133,7 +139,7 @@ textarea {
 
 .outer {
     background-color: #666;
-    width: 1020px;
+    max-width: 1600px;
     margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0px 0px 8px 0px;

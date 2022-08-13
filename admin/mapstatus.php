@@ -3,6 +3,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_handler.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
 
 $date_pk3 = @filemtime(get_project_full_path()) or 0;
@@ -52,7 +53,7 @@ $table_string = "<table class=\"maps_table\"><thead><tr><th>ID</th><th>Lump</th>
 if (get_setting("PROJECT_WRITE_MAPINFO")) {
     $table_string .= "<th>MAPINFO</th>";
 }
-$table_string .= "<th>Updated</th><th></th></tr></thead><tbody>";
+$table_string .= "<th>Updated</th><th style=\"min-width: 90px\"></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
         $table_string .= "<td>" . $file_data['map_number'] . "</td>";
@@ -64,15 +65,6 @@ foreach($file_table as $file_data) {
             $table_string .= html_property_editor($file_data['pin'], 'mapinfo', $file_data['mapinfo'], 'textarea');
         }
 
-        /**$table_string .= "<td>";
-        if ($file_data['jumpcrouch']) {
-            $table_string .= '<img src="/img/special_jump.png"/>';
-        }
-        if ($file_data['wip']) {
-            $table_string .= '<img src="/img/special_wip.png"/>';
-        } 
-        $table_string .= "</td>";
-        */
         $table_string .= "<td>" . $file_data['updated'] . "</td>";
         $table_string .= '<td class="editable-property" name="' . $file_data['pin'] . '">';
         if ($file_data['locked']) {
@@ -80,6 +72,7 @@ foreach($file_table as $file_data) {
         } else {
             $table_string .= '<button class="property property-unlocked"></button>';
         }
+        $table_string .= '&nbsp;' . Logger::get_log_link($file_data['map_number']);
         $table_string .= '&nbsp;<a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '"><button class="property property-download"></button></a>';
         $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;<a href="deletemap.php?mappin=' . $file_data['pin'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
         $table_string .= '</td>';
@@ -93,7 +86,7 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
         if ($type == 'text') {
             $table_string .= "<input name=\"" . $property_name . "\" value=\"" . $current_value . "\"></input>";
         } else if ($type == 'textarea') {
-            $table_string .= "<textarea class=\"code\" name=\"" . $property_name . "\">" . $current_value . "</textarea>";
+            $table_string .= "<textarea class=\"code minitextarea\" name=\"" . $property_name . "\">" . $current_value . "</textarea>";
         }
         $table_string .= "<br/><button class=\"property property-ok\"></button><span>&nbsp;</span><button class=\"property property-cancel\"></button></div>";
         if ($type == 'text') {
