@@ -14,14 +14,6 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
     $map_number = $map_data['map_number'];
     $wad_path = UPLOADS_FOLDER . get_source_wad_file_name($map_number);
 
-    $log_link = "";
-    if (Logger::map_has_log($map_number)) {
-        $log_link = '<a href="./maplog.php?id=' . $map_number . '"><img src="./img/log.png"/></a>';        
-    }
-    if (Logger::map_has_errors($map_number)) {
-        $log_link = '<a href="./maplog.php?id=' . $map_number . '"><img src="./img/logerror.png"/></a>';        
-    }
-
     $file_table[] = [
         'pin' => $identifier,
         'map_name' => $map_data['map_name'],
@@ -32,7 +24,7 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
         'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
         'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
         'locked' => isset($map_data['locked']) ? $map_data['locked'] : 0,
-        'log_link' => $log_link
+        'log_link' => Logger::get_log_link($map_number),
     ];
 }
 
@@ -69,7 +61,7 @@ $table_string .= "</tbody></table>";
 
 ?>
                 <p>You can generate and download a snapshot version of the project here. Snapshots will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
-                
+
                 <p>There are <?=count($file_table)?> maps in the project.</p>
 
                 <center><button type="button" id="download_button">Download a snapshot version!</button>

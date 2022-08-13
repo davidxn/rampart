@@ -92,7 +92,7 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
         if ($type == 'text') {
             $table_string .= "<span class=\"property-edit\">" . $current_value . "</span>";
         } else if ($type == 'textarea') {
-            $table_string .= "<span class=\"property-edit\"><pre class=\"code\">" . $current_value . "</textarea></span>";
+            $table_string .= "<span class=\"property-edit\"><pre class=\"code minitextarea\">" . $current_value . "</textarea></span>";
         }
         
         $table_string .= "</td>";

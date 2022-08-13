@@ -78,7 +78,7 @@ class Logger {
     public static function record_upload($start_time, $map_number, $size) {
         file_put_contents(UPLOAD_LOG_FILE, $start_time . "," . $map_number . "," . $size . PHP_EOL, FILE_APPEND);
     }
-    
+
     public static function get_log_link($map_number) {
         $log_link = "";
         if (Logger::map_has_log($map_number)) {
