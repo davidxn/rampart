@@ -79,8 +79,10 @@ class Project_Compiler {
         $this->copy_static_content();
         $this->set_status("Fiddling with DIALOGUE to write guide menus...");
         $this->write_guide_dialogue();
-        $this->set_status("Generating marquee textures...");
-        $this->generate_marquees($catalog_handler);
+        if (get_setting("GENERATE_MARQUEES")) {
+            $this->set_status("Generating marquee textures...");
+            $this->generate_marquees($catalog_handler);
+        }
         file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
         
         if (get_setting("PROJECT_FORMAT") == "WAD") {

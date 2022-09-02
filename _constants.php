@@ -42,6 +42,7 @@ specialaction_lowerfloor
 specialaction_killmonsters
 ',
     "PROJECT_QUICK_MUSIC" => false,
+    "GENERATE_MARQUEES" => false,
 
     # About the site
     "BANNER_MESSAGE" => "",

@@ -140,6 +140,16 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             </td>
                         </tr>
                         <tr>
+                            <td width="200">Generate marquee textures:</td>
+                            <td>
+                                <div class="smallnote">This option will generate textures with the names of the maps, for placing in a hub</div>
+                                <label class="checkmarkcontainer">
+                                    <input type="checkbox" id="GENERATE_MARQUEES" <?=get_setting("GENERATE_MARQUEES", "checkbox")?"checked=\"checked\"":""?>>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
                             <td width="200">Sky lump:</td>
                             <td>
                                 <div class="smallnote">If a lump by this name is present in an uploaded WAD, it will be included as the map's sky for the project.</div>
