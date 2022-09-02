@@ -412,3 +412,5 @@ button.property-unlocked{background-image: url("/img/unlocked.png");   }
 button.property-locked  {background-image: url("/img/locked.png");     }
 button.property-download{background-image: url("/img/page_save.png");  }
 button.property-delete  {background-image: url("/img/cross.png");      }
+button.property-log     {background-image: url("/img/log.png");        }
+button.property-logerror{background-image: url("/img/logerror.png");   }

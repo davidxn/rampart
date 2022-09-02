@@ -80,12 +80,13 @@ class Logger {
     }
 
     public static function get_log_link($map_number) {
+        
         $log_link = "";
         if (Logger::map_has_log($map_number)) {
-            $log_link = '<a href="/maplog.php?id=' . $map_number . '"><img src="/img/log.png"/></a>';        
+            $log_link = '<a href="/maplog.php?id=' . $map_number . '"><button class="property property-log"></button></a>';
         }
         if (Logger::map_has_errors($map_number)) {
-            $log_link = '<a href="/maplog.php?id=' . $map_number . '"><img src="/img/logerror.png"/></a>';        
+            $log_link = '<a href="/maplog.php?id=' . $map_number . '"><button class="property property-logerror"></button></a>';
         }
         return $log_link;
     }
