@@ -8,12 +8,14 @@ require_once("scripts/guide_writer.php");
 require_once("scripts/catalog_handler.php");
 require_once("scripts/build_numberer.php");
 require_once("scripts/sndinfo_handler.php");
+require_once("scripts/music_lump_mapper.php");
 
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
     public $wad_variables = ['custom_defined_doomednums' => [], 'custom_defined_spawnnums' => []];
     public $global_lump_list = [];
+    public $music_lump_mapper = null;
     
     function add_lump_to_global_list($lumpname, $data_hash, $owning_map) {
         //If we have no lump by this name recorded, add it
@@ -361,7 +363,11 @@ class Project_Compiler {
             return;
         }
 
-        //If not, find our first music then rename it to MUSxxx - prioritize MIDI first then check others later
+        //If not, find our first music then name it according to our lump map - prioritize MIDI first then check others later
+        if ($this->music_lump_mapper == null) {
+            $this->music_lump_mapper = new Music_Lump_Mapper();
+        }
+        
         $possible_music_types = ['midi', 'mus', 'module', 'mp3'];
         foreach ($possible_music_types as $looking_for_music_type) {
             foreach ($wad_handler->lumps as $lump) {
@@ -369,7 +375,7 @@ class Project_Compiler {
                     $music_type = $lump['type'];
                     $music_length = strlen($lump['data']);
                     Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . $music_length, $map_data['map_number']);
-                    $music_path = PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'];
+                    $music_path = PK3_FOLDER . "music/" . $this->music_lump_mapper->get_name_for_music_lump($map_data['lumpname']);
                     file_put_contents($music_path, $lump['data']);
                     Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data['map_number']);
                     return;
@@ -383,7 +389,7 @@ class Project_Compiler {
                 $music_type = $lump['type'];
                 $music_length = strlen($lump['data']);
                 Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . $music_length, $map_data['map_number']);
-                $music_path = PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'];
+                $music_path = PK3_FOLDER . "music/" . $this->music_lump_mapper->get_name_for_music_lump($map_data['lumpname']);
                 file_put_contents($music_path, $lump['data']);
                 Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data['map_number']);
                 return;
@@ -609,8 +615,16 @@ class Project_Compiler {
             }
 
             //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to our default
-            if (file_exists(PK3_FOLDER . "music/" . "MUS" . $map_data['map_number'])) {
-                $mapinfo .= "\t" . "music = MUS" . $map_data['map_number'] . PHP_EOL;
+            if ($this->music_lump_mapper == null) {
+                $this->music_lump_mapper = new Music_Lump_Mapper();
+            }
+            
+            $expected_music_lump = $this->music_lump_mapper->get_name_for_music_lump($map_data['lumpname']);
+            $expected_music_file = PK3_FOLDER . "music" . DIRECTORY_SEPARATOR . $expected_music_lump;
+        
+            if (file_exists($expected_music_file)) {
+                Logger::pg("Using music lump " . $expected_music_lump . " for map " . $map_data['map_number'], $map_data['map_number']);
+                $mapinfo .= "\t" . "music = " . $expected_music_lump . PHP_EOL;
             } else if (isset($this->map_additional_mapinfo[$map_data['map_number']]['music'])) {
                 $music_lump = $this->map_additional_mapinfo[$map_data['map_number']]['music'];
                 Logger::pg("Using specific music lump " . $music_lump . " for map " . $map_data['map_number'], $map_data['map_number']);

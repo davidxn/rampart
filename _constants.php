@@ -43,6 +43,7 @@ specialaction_killmonsters
 ',
     "PROJECT_QUICK_MUSIC" => false,
     "GENERATE_MARQUEES" => false,
+    "MUSIC_LUMP_MAP" => "none",
 
     # About the site
     "BANNER_MESSAGE" => "",

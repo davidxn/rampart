@@ -163,6 +163,19 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                                 <input type="text" id="DEFAULT_MUSIC_LUMP" value="<?=htmlspecialchars(get_setting("DEFAULT_MUSIC_LUMP"))?>"></input>
                             </td>
                         </tr>
+                        <tr>
+                            <td width="200">Assign vanilla music lump names:</td>
+                            <td>
+                                <div class="smallnote">Music uploaded to slots with map lumps in the chosen vanilla game will be written as that map's corresponding music</div>
+                                <div>
+                                    <?
+                                        echo html_radio_button('MUSIC_LUMP_MAP', 'None', "none");
+                                        echo html_radio_button('MUSIC_LUMP_MAP', 'Ultimate Doom', "udoom");
+                                        echo html_radio_button('MUSIC_LUMP_MAP', 'Doom 2', "doom2");
+                                    ?>
+                                </div>
+                            </td>
+                        </tr>
                         
                         <tr><td colspan="2"><h3>Site settings</h3></td></tr>
                         <tr>
