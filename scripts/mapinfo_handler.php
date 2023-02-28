@@ -27,7 +27,7 @@ class Mapinfo_Handler {
                 continue;
             }
             
-            if(substr($this->clean_token($line), 0, 10) == "spawnnums") {
+            if(substr($this->clean_token($line), 0, 9) == "spawnnums") {
                 Logger::pg("Found spawnnums");
                 $parsed_data['spawnnums'] = $this->parseSpawnNums();
                 continue;
