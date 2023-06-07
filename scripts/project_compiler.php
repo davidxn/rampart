@@ -173,7 +173,10 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
             $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
+            $imported_md3s = $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'models', '.md3');
+            $imported_objs = $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
+            $this=>import_models($map_data, $wad_handler, $imported_md3s, $imported_objs);
+            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA', 'MODELDEF']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
@@ -278,7 +281,8 @@ class Project_Compiler {
         Logger::pg("Wrote " . $bytes_written . " bytes to " . $target_wad, $map_data['map_number']);
     }
     
-    function import_between_markers($map_data, $wad_handler, $start_names, $stop_names, $folder_name, $type_to_display) {
+    function import_between_markers($map_data, $wad_handler, $start_names, $stop_names, $folder_name, $type_to_display, $filename_extension = NULL) {
+        $lump_references = array();
         $in_zone = false;
         foreach ($wad_handler->lumps as $lump) {
             if (in_array($lump['name'], $start_names)) {
@@ -298,9 +302,9 @@ class Project_Compiler {
                 }
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'];
+                $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'] . $filename_extension;
                 file_put_contents($output_file, $lump['data']);
-
+                $lump_references[$lump['name']] = $output_file;
                 Logger::pg("Wrote " . $type_to_display . " " . $output_file, $map_data['map_number']);
             }
         }
@@ -308,6 +312,8 @@ class Project_Compiler {
         if ($in_zone) {
             Logger::pg("❌ Didn't find an end lump for " . $folder_name . " - expected one of: " . implode(", ", $stop_names) . ". This might have caused further problems", $map_data['map_number'], true);
         }
+
+        return $lump_references;
     }
     
     function import_lumps_directly($map_data, $wad_handler, $allowed_lump_names) {
@@ -334,6 +340,46 @@ class Project_Compiler {
                 @mkdir(PK3_FOLDER, 0755, true);
                 $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $included_lump_counts[$lump['name']];
                 file_put_contents($data_path, $lump['data']);
+                Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path, $map_data['map_number']);
+            }
+        }
+    }
+
+    function import_models($map_data, $wad_handler, $imported_md3s, $imported_objs) {
+
+        $number_of_modeldefs = 0;
+        $imported_models = array_merge($imported_objs, $imported_md3s);
+
+        //import MODELDEF files
+        foreach ($wad_handler->lumps as $lump) {
+            if ($lump['name'] == 'MODELDEF') {
+                $number_of_modeldefs++;
+                
+                Logger::pg("💾 Including " . $lump["name"] . " lump " . $number_of_modeldefs, $map_data['map_number']);                
+                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $number_of_modeldefs;
+
+                //TODO: parse each for model reference; lookup in $imported_models and replace
+                $modeldef_data = $lump['data'];
+                $modeldef_lines = split(PHP_EOL, $modeldef_data);
+
+                $new_lines = array();
+                foreach ($modeldef_lines as $line) {
+                    if(preg_match('/MODEL/i', $line)){
+
+                        $model_line_pattern = '/\s(MODEL)\s([0-9]+)\s"(.*)"\s?/i';
+                        
+                        //Find the model reference value
+                        $model_lump_name = preg_replace($model_line_pattern, '$3', $line);
+                        $model_line_format = '$1 $2 "' . $imported_models[$model_lump_name] . '"';
+
+                        //Feplace the model reference with the relative path of the file we created
+                        $new_lines[count($new_lines)] = preg_replace($model_line_pattern, $model_line_format, $line);
+                    } else {
+                        $new_lines[count($new_lines)] = $line;
+                    }
+                }
+
+                file_put_contents($data_path, $new_lines);
                 Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path, $map_data['map_number']);
             }
         }
