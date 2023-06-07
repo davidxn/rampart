@@ -176,7 +176,7 @@ class Project_Compiler {
             $imported_md3s = $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'models', '.md3');
             $imported_objs = $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
             $this=>import_models($map_data, $wad_handler, $imported_md3s, $imported_objs);
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA', 'MODELDEF']);
+            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
