@@ -353,7 +353,9 @@ class Project_Compiler {
             if ($lump['name'] == 'MODELDEF') {
                 $number_of_modeldefs++;
                 
-                Logger::pg("💾 Including " . $lump["name"] . " lump " . $number_of_modeldefs, $map_data['map_number']);                
+                Logger::pg("💾 Including " . $lump["name"] . " lump " . $number_of_modeldefs, $map_data['map_number']);     
+
+                //MODELDEF files must go in the root directory of the pk3           
                 $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $number_of_modeldefs;
 
                 $modeldef_lines = split(PHP_EOL, $lump['data']);
