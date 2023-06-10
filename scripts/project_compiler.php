@@ -371,11 +371,10 @@ class Project_Compiler {
                         $modeldef_data .= 'Path "models' . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR . '"' . PHP_EOL
                     } 
 
-                    //Since RAMPART adds its own Path definition line, we should only include the file line if it
-                    //isn't one already set by the mapper
+                    //Since RAMPART needs to add its own Path definition line, we ignore one the mapper has already included
                     //note that allowing the mapper to include a Path line which is ignored makes it easier for the
                     //mapper to run their map both locally for testing and as part of the built project
-                    if (!preg_match('/PATH/i', $line) {
+                    if (!preg_match('/^/s*PATH/i', $line) {
                         $modeldef_data .= $line . PHP_EOL;
                     } 
                 }
