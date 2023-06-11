@@ -10,7 +10,7 @@ if (!file_exists(SETTINGS_FILE) && !$GLOBALS['SKIP_SETTINGS_CHECK']) {
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="/upload.js?xcache=8" type="text/javascript"></script>
-        <link rel="stylesheet" href="/ramp.css?xcache=8">
+        <link rel="stylesheet" href="/ramp.css?xcache=9">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Exo">
         <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
@@ -21,7 +21,7 @@ if (!file_exists(SETTINGS_FILE) && !$GLOBALS['SKIP_SETTINGS_CHECK']) {
     <body>
         <div class="outer">
             <div class="header">
-                <div class="titlebox">&nbsp;</div>
+                <div class="titlebox">&nbsp;<a class="quickstart" href="./rampstarterpack.zip"><img src="./img/quickstartbutton.png"/></a></div>
 <?php
 if (!is_writable(WORK_FOLDER)) {
 ?>
@@ -60,6 +60,8 @@ if (get_setting("ALLOW_NEW_UPLOADS") || get_setting("ALLOW_EDIT_UPLOADS")) {
 }
 ?>
                     <a href="/download.php"><div class="menuitem">Download</div></a>
+                    <a href="/info.php"><div class="menuitem">Build Info</div></a>
+                    <a href="https://discord.gg/afFGdGNhW2"><div class="menuitem"><b>Join Discord</b></div></a>
                 </div>
             </div>
             <div class="mainbox">

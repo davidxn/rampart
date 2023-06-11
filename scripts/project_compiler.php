@@ -13,7 +13,7 @@ require_once("scripts/music_lump_mapper.php");
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
-    public $wad_variables = ['custom_defined_doomednums' => [], 'custom_defined_spawnnums' => []];
+    public $wad_variables = ['custom_defined_doomednums' => [], 'custom_defined_spawnnums' => [], 'rejected_doomednums' => [], 'rejected_spawnnums' => [], 'scripts_rejected' => []];
     public $global_lump_list = [];
     public $music_lump_mapper = null;
     
@@ -45,7 +45,7 @@ class Project_Compiler {
     
     function add_doom2_lumps_to_global_list() {
         $lumpnames = explode("\n", file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.lumps"));
-        Logger::pg("Found " . count($lumpnames) . " to add to global list");
+        Logger::pg("Read " . count($lumpnames) . " protected lumps");
         foreach ($lumpnames as $lumpname) {
             $lumpname = trim($lumpname);
             if ($lumpname != "") {
@@ -102,7 +102,7 @@ class Project_Compiler {
         Logger::pg("Project generated in " . $seconds . " seconds, build number " . $new_build_number);
         Logger::record_pk3_generation($start_time, $seconds);
         $numberer->set_new_build_number($new_build_number);
-        
+        Logger::save_build_info($this->wad_variables);
         return true;
     }
 
@@ -170,6 +170,7 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['P_START', 'PP_START', 'PPSTART'], ['P_END', 'PP_END', 'PPEND'], 'patches', 'patch');
             $this->import_between_markers($map_data, $wad_handler, ['TX_START'], ['TX_END'], 'textures', 'texture');
             $this->import_between_markers($map_data, $wad_handler, ['VX_START'], ['VX_END'], 'voxels', 'voxel');
+            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'model');
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
             $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
@@ -323,6 +324,13 @@ class Project_Compiler {
                     continue;
                 }
                 
+                //Another special case - reject TEXTURES if it redefines RSKY1
+                
+                if ($lump['name'] == 'TEXTURES' && strpos(strtolower($lump['data']), 'texture "rsky1"') !== false) {
+                    Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it redefines RSKY1!", $map_data['map_number'], true);
+                    continue;
+                }
+                
                 Logger::pg("💾 Including " . $lump["name"] . " lump", $map_data['map_number']);
                 if (!isset($included_lump_counts[$lump["name"]])) {
                     $included_lump_counts[$lump["name"]] = 1;
@@ -375,6 +383,10 @@ class Project_Compiler {
                     $music_type = $lump['type'];
                     $music_length = strlen($lump['data']);
                     Logger::pg("🎵 Music of type " . $lump['type'] . " found in lump " . $lump['name'] . " with size " . $music_length, $map_data['map_number']);
+                    if ($music_length > 10000000) {
+                        Logger::pg("❌ Bloody hell that's enormous - skipping music lump " . $lump['name'], $map_data['map_number'], true);
+                        return;
+                    }
                     $music_path = PK3_FOLDER . "music/" . $this->music_lump_mapper->get_name_for_music_lump($map_data['lumpname']);
                     file_put_contents($music_path, $lump['data']);
                     Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data['map_number']);
@@ -404,6 +416,7 @@ class Project_Compiler {
             if (in_array(strtoupper($lump['name']), ['DECORATE', 'ZSCRIPT'])) {
                 if (strpos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
                     Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it performs replacements!", $map_data['map_number'], true);
+                    $this->wad_variables['scripts_rejected'][$map_data['map_number']] = 1;
                     continue;
                 }
                 Logger::pg("📜 Found " . $lump['name'] . " lump, adding it to our script folder", $map_data['map_number']);
@@ -437,8 +450,8 @@ class Project_Compiler {
     
     function import_mapinfo($map_data, $wad_handler) {
         foreach ($wad_handler->lumps as $lump) {
-            if (in_array(strtoupper($lump['name']), ['MAPINFO', 'ZMAPINFO'])) {
-                Logger::pg("📜 Found " . $lump['name'] . " lump, parsing it", $map_data['map_number']);
+            if (in_array(strtoupper($lump['name']), ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
+                Logger::pg("📜 Found map info " . $lump['name'] . " lump, parsing it", $map_data['map_number']);
                 $mapinfo_handler = new Mapinfo_Handler($lump['data']);
                 $mapinfo_properties = $mapinfo_handler->parse();
                 if (isset($mapinfo_properties['error'])) {
@@ -446,24 +459,31 @@ class Project_Compiler {
                     continue;
                 }
                 // Doomednums will all be added at the end - put them into a global array as we encounter them
-                if (isset($mapinfo_properties['doomednums'])) {
-                    foreach($mapinfo_properties['doomednums'] as $dnum => $classname) {
-                        if (isset($this->wad_variables['custom_defined_doomednums'][$dnum])) {
-                            Logger::pg("❌ DoomedNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->wad_variables['custom_defined_doomednums'][$dnum], $map_data['map_number'], true);
-                            continue;
-                        }
-                        $this->wad_variables['custom_defined_doomednums'][$dnum] = $classname;
-                        Logger::pg("DoomEdNum " . $dnum . " = " . $classname, $map_data['map_number']);
-                    }
+                if (isset($this->wad_variables['scripts_rejected'][$map_data['map_number']])) {
+                    Logger::pg("❌ Not importing identifiers because scripts for this map were rejected", $map_data['map_number'], true);
                 }
-                if (isset($mapinfo_properties['spawnnums'])) {
-                    foreach($mapinfo_properties['spawnnums'] as $dnum => $classname) {
-                        if (isset($this->wad_variables['custom_defined_spawnnums'][$dnum])) {
-                            Logger::pg("❌ SpawnNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->wad_variables['custom_defined_spawnnums'][$dnum], $map_data['map_number'], true);
-                            continue;
+                else {
+                    if (isset($mapinfo_properties['doomednums'])) {
+                        foreach($mapinfo_properties['doomednums'] as $dnum => $classname) {
+                            if (isset($this->wad_variables['custom_defined_doomednums'][$dnum])) {
+                                $dnuminfo = $this->wad_variables['custom_defined_doomednums'][$dnum];
+                                Logger::pg("❌ DoomedNum conflict: " . $dnum . " for " . $classname . " already refers to " . $dnuminfo['classname'] . " from map " . $dnuminfo['map_number'] . ", rejecting it", $map_data['map_number'], true);
+                                $this->wad_variables['rejected_doomednums'][] = ['dnum' => $dnum, 'classname' => $classname, 'original_definer' => $dnuminfo['map_number'], 'failed_definer' => $map_data['map_number']];
+                                continue;
+                            }
+                            $this->wad_variables['custom_defined_doomednums'][$dnum] = ['classname' => $classname, 'map_number' => $map_data['map_number']];
+                            Logger::pg("DoomEdNum " . $dnum . " = " . $classname, $map_data['map_number']);
                         }
-                        $this->wad_variables['custom_defined_spawnnums'][$dnum] = $classname;
-                        Logger::pg("SpawnNum " . $dnum . " = " . $classname, $map_data['map_number']);
+                    }
+                    if (isset($mapinfo_properties['spawnnums'])) {
+                        foreach($mapinfo_properties['spawnnums'] as $dnum => $classname) {
+                            if (isset($this->wad_variables['custom_defined_spawnnums'][$dnum])) {
+                                Logger::pg("❌ SpawnNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->wad_variables['custom_defined_spawnnums'][$dnum], $map_data['map_number'], true);
+                                continue;
+                            }
+                            $this->wad_variables['custom_defined_spawnnums'][$dnum] = $classname;
+                            Logger::pg("SpawnNum " . $dnum . " = " . $classname, $map_data['map_number']);
+                        }
                     }
                 }
                 // For any other index-value pair, as long as it's a string, check it against the allowed properties and add it if it's OK
@@ -520,8 +540,9 @@ class Project_Compiler {
         foreach ($catalog as $map_data) {
             
             $map_name = $map_data['map_name'];
+            $map_author = $map_data['author'];
             foreach([0, 1] as $is_blue) {
-                $params = urlencode(json_encode(["name" => $map_name, "active" => !$is_blue]));
+                $params = urlencode(json_encode(["name" => $map_name . " - " . $map_author . "  ", "active" => !$is_blue, "font" => "dos"]));
                 $image_bytes = file_get_contents("http://trackthet.com/services/marquee/generate_marquees.php?params=" . $params);
                 $marquee_prefix = $is_blue ? "MARX" : "MARQ";
                 $marquee_file = $marquee_folder . DIRECTORY_SEPARATOR . $marquee_prefix . $map_data['map_number'] . ".png";
@@ -651,8 +672,10 @@ class Project_Compiler {
         // If custom doomednums were found during WAD creation, add them to global MAPINFO now
         if ($this->wad_variables['custom_defined_doomednums']) {
             $mapinfo .= "doomednums {" . PHP_EOL;
-            foreach ($this->wad_variables['custom_defined_doomednums'] as $dnum => $classname) {
-                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
+            foreach ($this->wad_variables['custom_defined_doomednums'] as $dnum => $dnuminfo) {
+                $classname = $dnuminfo['classname'];
+                $defining_map = $dnuminfo['map_number'];
+                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . " // Map number " . $defining_map . PHP_EOL;
             }
             $mapinfo .= "}" . PHP_EOL;
         }

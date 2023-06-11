@@ -16,6 +16,9 @@ class Mapinfo_Handler {
         
         //This is incredibly basic - replace this with the equivalent of the parser from UDB eventually...
         $parsed_data = [];
+        
+        //Remove anything between multi-line comments
+        $this->bytes = preg_replace("/\/\*[\s\S]*\*\//", "", $this->bytes);
         $this->mapinfo_lines = split(PHP_EOL, $this->bytes);
         
         while ($this->current_line_number < count($this->mapinfo_lines)) {

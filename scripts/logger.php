@@ -90,4 +90,9 @@ class Logger {
         }
         return $log_link;
     }
+    
+    public static function save_build_info($data) {
+        $json = json_encode($data);
+        @file_put_contents(WORK_FOLDER . DIRECTORY_SEPARATOR . "buildinfo.log", $json);
+    }
 }

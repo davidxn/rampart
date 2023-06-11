@@ -132,6 +132,7 @@ const PK3_GEN_LOG_FOLDER    = WORK_FOLDER . "pk3genlogs";
 const PK3_GEN_HISTORY_FILE  = WORK_FOLDER . "pk3history.log";
 const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
+const BUILD_INFO_FILE       = WORK_FOLDER . "buildinfo.log";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
 const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads/";
