@@ -177,7 +177,7 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'models', '.md3');
             $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
             $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'models', '.png');
-            $this=>import_modeldefs($map_data, $wad_handler, $imported_md3s, $imported_objs);
+            $this->import_modeldefs($map_data, $wad_handler, $imported_md3s, $imported_objs);
             $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
@@ -376,13 +376,13 @@ class Project_Compiler {
                         //For each model definition in a legal model definition there will always be one file starting "Model 0"
                         //We need to add one Path definition line to each model definition, matching the path to models for the map being inported
                         //So it makes sense to add it immediately prior to the "Model 0" line
-                        $modeldef_data .= 'Path "models' . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR . '"' . PHP_EOL
+                        $modeldef_data .= 'Path "models' . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR . '"' . PHP_EOL;
                     } 
 
                     //Since RAMPART needs to add its own Path definition line, we ignore one the mapper has already included
                     //note that allowing the mapper to include a Path line which is ignored makes it easier for the
                     //mapper to run their map both locally for testing and as part of the built project
-                    if (!preg_match('/^/s*PATH/i', $line) {
+                    if (!preg_match('/^/s*PATH/i', $line)) {
                         $modeldef_data .= $line . PHP_EOL;
                     } 
                 }
