@@ -174,6 +174,10 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
             $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
+            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'models', '.md3');
+            $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
+            $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'models', '.png');
+            $this=>import_modeldefs($map_data, $wad_handler, $imported_md3s, $imported_objs);
             $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
@@ -279,7 +283,7 @@ class Project_Compiler {
         Logger::pg("Wrote " . $bytes_written . " bytes to " . $target_wad, $map_data['map_number']);
     }
     
-    function import_between_markers($map_data, $wad_handler, $start_names, $stop_names, $folder_name, $type_to_display) {
+    function import_between_markers($map_data, $wad_handler, $start_names, $stop_names, $folder_name, $type_to_display, $filename_extension = NULL) {
         $in_zone = false;
         foreach ($wad_handler->lumps as $lump) {
             if (in_array($lump['name'], $start_names)) {
@@ -299,9 +303,8 @@ class Project_Compiler {
                 }
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'];
+                $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'] . $filename_extension;
                 file_put_contents($output_file, $lump['data']);
-
                 Logger::pg("Wrote " . $type_to_display . " " . $output_file, $map_data['map_number']);
             }
         }
@@ -343,6 +346,49 @@ class Project_Compiler {
                 $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $included_lump_counts[$lump['name']];
                 file_put_contents($data_path, $lump['data']);
                 Logger::pg("Wrote " . strlen($lump["data"]) . " bytes to " . $data_path, $map_data['map_number']);
+            }
+        }
+    }
+
+    function import_modeldefs($map_data, $wad_handler) {
+
+        $number_of_modeldefs = 0;
+
+        //import MODELDEF files
+        //there could be multiple files with one definition in each, or one file with multiple definitions
+        //this should handle both cases -- or even a mixture of cases -- fine
+        foreach ($wad_handler->lumps as $lump) {
+            if ($lump['name'] == 'MODELDEF') {
+                $number_of_modeldefs++;
+                
+                Logger::pg("💾 Including " . $lump["name"] . " lump " . $number_of_modeldefs, $map_data['map_number']);     
+
+                //MODELDEF files must go in the root directory of the pk3           
+                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $number_of_modeldefs;
+
+                $modeldef_lines = split(PHP_EOL, $lump['data']);
+
+                $modeldef_data = "";
+
+                foreach ($modeldef_lines as $line) {
+
+                    if(preg_match('/MODEL\s+0/i', $line)){
+                        //For each model definition in a legal model definition there will always be one file starting "Model 0"
+                        //We need to add one Path definition line to each model definition, matching the path to models for the map being inported
+                        //So it makes sense to add it immediately prior to the "Model 0" line
+                        $modeldef_data .= 'Path "models' . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR . '"' . PHP_EOL
+                    } 
+
+                    //Since RAMPART needs to add its own Path definition line, we ignore one the mapper has already included
+                    //note that allowing the mapper to include a Path line which is ignored makes it easier for the
+                    //mapper to run their map both locally for testing and as part of the built project
+                    if (!preg_match('/^/s*PATH/i', $line) {
+                        $modeldef_data .= $line . PHP_EOL;
+                    } 
+                }
+
+                file_put_contents($data_path, $modeldef_data);
+                Logger::pg("Wrote " . strlen($modeldef_data) . " bytes to " . $data_path, $map_data['map_number']);
             }
         }
     }
