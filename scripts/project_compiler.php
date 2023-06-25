@@ -9,51 +9,17 @@ require_once("scripts/catalog_handler.php");
 require_once("scripts/build_numberer.php");
 require_once("scripts/sndinfo_handler.php");
 require_once("scripts/music_lump_mapper.php");
+require_once("scripts/lump_guardian.php");
 
 class Project_Compiler {
 
     public $map_additional_mapinfo = [];
     public $wad_variables = ['custom_defined_doomednums' => [], 'custom_defined_spawnnums' => [], 'rejected_doomednums' => [], 'rejected_spawnnums' => [], 'scripts_rejected' => []];
-    public $global_lump_list = [];
     public $music_lump_mapper = null;
+    public $lump_guardian = null;
     
-    function add_lump_to_global_list($lumpname, $data_hash, $owning_map) {
-        //If we have no lump by this name recorded, add it
-        if (!isset($this->global_lump_list[$lumpname])) {
-            $this->global_lump_list[$lumpname] = [];
-            $this->global_lump_list[$lumpname]['owner'] = $owning_map;
-            $this->global_lump_list[$lumpname]['hash'] = $data_hash;
-            return true;
-        }
-        //We already had a lump with this name. Look to see if it belongs to our base resources or a map, and if it's identical to the existing one
-        //IWAD overwrites are never allowed
-        if ($this->global_lump_list[$lumpname]['owner'] == "IWAD") {
-            Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from the project's base IWAD. Please rename it", $owning_map, true);
-            return false;
-        }
-        
-        //If the hash matches, notify but don't count as error
-        $existing_hash = $this->global_lump_list[$lumpname]['hash'];
-        if ($existing_hash == $data_hash) {
-            Logger::pg("Lump " . $lumpname . " matches same name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". The data is identical", $owning_map);
-            return true;
-        }
-        
-        Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". Please rename it to make sure both maps work correctly", $owning_map, true);
-        return false;
-    }
+    private $decorate_doomed_number_class = 'a DECORATE class';
     
-    function add_doom2_lumps_to_global_list() {
-        $lumpnames = explode("\n", file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.lumps"));
-        Logger::pg("Read " . count($lumpnames) . " protected lumps");
-        foreach ($lumpnames as $lumpname) {
-            $lumpname = trim($lumpname);
-            if ($lumpname != "") {
-                $this->add_lump_to_global_list($lumpname, "", "IWAD");
-            }
-        }
-    }
-
     function compile_project() {
         
         //Begin!
@@ -63,8 +29,7 @@ class Project_Compiler {
         file_put_contents(LOCK_FILE_COMPILE, ":)");
         @mkdir(get_setting("PROJECT_OUTPUT_FOLDER"), 0777, true);
 
-        //Temporary: Add some DOOM2 lump names to our global list. We'll make this configurable
-        $this->add_doom2_lumps_to_global_list();
+        $this->lump_guardian = new Lump_Guardian();
 
         $catalog_handler = new Catalog_Handler();
         $numberer = new Build_Numberer();
@@ -177,7 +142,7 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
             $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'models', '.png');
             $this->import_modeldefs($map_data, $wad_handler);
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA']);
+            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA', 'DECALDEF', 'TRNSLATE']);
             $this->import_music($map_data, $wad_handler);
             $this->import_scripts($map_data, $wad_handler);
             $this->import_mapinfo($map_data, $wad_handler);
@@ -215,16 +180,23 @@ class Project_Compiler {
                 Logger::pg("🔊 Found SNDINFO, attempting to parse it", $map_data['map_number']);
                 $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
                 $sndinfo_result = $sndinfo_handler->parse();
-                //sndinfo lumps come back with [0] the lines to add to the combined sndinfo, [1] the sound lump names it needs
-                $sndinfo_lines_to_import = array_merge($sndinfo_lines_to_import, $sndinfo_result[0]);
-                $sound_lumps_to_extract = array_merge($sound_lumps_to_extract, $sndinfo_result[1]);
+                $requested_lump_names = $sndinfo_result['requested_lump_names'];
+                $requested_definitions = $sndinfo_result['requested_definitions'];
+                for ($i = 0; $i < count($requested_lump_names); $i++) {
+                    if (!$this->lump_guardian->add_sndinfo_definition($requested_definitions[$i], $requested_lump_names[$i], $map_data['map_number'])) {
+                        Logger::pg("❌ Not importing this SNDINFO", $map_data['map_number'], true);
+                        continue 2;
+                    }
+                }
+                $sndinfo_lines_to_import = array_merge($sndinfo_lines_to_import, $sndinfo_result['input_lines']);
+                $sound_lumps_to_extract = array_merge($sound_lumps_to_extract, $requested_lump_names);
             }
             
             // We have the sound lumps we want to extract - let's look through and do that
             foreach ($wad_handler->lumps as $lump) {
                 if (in_array($lump['name'], $sound_lumps_to_extract)) {
                     Logger::pg("🔈 Found " . $lump['name'] . " mentioned in SNDINFO - assuming it's a sound", $map_data['map_number']);
-                    if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                    if (!$this->lump_guardian->add_lump($lump, $map_data['map_number'])) {
                         continue;
                     }
                     //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
@@ -297,7 +269,7 @@ class Project_Compiler {
             }
             if ($in_zone && $lump['data']) {
                 //If we're between start and stop names, import these lumps
-                if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                if (!$this->lump_guardian->add_lump($lump, $map_data['map_number'])) {
                     continue;
                 }
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR;
@@ -326,11 +298,13 @@ class Project_Compiler {
                     continue;
                 }
                 
-                //Another special case - reject TEXTURES if it redefines RSKY1
-                
-                if ($lump['name'] == 'TEXTURES' && strpos(strtolower($lump['data']), 'texture "rsky1"') !== false) {
-                    Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it redefines RSKY1!", $map_data['map_number'], true);
-                    continue;
+                //Another special case - reject TEXTURES if it redefines any existent lumps
+                if ($lump['name'] == 'TEXTURES') {
+                    $texture_validation_result = $this->lump_guardian->validate_textures($lump['data'], $map_data['map_number']);
+                    $lump['data'] = $texture_validation_result['cleaned_data'];
+                    if (!$texture_validation_result['success']) {
+                        Logger::pg("❌ Found conflicts while importing TEXTURES lump", $map_data['map_number'], true);
+                    }
                 }
                 
                 Logger::pg("💾 Including " . $lump["name"] . " lump", $map_data['map_number']);
@@ -404,7 +378,7 @@ class Project_Compiler {
         if ($number_of_midis > 1) {
             foreach ($wad_handler->lumps as $lump) {
                 if ($lump['type'] == 'midi') {
-                    if (!$this->add_lump_to_global_list($lump['name'], md5($lump['data']), $map_data['map_number'])) {
+                    if (!$this->lump_guardian->add_lump($lump, $map_data['map_number'])) {
                         continue;
                     }
                     $midis_imported++;
@@ -459,11 +433,33 @@ class Project_Compiler {
         $lumpnumber = 0;
         foreach ($wad_handler->lumps as $lump) {
             if (in_array(strtoupper($lump['name']), ['DECORATE', 'ZSCRIPT'])) {
-                if (strpos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
+                if (stripos($lump['data'], "replaces") !== false) { //Okay, I don't have time to write a proper parser
                     Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it performs replacements!", $map_data['map_number'], true);
                     $this->wad_variables['scripts_rejected'][$map_data['map_number']] = 1;
                     continue;
                 }
+                
+                //If this script is DECORATE, watch out for DoomEd number definitions
+                
+                if (strtoupper($lump['name'] == 'DECORATE')) {
+                    $matches = [];
+                    //Oh dear god - this gets the class name and DoomEd number out of an actor definition
+                    preg_match_all('/(*ANYCRLF)^\s*?actor\s+([a-zA-Z0-9_]*)\s*(?::\s*[a-zA-Z0-9_]*)?\s+([0-9]+)/im', $lump['data'], $matches);
+                    if (isset($matches[1])) {
+                        //We have some matching DoomEd numbers - attempt to add them to the global list
+                        for ($i = 0; $i < count($matches[1]); $i++) {
+                            $classname = $matches[1][$i];
+                            $doomed_number = $matches[2][$i];
+                            $result = $this->reserve_doomed_number($doomed_number, "DECORATE class: " . $classname, $map_data['map_number']);
+                            if (!$result) {
+                                Logger::pg("❌ Found " . $lump['name'] . " lump but got a DoomEdNum conflict, not including this script", $map_data['map_number'], true);
+                                $this->wad_variables['scripts_rejected'][$map_data['map_number']] = 1;
+                                continue 2;
+                            }
+                        }
+                    }
+                }                
+                
                 Logger::pg("📜 Found " . $lump['name'] . " lump, adding it to our script folder", $map_data['map_number']);
                 $lumpnumber++;
                 $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump['name']);
@@ -493,6 +489,22 @@ class Project_Compiler {
         }
     }
     
+    function reserve_doomed_number($dnum, $classname, $map_number) {
+        if (isset($this->wad_variables['custom_defined_doomednums'][$dnum])) {
+            $dnuminfo = $this->wad_variables['custom_defined_doomednums'][$dnum];
+            if (strtolower($classname) != strtolower($dnuminfo['classname'])) {
+                Logger::pg("❌ DoomedNum conflict: " . $dnum . " for " . $classname . " already refers to " . $dnuminfo['classname'] . " from map " . $dnuminfo['map_number'] . ", rejecting it", $map_number, true);
+                $this->wad_variables['rejected_doomednums'][] = ['dnum' => $dnum, 'classname' => $classname, 'original_definer' => $dnuminfo['map_number'], 'failed_definer' => $map_number];
+                return false;
+            }
+            Logger::pg("⚠️ DoomedNum " . $dnum . " is already defined for " . $classname . " in map " . $dnuminfo['map_number'] . ". Skipping it, but not considering it an error", $map_number);
+            return true;
+        }
+        $this->wad_variables['custom_defined_doomednums'][$dnum] = ['classname' => $classname, 'map_number' => $map_number];
+        Logger::pg("Reserving DoomEdNum " . $dnum . " = " . $classname, $map_number);
+        return true;
+    }
+    
     function import_mapinfo($map_data, $wad_handler) {
         foreach ($wad_handler->lumps as $lump) {
             if (in_array(strtoupper($lump['name']), ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
@@ -510,14 +522,7 @@ class Project_Compiler {
                 else {
                     if (isset($mapinfo_properties['doomednums'])) {
                         foreach($mapinfo_properties['doomednums'] as $dnum => $classname) {
-                            if (isset($this->wad_variables['custom_defined_doomednums'][$dnum])) {
-                                $dnuminfo = $this->wad_variables['custom_defined_doomednums'][$dnum];
-                                Logger::pg("❌ DoomedNum conflict: " . $dnum . " for " . $classname . " already refers to " . $dnuminfo['classname'] . " from map " . $dnuminfo['map_number'] . ", rejecting it", $map_data['map_number'], true);
-                                $this->wad_variables['rejected_doomednums'][] = ['dnum' => $dnum, 'classname' => $classname, 'original_definer' => $dnuminfo['map_number'], 'failed_definer' => $map_data['map_number']];
-                                continue;
-                            }
-                            $this->wad_variables['custom_defined_doomednums'][$dnum] = ['classname' => $classname, 'map_number' => $map_data['map_number']];
-                            Logger::pg("DoomEdNum " . $dnum . " = " . $classname, $map_data['map_number']);
+                            $this->reserve_doomed_number($dnum, $classname, $map_data['map_number']);                            
                         }
                     }
                     if (isset($mapinfo_properties['spawnnums'])) {
@@ -720,6 +725,10 @@ class Project_Compiler {
             foreach ($this->wad_variables['custom_defined_doomednums'] as $dnum => $dnuminfo) {
                 $classname = $dnuminfo['classname'];
                 $defining_map = $dnuminfo['map_number'];
+                //If this DoomEd number was defined by Decorate, it doesn't need to be included in this list
+                if (substr($classname, 0, 15) == "DECORATE class:") {
+                    continue;
+                }
                 $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . " // Map number " . $defining_map . PHP_EOL;
             }
             $mapinfo .= "}" . PHP_EOL;
@@ -980,4 +989,3 @@ class Project_Compiler {
         file_put_contents(STATUS_FILE, $string);
     }
 }
-
