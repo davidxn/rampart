@@ -19,10 +19,17 @@ class Sndinfo_Handler {
             $tokens = preg_split('/\s+/', trim($current_line));
             $is_command = substr($tokens[0], 0, 1) == "$";
             $is_comment = substr($tokens[0], 0, 2) == "//";
-            if (count($tokens) == 2 && !$is_command && !$is_comment) {
+            $is_two_token_line = (count($tokens) == 2);
+            $is_three_token_line = (count($tokens) == 3 && trim($tokens[1]) == "=");
+            
+            if (($is_two_token_line || $is_three_token_line) && !$is_command && !$is_comment) {
+                //Just copy the sound lump name into the middle place if we had three tokens
+                if ($is_three_token_line) {
+                    $tokens[1] = $tokens[2];
+                }
                 //We're going to assume this is a sound name followed by a lump name. Add the lump name to our requested sounds.
                 $this->requested_sound_definitions[] = strtolower($tokens[0]);
-                $this->requested_sound_lump_names[] = strtoupper($tokens[1]);
+                $this->requested_sound_lump_names[] = str_replace("\"", "", strtoupper($tokens[1]));
                 Logger::pg("Added " . strtolower($tokens[0]) . " to requested sound definitions");
                 Logger::pg("Added " . strtoupper($tokens[1]) . " to requested sound lump names");
             }

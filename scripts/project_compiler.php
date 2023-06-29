@@ -643,7 +643,7 @@ class Project_Compiler {
 
             $language .= $map_data['lumpname'] . "NAME = \"" . $map_data['map_name'] . "\";" . PHP_EOL;
             $language .= $map_data['lumpname'] . "AUTH = \"" . $map_data['author'] . "\";" . PHP_EOL;
-            $language .= $map_data['lumpname'] . "MUSC = \"" . (isset($map['music_credit']) ? $map['music_credit'] : '') . "\";" . PHP_EOL;
+            $language .= $map_data['lumpname'] . "MUSC = \"" . (isset($map_data['music_credit']) ? $map_data['music_credit'] : '') . "\";" . PHP_EOL;
             $language .= PHP_EOL;
 
             $rampdata[$map_data['map_number']] = implode(",", [$map_allows_jump, $map_is_wip, $map_data['map_number'], $map_data['lumpname']]);

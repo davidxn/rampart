@@ -13,16 +13,16 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
                     <li>OR Include your sky texture(s) under other names and point to them with SKY1 and SKY2 in a MAPINFO</li></ul>
                 </li>
                 </ul>
-                <p>Take a look at <a href="./guide.php">the tutorial video for uploading</a> to see how!</p>
+                <p>Take a look at the <a href="./rules.php">rules page</a> for a complete list of accepted data. If what you want isn't there, ask!</p>
                 </div>
 
                 <div id="upload-question-type">
                     <p>I want to...</p>
                     <?php if (get_setting("ALLOW_NEW_UPLOADS")) { ?>
-                    <button type="button" id="uploadtype_first">Add a new slot for this map</button>
+                    <button type="button" id="uploadtype_first">Add a new map</button>
                     <?php } ?>
                     <?php if (get_setting("ALLOW_EDIT_UPLOADS")) { ?>
-                    <button type="button" id="uploadtype_update">Put a map in an existing map slot</button>
+                    <button type="button" id="uploadtype_update">Update a map I submitted before</button>
                     <?php } ?>
                 </div>
                 <div id="upload-question-pin">
