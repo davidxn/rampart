@@ -18,9 +18,21 @@ class Project_Compiler {
     public $music_lump_mapper = null;
     public $lump_guardian = null;
     
-    private $decorate_doomed_number_class = 'a DECORATE class';
+    private $decorate_id_number_prefix = "DECORATE class:";
     
     function compile_project($prepare_file = true) {
+        
+        Logger::pg("Adding base spawnnums to global list");
+        $lines = explode("\n", file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.spawnnums"));
+        Logger::pg("Read " . count($lines) . " protected spawnnums");
+        foreach ($lines as $line) {
+            $elements = $tokens = preg_split('/=/', trim($line));
+            $snum = strtolower(trim($elements[0]));
+            $classname = strtolower(trim($elements[1]));
+            if ($classname != "") {
+                $this->reserve_spawn_number($snum, $classname, 'IWAD');
+            }
+        }
         
         //Begin!
         $start_time = time();
@@ -461,9 +473,26 @@ class Project_Compiler {
                         for ($i = 0; $i < count($matches[1]); $i++) {
                             $classname = $matches[1][$i];
                             $doomed_number = $matches[2][$i];
-                            $result = $this->reserve_doomed_number($doomed_number, "DECORATE class: " . $classname, $map_data['map_number']);
+                            $result = $this->reserve_doomed_number($doomed_number, $this->decorate_id_number_prefix . $classname, $map_data['map_number']);
                             if (!$result) {
                                 Logger::pg("❌ Found " . $lump['name'] . " lump but got a DoomEdNum conflict, not including this script", $map_data['map_number'], true);
+                                $this->wad_variables['scripts_rejected'][$map_data['map_number']] = 1;
+                                continue 2;
+                            }
+                        }
+                    }
+                    
+                    //Same for spawn nums
+                    $matches = [];
+                    preg_match_all('/(*ANYCRLF)\s*?actor\s+([a-zA-Z0-9_]*)[^{]*?{[^}]*?spawnid[\s]*?([0-9]+)[\s\S]*?}/im', $lump['data'], $matches);
+                    if (isset($matches[1])) {
+                        //We have some matching spawn numbers - attempt to add them to the global list
+                        for ($i = 0; $i < count($matches[1]); $i++) {
+                            $classname = $matches[1][$i];
+                            $spawn_number = $matches[2][$i];
+                            $result = $this->reserve_spawn_number($spawn_number, $this->decorate_id_number_prefix . $classname, $map_data['map_number']);
+                            if (!$result) {
+                                Logger::pg("❌ Found " . $lump['name'] . " lump but got a spawnnum conflict, not including this script", $map_data['map_number'], true);
                                 $this->wad_variables['scripts_rejected'][$map_data['map_number']] = 1;
                                 continue 2;
                             }
@@ -516,6 +545,22 @@ class Project_Compiler {
         return true;
     }
     
+    function reserve_spawn_number($snum, $classname, $map_number) {
+        if (isset($this->wad_variables['custom_defined_spawnnums'][$snum])) {
+            $snuminfo = $this->wad_variables['custom_defined_spawnnums'][$snum];
+            if (strtolower($classname) != strtolower($snuminfo['classname'])) {
+                Logger::pg("❌ Spawnnum conflict: " . $snum . " for " . $classname . " already refers to " . $snuminfo['classname'] . " from map " . $snuminfo['map_number'] . ", rejecting it", $map_number, true);
+                $this->wad_variables['rejected_spawnnums'][] = ['snum' => $snum, 'classname' => $classname, 'original_definer' => $snuminfo['map_number'], 'failed_definer' => $map_number];
+                return false;
+            }
+            Logger::pg("⚠️ Spawnnum " . $snum . " is already defined for " . $classname . " in map " . $snuminfo['map_number'] . ". Skipping it, but not considering it an error", $map_number);
+            return true;
+        }
+        $this->wad_variables['custom_defined_spawnnums'][$snum] = ['classname' => $classname, 'map_number' => $map_number];
+        Logger::pg("Reserving Spawnnum " . $snum . " = " . $classname, $map_number);
+        return true;
+    }
+    
     function import_mapinfo($map_data, $wad_handler) {
         foreach ($wad_handler->lumps as $lump) {
             if (in_array(strtoupper($lump['name']), ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
@@ -533,17 +578,12 @@ class Project_Compiler {
                 else {
                     if (isset($mapinfo_properties['doomednums'])) {
                         foreach($mapinfo_properties['doomednums'] as $dnum => $classname) {
-                            $this->reserve_doomed_number($dnum, $classname, $map_data['map_number']);                            
+                            $this->reserve_doomed_number($dnum, $classname, $map_data['map_number']);
                         }
                     }
                     if (isset($mapinfo_properties['spawnnums'])) {
-                        foreach($mapinfo_properties['spawnnums'] as $dnum => $classname) {
-                            if (isset($this->wad_variables['custom_defined_spawnnums'][$dnum])) {
-                                Logger::pg("❌ SpawnNum conflict: " . $dnum . " refers to " . $classname . " and " . $this->wad_variables['custom_defined_spawnnums'][$dnum], $map_data['map_number'], true);
-                                continue;
-                            }
-                            $this->wad_variables['custom_defined_spawnnums'][$dnum] = $classname;
-                            Logger::pg("SpawnNum " . $dnum . " = " . $classname, $map_data['map_number']);
+                        foreach($mapinfo_properties['spawnnums'] as $snum => $classname) {
+                            $this->reserve_spawn_number($snum, $classname, $map_data['map_number']);
                         }
                     }
                 }
@@ -737,7 +777,7 @@ class Project_Compiler {
                 $classname = $dnuminfo['classname'];
                 $defining_map = $dnuminfo['map_number'];
                 //If this DoomEd number was defined by Decorate, it doesn't need to be included in this list
-                if (substr($classname, 0, 15) == "DECORATE class:") {
+                if (substr($classname, 0, strlen($this->decorate_id_number_prefix)) == $this->decorate_id_number_prefix) {
                     continue;
                 }
                 $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . " // Map number " . $defining_map . PHP_EOL;
@@ -746,8 +786,13 @@ class Project_Compiler {
         }
         if ($this->wad_variables['custom_defined_spawnnums']) {
             $mapinfo .= "spawnnums {" . PHP_EOL;
-            foreach ($this->wad_variables['custom_defined_spawnnums'] as $dnum => $classname) {
-                $mapinfo .= "    " . $dnum . " = " . "\"" . $classname . "\"" . PHP_EOL;
+            foreach ($this->wad_variables['custom_defined_spawnnums'] as $snum => $snuminfo) {
+                $classname = $snuminfo['classname'];
+                $defining_map = $snuminfo['map_number'];
+                if (substr($classname, 0, strlen($this->decorate_id_number_prefix)) == $this->decorate_id_number_prefix) {
+                    continue;
+                }
+                $mapinfo .= "    " . $snum . " = " . "\"" . $classname . "\"" . PHP_EOL;
             }
             $mapinfo .= "}" . PHP_EOL;
         }
