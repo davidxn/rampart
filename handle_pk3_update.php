@@ -8,6 +8,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/project_
 
 $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : false;
 $nocache = isset($_GET['nocache']) ? $_GET['nocache'] : false;
+$nozip = isset($_GET['nozip']) ? $_GET['nozip'] : false;
 
 $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - get_mtime(LOCK_FILE_COMPILE)) < 600;
 $pk3_is_current = true;
@@ -60,7 +61,7 @@ if ($pk3_is_current) {
 
 // Trigger a rebuild
 $handler = new Project_Compiler();
-if ($handler->compile_project()) {
+if ($handler->compile_project(!$nozip)) {
     if ($redirect) {
         header("Location: admin/index.php");
         die();

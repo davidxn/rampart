@@ -20,10 +20,11 @@ class Project_Compiler {
     
     private $decorate_doomed_number_class = 'a DECORATE class';
     
-    function compile_project() {
+    function compile_project($prepare_file = true) {
         
         //Begin!
         $start_time = time();
+        $milestone_times = [];
         Logger::clear_pk3_log();
         $this->set_status("Initializing");
         file_put_contents(LOCK_FILE_COMPILE, ":)");
@@ -38,34 +39,44 @@ class Project_Compiler {
 
         $this->set_status("Clearing old work folder");
         $this->clean();
+        $milestone_times[] = time() - $start_time; //Preparation
+
         $this->set_status("Translating uploaded WADs into maps...");
         $this->generate_map_wads($catalog_handler);
         $this->set_status("Generating MAPINFO and other descriptors like that...");
         $this->generate_info($catalog_handler);
-        $this->set_status("Copying static content like the hub map and textures...");
-        $this->copy_static_content();
-        $this->set_status("Fiddling with DIALOGUE to write guide menus...");
-        $this->write_guide_dialogue();
-        if (get_setting("GENERATE_MARQUEES")) {
-            $this->set_status("Generating marquee textures...");
-            $this->generate_marquees($catalog_handler);
-        }
-        file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
-        
-        if (get_setting("PROJECT_FORMAT") == "WAD") {
-            $this->set_status("Compiling WAD");
-            $this->create_wad();
-        } else {
-            $this->set_status("Waiting on the ZIP process (this one always takes a minute or so)");
-            $this->create_pk3();
+        $milestone_times[] = time() - $start_time; //Map compiling
+
+        //The rest of these actions can be skipped if we're not preparing the final file
+        if ($prepare_file) {
+            $this->set_status("Copying static content like the hub map and textures...");
+            $this->copy_static_content();
+            $milestone_times[] = time() - $start_time; //Copying static content
+
+            $this->set_status("Fiddling with DIALOGUE to write guide menus...");
+            $this->write_guide_dialogue();
+            if (get_setting("GENERATE_MARQUEES")) {
+                $this->set_status("Generating marquee textures...");
+                $this->generate_marquees($catalog_handler);
+            }
+            file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
+            $milestone_times[] = time() - $start_time; //Generating hub resources
+            if (get_setting("PROJECT_FORMAT") == "WAD") {
+                $this->set_status("Compiling WAD");
+                $this->create_wad();
+            } else {
+                $this->set_status("Waiting on the ZIP process (this one always takes a minute or so)");
+                $this->create_pk3();
+            }
         }
         //Unmutex
         @unlink(LOCK_FILE_COMPILE);
         $this->set_status("Complete");
         Logger::pg("Download generating lock released");
         $seconds = time() - $start_time;
+        $milestone_times[] = $seconds; //Finish
         Logger::pg("Project generated in " . $seconds . " seconds, build number " . $new_build_number);
-        Logger::record_pk3_generation($start_time, $seconds);
+        Logger::record_pk3_generation($start_time, $milestone_times);
         $numberer->set_new_build_number($new_build_number);
         Logger::save_build_info($this->wad_variables);
         return true;

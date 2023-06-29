@@ -71,8 +71,9 @@ class Logger {
     }
 
         
-    public static function record_pk3_generation($start_time, $seconds) {
-        file_put_contents(PK3_GEN_HISTORY_FILE, $start_time . "," . max($seconds, 1) . "," . @filesize(get_project_full_path()) . PHP_EOL, FILE_APPEND);
+    public static function record_pk3_generation($start_time, $seconds_array) {
+        $times_string = implode(",", $seconds_array);
+        file_put_contents(PK3_GEN_HISTORY_FILE, $start_time . "," . $times_string . "," . @filesize(get_project_full_path()) . PHP_EOL, FILE_APPEND);
     }
     
     public static function record_upload($start_time, $map_number, $size) {
