@@ -36,7 +36,7 @@ for ($i = 0; $i < $slots; $i++) {
     
     //...but override them if we're using a template
     if (isset($template_entries[$i])) {
-        $template_line = split(" ", $template_entries[$i]);
+        $template_line = explode(" ", $template_entries[$i]);
         $map_lumpname = $template_line[0];
         $nextmap = $template_line[1];
         $secretnextmap = $template_line[2];

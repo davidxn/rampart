@@ -10,7 +10,7 @@ class Sndinfo_Handler {
     private $requested_sound_definitions = [];
     
     public function __construct($bytes) {
-        $this->input_lines = split(PHP_EOL, $bytes);
+        $this->input_lines = explode(PHP_EOL, $bytes);
     }
     
     public function parse() {

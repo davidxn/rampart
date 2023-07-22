@@ -19,7 +19,7 @@ class Mapinfo_Handler {
         
         //Remove anything between multi-line comments
         $this->bytes = preg_replace("/\/\*[\s\S]*\*\//", "", $this->bytes);
-        $this->mapinfo_lines = split(PHP_EOL, $this->bytes);
+        $this->mapinfo_lines = explode(PHP_EOL, $this->bytes);
         
         while ($this->current_line_number < count($this->mapinfo_lines)) {
             $line = trim($this->mapinfo_lines[$this->current_line_number]);
@@ -43,7 +43,7 @@ class Mapinfo_Handler {
                 $parsed_data['jumpcrouch'] = 1;
             }
             
-            $line_tokens = split("=", $line);
+            $line_tokens = explode("=", $line);
 
             $key = $this->clean_token($line_tokens[0]);
             if (in_array($key, ALLOWED_MAPINFO_PROPERTIES) || $key == 'music') {
@@ -85,7 +85,7 @@ class Mapinfo_Handler {
         $line = "";
         while ($line != "}" && $this->current_line_number < count($this->mapinfo_lines)) {
             $line = trim($this->mapinfo_lines[$this->current_line_number]);
-            $line_tokens = split("=", $line);
+            $line_tokens = explode("=", $line);
             if (count($line_tokens) < 2) {
                 //Doesn't have two tokens around equals? Forget it
                 $this->current_line_number++;
@@ -110,7 +110,7 @@ class Mapinfo_Handler {
         $line = "";
         while ($line != "}" && $this->current_line_number < count($this->mapinfo_lines)) {
             $line = trim($this->mapinfo_lines[$this->current_line_number]);
-            $line_tokens = split("=", $line);
+            $line_tokens = explode("=", $line);
             if (count($line_tokens) < 2) {
                 //Doesn't have two tokens around equals? Forget it
                 $this->current_line_number++;
@@ -138,4 +138,3 @@ class Mapinfo_Handler {
     }
     
 }
-
