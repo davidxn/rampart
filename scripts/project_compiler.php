@@ -362,7 +362,7 @@ class Project_Compiler {
                 //MODELDEF files must go in the root directory of the pk3           
                 $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump['name'] . "." . $map_data['map_number'] . "-" . $number_of_modeldefs;
 
-                $modeldef_lines = split(PHP_EOL, $lump['data']);
+                $modeldef_lines = explode(PHP_EOL, $lump['data']);
 
                 $modeldef_data = "";
 
