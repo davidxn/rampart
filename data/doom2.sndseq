@@ -1,0 +1,26 @@
+:DoorOpenNormal
+    play        doors/dr1_open
+    nostopcutoff
+end
+
+:DoorCloseNormal
+    play        doors/dr1_clos
+    nostopcutoff
+end
+
+:DoorOpenBlazing
+    play        doors/dr2_open
+    nostopcutoff
+end
+
+:DoorCloseBlazing
+    play        doors/dr2_clos
+    nostopcutoff
+end
+
+[DoorNormal
+    0        DoorOpenNormal
+    1        DoorCloseNormal
+    2        DoorOpenBlazing
+    3        DoorCloseBlazing
+]

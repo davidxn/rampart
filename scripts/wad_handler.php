@@ -46,8 +46,9 @@ class Wad_Handler {
                     $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
                 }
             }
-        }        
+        }
         fclose($this->wad_file);
+        return true;
     }
     
     public function read_lump($lump) {
@@ -65,9 +66,13 @@ class Wad_Handler {
             return strtolower($lump['name']);
         }            
         //Could be a MAPINFO
-        if (in_array($lump['name'], ['MAPINFO', 'ZMAPINFO'])) {
+        if (in_array($lump['name'], ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
             return 'mapinfo';
         }
+        if (in_array($lump['name'], ['SNDINFO', 'SNDSEQ', 'TEXTURES', 'TEXTURE1', 'TEXTURE2', 'PNAMES', 'GLDEFS', 'LOCKDEFS'])) {
+            return strtolower($lump['name']);
+        }
+        
         //If the length is 0 it's just a marker. If the next lump is either TEXTMAP or THINGS it's a map.
         if ($lump['size'] == 0) {
             $type = 'marker';
@@ -86,11 +91,17 @@ class Wad_Handler {
             if ($string == 'OggS') {
                 return 'ogg';
             }
-            if ($string == 'IMPM') {
+            if ($string == 'IMPM' || $string == 'Exte') {
                 return 'module';
             }
             if ($string == 'fLaC') {
                 return 'flac';
+            }
+            if ($string == "MUS\x1A") {
+                return 'mus';
+            }
+            if ($string == "\x89\x50\x4E\x47") {
+                return 'image';
             }
         }
         if ($lump['size'] >= 3) {
@@ -99,8 +110,17 @@ class Wad_Handler {
             if ($string == 'ID3' || substr($string, 0, 2) == "\xFF\xFB") {
                 return 'mp3';
             }
-            if ($string == 'MUS') {
-                return 'mus';
+            if ($string == "\xFF\xD8\xFF") {
+                return 'image';
+            }
+        }
+        //S3M files have their signature at position 44...
+        if ($lump['size'] >= 48) {
+            fseek($this->wad_file, $lump['position']);
+            $string = $this->read_bytes(44, 'str');
+            $string = $this->read_bytes(4, 'str');
+            if ($string == 'SCRM') {
+                return 'module';
             }
         }
         return 'unknown';

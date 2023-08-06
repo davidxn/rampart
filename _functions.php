@@ -13,3 +13,7 @@ function get_mtime($file) {
     }
     return 0;
 }
+
+function get_safe_lump_file_name($name) {
+    return str_replace("\\", "^", $name);
+}

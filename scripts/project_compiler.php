@@ -90,7 +90,7 @@ class Project_Compiler {
         Logger::pg("Project generated in " . $seconds . " seconds, build number " . $new_build_number);
         Logger::record_pk3_generation($start_time, $milestone_times);
         $numberer->set_new_build_number($new_build_number);
-        Logger::save_build_info($this->wad_variables);
+        Logger::save_build_info($this->wad_variables, $this->lump_guardian);
         return true;
     }
 
@@ -201,10 +201,16 @@ class Project_Compiler {
             // Get all lines we want to include
             foreach ($sndinfo_lumps as $sndinfo_lump) {
                 Logger::pg("🔊 Found SNDINFO, attempting to parse it", $map_data['map_number']);
-                $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"]);
+                $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump["data"], $map_data['map_number']);
                 $sndinfo_result = $sndinfo_handler->parse();
                 $requested_lump_names = $sndinfo_result['requested_lump_names'];
                 $requested_definitions = $sndinfo_result['requested_definitions'];
+                $requested_ambients = $sndinfo_result['requested_ambients'];
+                $ambient_result = $this->lump_guardian->add_ambients($requested_ambients, $map_data['map_number']);
+                if ($ambient_result === false) {
+                    Logger::pg("❌ Not importing this SNDINFO", $map_data['map_number'], true);
+                    continue;
+                }
                 for ($i = 0; $i < count($requested_lump_names); $i++) {
                     if (!$this->lump_guardian->add_sndinfo_definition($requested_definitions[$i], $requested_lump_names[$i], $map_data['map_number'])) {
                         Logger::pg("❌ Not importing this SNDINFO", $map_data['map_number'], true);
@@ -297,7 +303,7 @@ class Project_Compiler {
                 }
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data['lumpname'] . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . DIRECTORY_SEPARATOR . $lump['name'] . $filename_extension;
+                $output_file = $lump_folder . DIRECTORY_SEPARATOR . get_safe_lump_file_name($lump['name']) . $filename_extension;
                 file_put_contents($output_file, $lump['data']);
                 Logger::pg("Wrote " . $type_to_display . " " . $output_file, $map_data['map_number']);
             }
@@ -327,6 +333,37 @@ class Project_Compiler {
                     $lump['data'] = $texture_validation_result['cleaned_data'];
                     if (!$texture_validation_result['success']) {
                         Logger::pg("❌ Found conflicts while importing TEXTURES lump", $map_data['map_number'], true);
+                    }
+                }
+
+                if ($lump['name'] == 'SNDSEQ') {
+                    $sndseq_result = $this->lump_guardian->add_sound_sequences($lump['data'], $map_data['map_number']);
+                    $lump['data'] = $sndseq_result['cleaned_data'];
+                    if (!$sndseq_result['success']) {
+                        Logger::pg("❌ Found conflicts while importing SNDSEQ lump", $map_data['map_number'], true);
+                    }
+                }
+                
+                if ($lump['name'] == 'GLDEFS') {
+                    //Extract and load brightmaps
+                    $matches = [];
+                    preg_match_all('/[^0-9A-Za-z]+?map ([0-9A-Za-z]*)/im', $lump['data'], $matches);
+                    for ($i = 0; $i < count($matches[0]); $i++) {
+                        $bmlumpname = $matches[1][$i];
+                        //Get this lump from our current WAD and treat it as a graphic, if this lump isn't already there
+                        $bmlump = $wad_handler->get_lump($bmlumpname);
+                        if (!$bmlump) {
+                            Logger::pg("Couldn't find brightmap " . $bmlumpname . " to import, trusting it's already included", $map_data['map_number']);
+                            continue;
+                        }
+                        if (!$this->lump_guardian->add_lump($bmlump, $map_data['map_number'])) {
+                            continue;
+                        }
+                        Logger::pg("Adding brightmap " . $bmlumpname . " as a graphic", $map_data['map_number']);
+                        $graphics_folder = PK3_FOLDER . "graphics";
+                        @mkdir($graphics_folder, 0755, true);
+                        $graphic_file_path = PK3_FOLDER . "graphics/" . $bmlumpname;
+                        file_put_contents($graphic_file_path, $bmlump['data']);
                     }
                 }
                 
@@ -1039,6 +1076,7 @@ class Project_Compiler {
             }
             return @rmdir($str);
         }
+        return false;
     }
 
     function set_status($string) {

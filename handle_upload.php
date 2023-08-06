@@ -111,18 +111,13 @@ class Upload_Handler {
 
     function clean_text($string, $length = 0) {
        $string = trim($string);
-       $string = preg_replace('/[^A-Za-z0-9\-\'!: ]/', '', $string); // Removes special chars.
+       $string = preg_replace('/[^A-Za-z0-9\-\'!:\)\(\. ]/', '', $string); // Removes special chars.
        if ($length) {
            $string = substr($string, 0, $length);
        }
        return $string;
     }
 
-    function get_slot_and_pin($catalog_handler) {
-
-        return ['map_number' => $map_number, 'pin' => $new_pin];
-    }
-    
     function validate_pin($pin, $catalog_handler) {
         $map = $catalog_handler->get_map($pin);
         if (!$map) {

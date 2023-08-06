@@ -106,14 +106,16 @@ const ALLOWED_MAPINFO_PROPERTIES = [
     'baronspecial',
     'cyberdemonspecial',
     'spidermastermindspecial',
-    'eventhandlers'
+    'eventhandlers',
+    'activateowndeathspecials',
+    'map07special'
 ];
 
 ///////////////////////////////////////////////////////////
 // RAMPART constants that you probably don't need to modify
 ///////////////////////////////////////////////////////////
 
-const RAMPART_VERSION = "BETA v1";
+const RAMPART_VERSION = "BETA v3";
 
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];
 

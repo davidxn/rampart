@@ -18,6 +18,9 @@ ksort($successful_dnums);
 
 $rejected_dnums = $build_info['rejected_doomednums'];
 ksort($rejected_dnums);
+
+$ambients = $build_info['global_ambient_list'];
+ksort($ambients);
 ?>
 
 <?php if ($rejected_dnums) { ?>
@@ -42,7 +45,9 @@ $table_string .= "</tbody></table>";
 echo ($table_string);
 
 } ?>
-                <p>Used DoomEdNums:</p>
+
+<?php if ($successful_dnums) { ?>
+<p>Used DoomEdNums:</p>
 <?php
 $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Class</th><th>Lump Name</th><th>Map Author</th></tr></thead><tbody>";
 foreach($successful_dnums as $successful_dnum => $dnum_info) {
@@ -58,6 +63,29 @@ foreach($successful_dnums as $successful_dnum => $dnum_info) {
 $table_string .= "</tbody></table>";
 
 echo ($table_string);
+
+} ?>
+
+<?php if ($ambients) { ?>
+<p>Ambient sounds:</p>
+<?php
+$table_string = "<table class=\"maps_table\"><thead><tr><th>Ambient ID</th><th>Lump Name</th><th>Map Author</th></tr></thead><tbody>";
+foreach($ambients as $index => $ambient_info) {
+      
+        $map_data = $catalog_handler->get_map_by_number($ambient_info['map']);
+        $table_string .= "<tr>";
+        $table_string .= "<td class=\"nopad\">" . $index . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $map_data['lumpname'] . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $map_data['author'] . "</td>";
+        $table_string .= "</tr>";
+}
+$table_string .= "</tbody></table>";
+
+echo ($table_string);
+
+} ?>
+
+<?php
 
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
 
