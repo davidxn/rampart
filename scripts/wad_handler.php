@@ -46,7 +46,7 @@ class Wad_Handler {
                     $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
                 }
             }
-        }
+        }        
         fclose($this->wad_file);
     }
     
