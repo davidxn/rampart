@@ -9,7 +9,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 <h3>You will need</h3>
 
 <ul>
-<li>Either a copy of <a href="https://www.gog.com/game/doom_ii_final_doom">DOOM2.WAD</a> or <a href="https://freedoom.github.io/download.html">FREEDOOM2.WAD from Freedoom</a></li>
+<li>Either a copy of <a href="https://www.gog.com/game/doom_ii">DOOM2.WAD</a> or <a href="https://freedoom.github.io/download.html">FREEDOOM2.WAD from Freedoom</a></li>
 <li>A source port for running Doom levels (e.g. <a href="http://prboom.sourceforge.net/">PrBoom</a>, <a href="https://zdoom.org/index">GZDoom</a>)</li>
 <li>A DOOM level editor (e.g. <a href="https://forum.zdoom.org/viewtopic.php?f=232&t=66745">Ultimate Doom Builder</a>, <a href="https://slade.mancubus.net/">Slade3</a>)</li>
 </ul>
@@ -35,4 +35,3 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
-
