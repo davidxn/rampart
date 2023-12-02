@@ -14,10 +14,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                         </tr>
                         <tr>
                             <td width="200">Project file name:</td>
-                            <td><input type="text" style="width: 200px" id="PROJECT_FILE_NAME" value="<?=htmlspecialchars(get_setting("PROJECT_FILE_NAME"))?>">                                <?
+                            <td><input type="text" style="width: 200px" id="PROJECT_FILE_NAME" value="<?=htmlspecialchars(get_setting("PROJECT_FILE_NAME"))?>">
+                            <?php
                                 echo html_radio_button('PROJECT_FORMAT', '.PK3', 'PK3');
                                 echo html_radio_button('PROJECT_FORMAT', '.WAD', 'WAD');
-                                ?></input></td>
+                            ?></input></td>
                         </tr>
                         <tr>
                             <td width="200">Project output folder:</td>
@@ -100,7 +101,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td width="200">Allow jump and crouch:</td>
                             <td>
                             <div>
-                                <?
+                                <?php
                                     echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'Uploader choice', 'user');
                                     echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'Yes', 'always');
                                     echo html_radio_button('ALLOW_GAMEPLAY_JUMP', 'No', 'never');
@@ -113,7 +114,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td width="200">MAPINFO behaviour:</td>
                             <td>
                             <div>
-                                <?
+                                <?php
                                     echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Do not use MAPINFO (or I\'ll write my own)', false);
                                     echo html_radio_button('PROJECT_WRITE_MAPINFO', 'Create a MAPINFO in this project', true);
                                 ?>
@@ -132,7 +133,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td>
                             <div class="smallnote">You can set RAMPART to use the first music lump in the WAD as the map's background music, or only include music if it's pointed to by the MAPINFO.</div>
                             <div>
-                                <?
+                                <?php
                                     echo html_radio_button('PROJECT_QUICK_MUSIC', 'Use first music lump', true);
                                     echo html_radio_button('PROJECT_QUICK_MUSIC', 'Only use music in MAPINFO', false);
                                 ?>
@@ -168,7 +169,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td>
                                 <div class="smallnote">Music uploaded to slots with map lumps in the chosen vanilla game will be written as that map's corresponding music</div>
                                 <div>
-                                    <?
+                                    <?php
                                         echo html_radio_button('MUSIC_LUMP_MAP', 'None', "none");
                                         echo html_radio_button('MUSIC_LUMP_MAP', 'Ultimate Doom', "udoom");
                                         echo html_radio_button('MUSIC_LUMP_MAP', 'Doom 2', "doom2");
@@ -195,7 +196,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td>
                             <div class="smallnote">If using the list option, provide a file called 'pins-master.txt' in the RAMPART work folder with one PIN on each line.</div>
                             <div>
-                            <?
+                            <?php
                                 echo html_radio_button('PIN_MANAGER_CLASS', 'Randomly', 'Pin_Manager_Random');
                                 echo html_radio_button('PIN_MANAGER_CLASS', 'From list file', 'Pin_Manager_Preset');
                             ?>
@@ -211,7 +212,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                             <td width="200">Notify on:</td>
                             <td>
                             <div>
-                                <?
+                                <?php
                                     echo html_radio_button('NOTIFY_ON_MAPS', 'None', 'never');
                                     echo html_radio_button('NOTIFY_ON_MAPS', 'All map uploads', 'all');
                                     echo html_radio_button('NOTIFY_ON_MAPS', 'New map slots only', 'new');
