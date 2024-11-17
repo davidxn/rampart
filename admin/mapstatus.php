@@ -34,7 +34,8 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
         'map_number' => $map_data['map_number'],
         'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
         'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
-        'locked' => isset($map_data['locked']) ? $map_data['locked'] : 0
+        'locked' => isset($map_data['locked']) ? $map_data['locked'] : 0,
+        'disabled' => isset($map_data['disabled']) ? $map_data['disabled'] : 0
     ];
     $file_table[] = $row_data;
     if ($row_data['locked']) { $locked_maps++; }
@@ -74,7 +75,14 @@ foreach($file_table as $file_data) {
         }
         $table_string .= '&nbsp;' . Logger::get_log_link($file_data['map_number']);
         $table_string .= '&nbsp;<a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '"><button class="property property-download"></button></a>';
-        $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;<a href="deletemap.php?mappin=' . $file_data['pin'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
+        $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;';
+        
+        if ($file_data['disabled'] > 0) {
+            $table_string .= '<button class="property property-disabled"></button>';
+        } else {
+            $table_string .= '<button class="property property-enabled"></button>';
+        }        
+        $table_string .= '<a href="deletemap.php?mappin=' . $file_data['pin'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
         $table_string .= '</td>';
         $table_string .= "</tr>";
 }

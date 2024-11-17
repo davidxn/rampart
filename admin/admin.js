@@ -60,6 +60,10 @@ $(function() {
     // Lock and unlock
     $(".maps_table").on("click", ".property-locked", function() {handleLock(this); });
     $(".maps_table").on("click", ".property-unlocked", function() {handleLock(this); });
+    
+    // Enable and disable
+    $(".maps_table").on("click", ".property-disabled", function() {handleDisable(this); });
+    $(".maps_table").on("click", ".property-enabled", function() {handleDisable(this); });
 
     var handleLock = function(me) {
         var td = $(me).closest("td.editable-property");
@@ -71,6 +75,18 @@ $(function() {
         myFormData.set('field', field);
         myFormData.set('value', value);
         submitLock(myFormData, td);
+    };
+    
+    var handleDisable = function(me) {
+        var td = $(me).closest("td.editable-property");
+        var pin = td.attr("name");
+        var field = 'disabled';
+        var value = $(me).hasClass("property-enabled") ? 1 : -1;
+        myFormData = new FormData();
+        myFormData.set('pin', pin);
+        myFormData.set('field', field);
+        myFormData.set('value', value);
+        submitDisable(myFormData, td);
     };
 });
 
@@ -121,9 +137,31 @@ function submitLock(formdata, td){
         success: function(response){
             if (!response.error) {
                 if (newValue > 0) {
-                    td.children('button').addClass('property-locked').removeClass('property-unlocked');
+                    td.children('button.property-unlocked').addClass('property-locked').removeClass('property-unlocked');
                 } else {
-                    td.children('button').addClass('property-unlocked').removeClass('property-locked');
+                    td.children('button.property-locked').addClass('property-unlocked').removeClass('property-locked');
+                }
+            }
+        }
+    });
+}
+
+function submitDisable(formdata, td){
+    var newValue = formdata.get("value");
+
+    $.ajax({
+        url: './handle_data_edit.php',
+        type: 'post',
+        data: formdata,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            if (!response.error) {
+                if (newValue > 0) {
+                    td.children('button.property-enabled').addClass('property-disabled').removeClass('property-enabled');
+                } else {
+                    td.children('button.property-disabled').addClass('property-enabled').removeClass('property-disabled');
                 }
             }
         }
@@ -147,10 +185,10 @@ function submitNewSlots(formdata){
     });
 }
 
-function renumberSlots(formdata){
+function moveMap(formdata){
     
     $.ajax({
-        url: './handle_renumber.php',
+        url: './handle_move.php',
         type: 'post',
         data: formdata,
         contentType: false,

@@ -23,7 +23,7 @@ class Map_Data_Editor {
         }
 
         $catalog_handler = new Catalog_Handler();
-        if (in_array($field, ['lumpname', 'map_name', 'author', 'mapinfo'])) {
+        if (in_array($field, ['lumpname', 'map_name', 'author', 'mapinfo', 'disabled'])) {
             $catalog_handler->update_map_property($pin, $field, $value);
             echo(json_encode(['success' => true]));
             die();
