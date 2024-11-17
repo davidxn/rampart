@@ -2,6 +2,7 @@
 $SKIP_SETTINGS_CHECK = true;
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 ?>
                 <div id="settings_1">
                     <div id="settings_1" class="lightbox">
@@ -267,13 +268,3 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php
                 <script src="settings.js" type="text/javascript"></script>
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
-
-function html_radio_button($setting, $text, $value = null) {
-    if ($value === null) {
-        $value = $text;
-    }
-    $id = $setting . "__" . strtoupper(str_replace(" ", "", $value));
-    return '<input type="radio" id="'.$id.'"' . PHP_EOL .
-            'name="'.$setting.'" value="'.$value.'"' . (get_setting($setting)==$value?" checked=\"checked\"":"") . '">' . PHP_EOL .
-            '<label for="'.$id.'">'.$text.'</label>' . PHP_EOL;
-}

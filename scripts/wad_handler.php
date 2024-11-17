@@ -103,6 +103,9 @@ class Wad_Handler {
             if ($string == "\x89\x50\x4E\x47") {
                 return 'image';
             }
+            if ($string == "FON2") {
+                return 'font';
+            }
         }
         if ($lump['size'] >= 3) {
             fseek($this->wad_file, $lump['position']);

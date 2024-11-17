@@ -5,12 +5,44 @@ require_once("_functions.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
 
 class Lump_Guardian {
+
+    public static $reserved_doomed_ranges = [
+        [1,127,"Reserved"],
+        [888,888,"MBFHelperDog"],
+        [1200 ,1209,"Heretic sound sequences"],
+        [1400 ,1411,"Hexen sound sequences"],
+        [1500 ,1505,"Geometry objects"],
+        [2001 ,2049,"Doom objects"],
+        [3001 ,3006,"Doom monsters"],
+        [4001 ,4004,"Additional playerstarts"],
+        [4500 ,4503,"Mine Lamps"],
+        [5001 ,5010,"Reserved"],
+        [5050 ,5050,"Stalagmite"],
+        [5061 ,5065,"Bridge objects"],
+        [7000 ,7000,"Grass"],
+        [7100 ,7120,"Flora"],
+        [9024 ,9048,"Misc script objects"],
+        [9050 ,9083,"Stealth monsters that nobody likes"],
+        [9100 ,9111,"Scripted marines"],
+        [9200 ,9200,"Decal"],
+        [9300 ,9303,"Polyobjects"],
+        [9500 ,9511,"Ramps"],
+        [9600 ,9632,"Wolf3D objects"],
+        [9702 ,9724,"Trees"],
+        [9800 ,9830,"Lights"],
+        [9901 ,9930,"Hub objects"],
+        [9980 ,9999,"Event objects"],
+        [14001 ,14067,"Sound objects"],
+        [14101 ,14165,"Music changers"],
+        [32000 ,32000,"Doom Builder Camera"]
+    ];
     
     public $global_lump_list = [];
     public $global_texture_list = [];
     public $global_sound_definition_list = [];
     public $global_sound_sequence_list = [];
     public $global_ambient_list = [];
+    public $ignore_special_lump_list = ['rampshot', 'rsky1'];
     
     public function __construct() {
         $this->add_doom2_lumps();
@@ -21,6 +53,22 @@ class Lump_Guardian {
     
     public function add_lump($lump, $owning_map) {
         return $this->add_lump_to_global_list($lump['name'], md5($lump['data']), $owning_map);
+    }
+    
+    public function in_special_lump_list($lump) {
+        return in_array(strtolower($lump['name']), $this->ignore_special_lump_list);
+    }
+    
+    public function doomed_num_in_reserved_range($num) {
+        foreach(self::$reserved_doomed_ranges as $range) {
+            $start = $range[0];
+            $end = $range[1];
+            $name = $range[2];
+            if ($start <= $num && $end >= $num) {
+                return $name;
+            }
+        }
+        return "";
     }
     
     public function add_ambients($requested_ambients, $map_number) {
@@ -41,10 +89,10 @@ class Lump_Guardian {
         $requested_lump_name = strtolower($requested_lump_name);
         if (isset($this->global_sound_definition_list[$requested_definition])) {
             if ($this->global_sound_definition_list[$requested_definition] != $requested_lump_name) {
-                Logger::pg("❌ SNDINFO tries to define the sound " . $requested_definition . " as " . $requested_lump_name . ", but it's already defined as " . $this->global_sound_definition_list[$requested_definition], $map_number, true);
+                Logger::pg(get_error_link('ERR_SOUND_SNDINFO_REDEFINITION', [$requested_definition, $requested_lump_name, $this->global_sound_definition_list[$requested_definition]]), $map_number, true);
                 return false;
             }
-            Logger::pg("⚠️ SNDINFO defines the sound " . $requested_definition . ", which is already defined but it matches the existing definition " . $this->global_sound_definition_list[$requested_definition], $map_number);
+            Logger::pg(get_error_link('WARN_SOUND_SNDINFO_REDEFINITION', [$requested_definition, $this->global_sound_definition_list[$requested_definition]]), $map_number);
         }
         $this->global_sound_definition_list[$requested_definition] = $requested_lump_name;
         return true;
@@ -63,19 +111,19 @@ class Lump_Guardian {
             $definition = strtolower(preg_replace("/\s/", "", $definition));
             Logger::pg("Found texture definition for " . $texture_name, $map_number);
             if (in_array($texture_name, ['aashitty', 'aastinky', 's3dummy'])) {
-                Logger::pg("⚠️ You don't need to define " . $texture_name, $map_number);
+                Logger::pg(get_error_link('ERR_TEX_DEFINITION_NOT_NEEDED', [$texture_name]), $map_number);
                 $final_texture_data = str_replace($fullmatch, "", $final_texture_data);
                 continue;
             }
             if (isset($this->global_texture_list[$texture_name])) {
                 $existing_definition = $this->global_texture_list[$texture_name];
                 if ($definition != $existing_definition['definition']) {
-                    Logger::pg("❌ TEXTURES attempts to redefine " . $type . " " . $texture_name . " as " . $definition . ", already defined in " . $existing_definition['map'] . " as " . $existing_definition['definition'] . ". Skipping this definition", $map_number, true);
+                    Logger::pg(get_error_link('ERR_TEX_REDEFINITION_OTHER', [$type, $texture_name, $definition, $existing_definition['map'], $existing_definition['definition']]), $map_number, true);
                     $final_texture_data = str_replace($fullmatch, "", $final_texture_data);
                     $success = false;
                     continue;
                 }
-                Logger::pg("⚠️ TEXTURES redefines " . $type . " " . $texture_name . " as " . $definition . ", already defined in " . $existing_definition['map'] . " with an identical definition. Skipping this definition", $map_number);
+                Logger::pg(get_error_link('WARN_TEX_REDEFINITION', [$texture_name, $definition, $existing_definition['map']]), $map_number);
                 $final_texture_data = str_replace($fullmatch, "", $final_texture_data);
                 continue;
             }
@@ -161,24 +209,24 @@ class Lump_Guardian {
         //We already had a lump with this name. Look to see if it belongs to our base resources or a map, and if it's identical to the existing one
         //IWAD overwrites are never allowed
         if ($this->global_lump_list[$lumpname]['owner'] == "IWAD") {
-            Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from the project's base IWAD. Please rename it", $owning_map, true);
+            Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_BASE', [$lumpname]), $owning_map, true);
             return false;
         }
         
         //If the hash matches, notify but don't count as error
         $existing_hash = $this->global_lump_list[$lumpname]['hash'];
         if ($existing_hash == $data_hash) {
-            Logger::pg("⚠️ Lump " . $lumpname . " matches same name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". The data is identical", $owning_map);
+            Logger::pg(get_error_link('WARN_LUMP_DUPLICATE_OTHER', [$lumpname, $this->global_lump_list[$lumpname]['owner']]), $owning_map);
             return true;
         }
-        
-        Logger::pg("❌ Lump " . $lumpname . " would overwrite existing lump of that name from map number " . $this->global_lump_list[$lumpname]['owner'] . ". Please rename it to make sure both maps work correctly", $owning_map, true);
+        Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_OTHER', [$lumpname, $this->global_lump_list[$lumpname]['owner']]), $owning_map, true);
         return false;
     }
     
     //TODO Make this customizable, just does Doom2 just now
     private function add_doom2_lumps() {
-        $lumpnames = explode("\n", file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.lumps"));
+        $lump_file_contents = file_get_contents(DATA_FOLDER . DIRECTORY_SEPARATOR . "doom2.lumps");
+        $lumpnames = explode("\n", $lump_file_contents);
         Logger::pg("Read " . count($lumpnames) . " protected lumps");
         foreach ($lumpnames as $lumpname) {
             $lumpname = strtolower(trim($lumpname));
