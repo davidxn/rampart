@@ -1,13 +1,15 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 ?>
-                <p>This page lets contributors submit a map to your project!</p>
+                <p>Submit or adjust a RAMP2024 map here!</p>
                 
                 <div class="lightbox">
                 <p>As well as a map, you can include these resources:</p>
                 <ul>
-                <li>The first MIDI/OGG/MP3 file in the WAD will be used as your map's music, no matter what its name is.</li>
+                <li>Name a lump D_RUNNIN to include it as the background music for your map.</li>
+                <li>Include a 512x384 image lump RAMPSHOT to display it as the thumbnail image for your map in the hub level.</li>
                 <li>For skies, you can do one of two things:
                     <ul><li>Include a lump called RSKY1 and it'll automatically be used as the sky</li>
                     <li>OR Include your sky texture(s) under other names and point to them with SKY1 and SKY2 in a MAPINFO</li></ul>
@@ -29,7 +31,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
                     <div id="pin_form" class="lightbox">
                         <p>Please enter the PIN for the slot you want to update. (If you don't know it, contact the project owner)</p>
                         <div id="pin_status">&nbsp;</div>
-                        <input type="text" id="input_pin_to_reupload"></input>
+                        <input type="text" style="width: 100px;" id="input_pin_to_reupload"></input>
                         <button type="button" id="confirm_pin">That's my PIN</button>
                     </div>
                 </div>
@@ -67,7 +69,66 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
                                 </label>
                                 <div class="smallnote">Check this box to indicate a map isn't ready to be fully played yet. You'll still be able to upload new versions even if this box isn't checked</div>
                             </td>
-                        </tr><tr>
+                        </tr>
+
+                        <tr>
+                            <td>Map theme</td>
+                            <td>
+                            <div class="smallnote">You don't have to be exact, just the general setting of the map.</div>
+                            <div>
+                                <?php
+                                    echo html_radio_button('input_map_category', 'Abstract or minigame', 'mystery', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Ancient', 'ancient', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Castle', 'castle', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Techbase (classic Doom)', 'uac', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Other future or space', 'space', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Hell', 'hell', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Outdoor or caves', 'cave', true, 'uac');
+                                    echo html_radio_button('input_map_category', 'Urban (towns and cities)', 'city', true, 'uac');
+                                ?>
+                            </div>
+                            </td>
+                        <tr>
+                        
+                        <tr>
+                            <td>Map difficulty level</td>
+                            <td>
+                            <div class="smallnote">How tough is this map?</div>
+                            <div>
+                                <?php
+                                    echo html_radio_button('input_map_difficulty', 'No real chance of failure', 1, true, 3);
+                                    echo html_radio_button('input_map_difficulty', 'Pretty gentle', 2, true, 3);
+                                    echo html_radio_button('input_map_difficulty', 'About the same as Ultra-Violence in Doom', 3, true, 3);
+                                    echo html_radio_button('input_map_difficulty', 'You\'re going to die a lot', 4, true, 3);
+                                    echo html_radio_button('input_map_difficulty', 'Densely packed monster-o-rama', 5, true, 3);
+                                ?>
+                            </div>
+                            </td>
+                        <tr>
+
+                        <tr>
+                            <td>Map length</td>
+                            <td>
+                            <div class="smallnote">Aim for maps to last 10 minutes or less.</div>
+                            <div>
+                                <?php
+                                    echo html_radio_button('input_map_length', 'A&nbsp;couple&nbsp;of&nbsp;minutes', 1, true, 3);
+                                    echo html_radio_button('input_map_length', '5 minutes or less', 2, true, 3);
+                                    echo html_radio_button('input_map_length', '10 minutes or so', 3, true, 3);
+                                    echo html_radio_button('input_map_length', 'A bit more than 10 minutes', 4, true, 3);
+                                    echo html_radio_button('input_map_length', 'Actually a lot more than 10 minutes', 5, true, 3);
+                                ?>
+                            </div>
+                            </td>
+                        <tr>
+                        
+                        <tr>
+                            <td>Monster count:</td>
+                            <td><div class="smallnote">Doesn't have to be exact. If it's very different between difficulty levels, use the rough average</div>
+                            <input type="number" style="width: 100px" id="input_monster_count"></input></td>
+                        </tr>
+
+
                         <td>Map file:</td><td>
                         <input type="file" name="file" id="file">
                         

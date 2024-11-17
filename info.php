@@ -3,6 +3,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/lump_guardian.php");
 
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_handler.php');
 $catalog_handler = new Catalog_Handler();
@@ -28,7 +29,7 @@ ksort($ambients);
 <?php
 $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Class</th><th>Rejected from map</th><th>By author</th><th>Defined in map</th><th>By author</th></tr></thead><tbody>";
 foreach($rejected_dnums as $rejected_dnum_info) {
-      
+
         $original_map_data = $catalog_handler->get_map_by_number($rejected_dnum_info['original_definer']);
         $rejected_map_data = $catalog_handler->get_map_by_number($rejected_dnum_info['failed_definer']);
         $table_string .= "<tr>";
@@ -50,7 +51,21 @@ echo ($table_string);
 <p>Used DoomEdNums:</p>
 <?php
 $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Class</th><th>Lump Name</th><th>Map Author</th></tr></thead><tbody>";
+$highest_num_range_start = -1;
+$reserved_range_pointer = 0;
 foreach($successful_dnums as $successful_dnum => $dnum_info) {
+
+	while ($successful_dnum >= $highest_num_range_start && $reserved_range_pointer < count(Lump_Guardian::$reserved_doomed_ranges)) {
+        $range = Lump_Guardian::$reserved_doomed_ranges[$reserved_range_pointer];
+        $rangeDisplay = $range[0] . "-" . $range[1];
+        if ($range[0] == $range[1]) {
+            $rangeDisplay = $range[0];
+        }
+		$table_string .= sprintf("<tr><td class=\"reservednumspan\" colspan=\"4\">%s %s</td></tr>", $rangeDisplay, $range[2]);
+		$reserved_range_pointer++;
+		$highest_num_range_start = Lump_Guardian::$reserved_doomed_ranges[$reserved_range_pointer][0];
+
+	}
       
         $map_data = $catalog_handler->get_map_by_number($dnum_info['map_number']);
         $table_string .= "<tr>";

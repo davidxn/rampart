@@ -18,20 +18,26 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <p>Here's a video describing how to set yourself up for creating Doom levels.</p>
 
-<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/PdEoNPeC1rg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/V9Tmk9ic5_Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 <h3>Making a map</h3>
 
-<p>Doom maps can come in several flavours. You might want to stick to the map features possible using the original game, or experiment with the wide array of options added since then in the Universal Doom Map Format (UDMF). This video shows making a basic level in the Boom format.</p>
+<p>Doom maps can come in several flavours. You might want to stick to the map features possible using the original game, or experiment with the wide array of options added since then in the Universal Doom Map Format (UDMF). Mapping tutorials are all over the internet, but here are just a few of them:</p>
 
-<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/2HYYAnZsQHY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/OqFhVGl4AJQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/hAVtsA53XW0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/zHUv06LNqu8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/7pUwu-695uI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 
 <h3>Submitting a WAD</h3>
 
-<p>The easiest way to submit a WAD to RAMP is through the <a href="./upload.php">uploader</a> on this site - you can use the PIN given to you after the initial upload to submit further edits to your WAD once it's been submitted. This video shows how to use the uploader.</p>
+<p>WADs can be submitted to RAMP through the <a href="./upload.php">uploader</a> on this site - you can use the PIN given to you after the initial upload to submit further edits to your WAD once it's been submitted. This video shows how to use the uploader.</p>
 
-<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/MSGO--HruNg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
+<center><iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/jXjhTf-2J3c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></center>
 
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');

@@ -1,6 +1,23 @@
+:root {
+    
+  --bg-color-footer: #315;
+
+  --bg-color-body: #424;
+  --text-color-body: #FDF;
+  --text-color-link: #FEF;
+  
+  --bg-color-button: #306;
+  --text-color-button: #FDF;
+  --border-color-button: #909;
+  
+  --bg-color-button-disabled: #747;
+  --text-color-button-disabled: #CCC;
+  --border-color-button-disabled: #949;
+}
+
 a {
-    text-decoration: none;
-    color: #EEE;
+    text-decoration: underline;
+    color: var(--text-color-link);
 }
 
 a.quickstart {
@@ -10,18 +27,20 @@ a.quickstart {
 }
 
 body {
-    background-color: #333;
+    background-color: var(--bg-color-body);
     font-family: Exo, sans-serif;
-    background-image: url('/img/bg.jpg');
+    background-image: url('/img/bg.png');
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 100% 100%;
+    color: var(--text-color-body);
 }
 
 button {
-    background-color: #006;
-    color: #CCF;
-    border: 1px solid #009;
+    background-color: var(--bg-color-button);
+    color: var(--text-color-button);
+    border: 1px solid var(--border-color-button);
     border-radius: 4px;
     padding: 8px;
     cursor: pointer;
@@ -38,9 +57,9 @@ button#confirm_pin {
 }
 
 button:disabled {
-    background-color: #777;
-    color: #CCC;
-    border: 1px solid #999;
+    background-color: var(--bg-color-button-disabled);
+    color: var(--text-color-button-disabled);
+    border: 1px solid var(--border-color-button-disabled);
 
 }
 
@@ -49,9 +68,9 @@ button.waitingdisabled {
 }
 
 input {
-    background-color: #666;
-    color: #DDD;
-    border: 1px solid #888;
+    background-color: var(--bg-color-button);
+    color: var(--text-color-button);
+    border: 1px solid var(--border-color-button);
     border-radius: 4px;
     padding: 8px;
     width: 90%;
@@ -68,8 +87,8 @@ textarea {
 
 .code {
     font-family: monospace;
-    border: 1px solid #555;
-    background-color: #333;
+    border: 1px solid #225;
+    background-color: #003;
     color: #CCC;
     border-radius: 4px;
     white-space: pre-wrap;
@@ -85,7 +104,7 @@ textarea {
 
 .footer {
     color: white;
-    background-color: #555;
+    background-color: var(--bg-color-footer);
     font-size: 9pt;
     padding: 8px;
     border-radius: 0px 0px 8px 8px;
@@ -108,9 +127,9 @@ textarea {
     font-weight: bold;
     text-align: center;
     padding: 8px;
-    background-color: #888;
-    border-top: 1px solid #444;
-    border-bottom: 1px solid #444;
+    background-color: #228;
+    border-top: 1px solid #114;
+    border-bottom: 1px solid #114;
 }
 
 .errormessage {
@@ -138,7 +157,7 @@ textarea {
 }
 
 .outer {
-    background-color: #666;
+    background-color: #226;
     max-width: 1600px;
     margin: 0 auto;
     border-radius: 8px;
@@ -155,7 +174,8 @@ textarea {
 }
 
 .menubox {
-    background-color: #444;
+    background-color: #114;
+    text-align: center;
 }
 
 .menuitem {
@@ -163,18 +183,21 @@ textarea {
     color: white;
     display: inline-block;
     padding: 10px 20px;
+    background-color: #226;
+    margin: 5px 2px;
+    border-radius: 12px;
 }
 
 .lightbox {
-    border: 1px solid #666;
-    background-color: #777;
+    border: 1px solid #226;
+    background-color: #227;
     border-radius: 8px;
     padding: 8px 16px;
 }
 
 .menuitem:hover {
     text-decoration: none;
-    background-color: #777;
+    background-color: #227;
 }
 
 .mainbox {
@@ -183,13 +206,13 @@ textarea {
 
 .upload-area{
     height: 64px;
-    border: 2px solid #CCC;
+    border: 2px solid #AAC;
     border-radius: 3px;
     margin: 0 auto;
     text-align: center;
     vertical-align: middle;
     overflow: auto;
-    background-color: #AAA;
+    background-color: #66A;
 }
 
 .upload-area h1{
@@ -203,7 +226,7 @@ textarea {
 
 .smallnote {
     font-size: 8pt;
-    color: #CCC;
+    color: #AAC;
     font-style: italic;
 }
 
@@ -213,7 +236,7 @@ table.upload_table {
 }
 
 table.upload_table td {
-    border-bottom: 1px solid #888;
+    border-bottom: 1px solid #338;
 }
 
 table.maps_table {
@@ -225,9 +248,9 @@ table.maps_table {
 table.maps_table td {
     margin: 4px;
     padding: 8px;
-    background-color: #777;
+    background-color: #337;
     text-align: center;
-    border: 1px solid #555;
+    border: 1px solid #225;
     border-radius: 2px;
 }
 
@@ -237,6 +260,10 @@ table.maps_table th {
     background-color: #88B;
     border: 1px solid #559;
     border-radius: 2px;
+}
+
+td.nopad {
+    padding: 0;
 }
 
 #upload-question-pin {
@@ -274,10 +301,10 @@ table.maps_table th {
 }
 
 h3 {
-    border: 1px solid #444;
+    border: 1px solid #334;
     padding: 4px 8px;
     border-radius: 4px;
-    background-color: #555;    
+    background-color: #225;    
 }
 
 /******************/
@@ -347,7 +374,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]+label {
-    border: 1px solid #888;
+    border: 1px solid #558;
     border-radius: 6px;
     height: 25px;
     padding: 0px 8px;
@@ -406,6 +433,48 @@ button.property {
     width: 16px;
 }
 
+div.slideshow {
+    text-align: center;
+}
+
+div.randompicture {
+    display: inline-block;
+    width: 18%;
+    margin: 8px;
+    overflow: hidden;
+}
+
+div.randompicture div.fading img {
+    width: 100%;
+
+}
+
+div.randompicture-inner {
+    position: relative;
+    border: 1px solid var(--text-color-body);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 3px 3px 4px 0px black;
+    animation: fadeIn 1s;
+}
+
+div.randompicture div.mapnumber {
+    position: absolute;
+    top: 8px;
+    color: white;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, .25);
+    padding: 4px;
+    border-radius: 8px;
+    left: 8px;
+}
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 button.property-ok      {background-image: url("/img/confirm.png");    }
 button.property-cancel  {background-image: url("/img/cancel.png");     }
 button.property-unlocked{background-image: url("/img/unlocked.png");   }
@@ -414,3 +483,39 @@ button.property-download{background-image: url("/img/page_save.png");  }
 button.property-delete  {background-image: url("/img/cross.png");      }
 button.property-log     {background-image: url("/img/log.png");        }
 button.property-logerror{background-image: url("/img/logerror.png");   }
+button.property-disabled{background-image: url("/img/lightbulb_off.png");   }
+button.property-enabled {background-image: url("/img/lightbulb.png");   }
+
+.map_length {
+  display: inline-block;
+  Background-color: #44F;
+  Border: 1px solid #22D;
+  Border-radius: 8px;
+  Width: 16px;
+}
+
+.map_difficulty {
+  display: inline-block;
+  Background-color: #900;
+  Border: 1px solid #700;
+  Border-radius: 8px;
+  Width: 16px;
+}
+
+.map_property {
+    display: inline-block;
+    Background-color: #090;
+    Border: 1px solid #070;
+    Border-radius: 8px;
+    padding: 0 4px;
+}
+
+/* Special for not showing link underlines in error page titles */
+.errorpage > h4 > a {
+    text-decoration: none;
+}
+
+table.maps_table td.reservednumspan {
+    Background-color: #333;
+    Border: 1px solid #111;
+}

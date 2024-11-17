@@ -33,12 +33,21 @@ class Pin_Handler {
 
         $jumpcrouch = isset($map['jumpcrouch']) ? $map['jumpcrouch'] : 0;
         $wip = isset($map['wip']) ? $map['wip'] : 0;
+        $category = $map['category'] ?? 0;
+        $length = $map['length'] ?? 0;
+        $difficulty = $map['difficulty'] ?? 0;
+        $monsters = $map['monsters'] ?? 0;
+       
         echo json_encode([
             "mapname" => $map['map_name'],
             "author" => $map['author'],
             "musiccredit" => (isset($map['music_credit']) ? $map['music_credit'] : ''),
             "jumpcrouch" => $jumpcrouch,
-            "wip" => $wip
+            "wip" => $wip,
+            "category" => $category,
+            "length" => $length,
+            "difficulty" => $difficulty,
+            "monsters" => $monsters
         ]);
     }
 

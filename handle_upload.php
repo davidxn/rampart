@@ -19,6 +19,10 @@ class Upload_Handler {
         $authorname = $this->clean_text($_POST['authorname']);
         $musiccredit = $this->clean_text($_POST['musiccredit']);
         $jumpcrouch = $this->clean_text($_POST['jumpcrouch']);
+        $category = $this->clean_text($_POST['category']);
+        $length = $this->clean_text($_POST['length']);
+        $difficulty = $this->clean_text($_POST['difficulty']);
+        $monsters = $this->clean_number($_POST['monsters']);
         $wip = 0;
         if (isset($_POST['wip'])) { $wip = $this->clean_text($_POST['wip']); }
         $pin = strtoupper($this->clean_text($pin));
@@ -82,7 +86,12 @@ class Upload_Handler {
                 'map_number' => $map_number,
                 'lumpname' => $map_lumpname,
                 'jumpcrouch' => $jumpcrouch,
-                'wip' => $wip
+                'wip' => $wip,
+                'category' => $category,
+                'length' => $length,
+                'difficulty' => $difficulty,
+                'monsters' => $monsters,
+                'disabled' => 0 // Re-enable a map on reupload
             ]
         );
         Logger::lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
@@ -101,7 +110,7 @@ class Upload_Handler {
             mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lumpname . " " . $mapname . "' by " . $authorname . " has just been updated.");
         }
 
-        $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is <b>" . $pin . "</b> - use this if you ever need to update your level.";
+        $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is: <div style=\"font-size: 64pt; font-weight: bold; text-align: center\">" . $pin . "</div>Use this if you ever need to update your level.";
         if ($existing_map) {
             $success_message = "Success! Your WAD in slot " . $map_number . " with PIN <b>" . $pin . "</b> has been updated.";
         }
@@ -112,6 +121,15 @@ class Upload_Handler {
     function clean_text($string, $length = 0) {
        $string = trim($string);
        $string = preg_replace('/[^A-Za-z0-9\-\'!:\)\(\. ]/', '', $string); // Removes special chars.
+       if ($length) {
+           $string = substr($string, 0, $length);
+       }
+       return $string;
+    }
+    
+    function clean_number($string, $length = 0) {
+       $string = trim($string);
+       $string = preg_replace('/[^0-9]/', '', $string);
        if ($length) {
            $string = substr($string, 0, $length);
        }
@@ -147,9 +165,16 @@ class Upload_Handler {
 
     function validate_ip() {
         $ip = $_SERVER['REMOTE_ADDR'];
+        Logger::lg("Recording upload from IP " . $ip);        
         $filename = 'b' . str_replace(".", "", $ip) . 'b';
+        $banfilename = 'x' . $ip . 'x';
         $ip_check_file = IPS_FOLDER . $filename;
         @mkdir(IPS_FOLDER);
+        if (file_exists(IPS_FOLDER . $banfilename)) {
+            Logger::lg("Blocked upload attempt from IP " . $ip);
+            echo json_encode(['error' => 'Your WAD is too large! Check the maximum file size with the project owner']);
+            die();
+        }
         if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < get_setting("UPLOAD_ATTEMPT_GAP")) {
             Logger::lg("IP " . $ip . " is submitting too fast");
             echo json_encode(['error' => 'You uploaded just a moment ago - hold on a minute before you submit again']);

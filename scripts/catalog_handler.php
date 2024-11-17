@@ -92,6 +92,12 @@ class Catalog_Handler {
         unset($this->catalog[$pin]);
         file_put_contents(CATALOG_FILE, json_encode($this->catalog));    
     }
+
+    public function disable_map($pin) {
+        if ($this->catalog[$pin]) {
+            $this->update_map_property($pin, 'disabled', 1);
+        }
+    }    
     
     public function change_pin($pin, $new_pin) {
         $new_pin = strtoupper($new_pin);
@@ -100,6 +106,68 @@ class Catalog_Handler {
         }
         $this->catalog[$new_pin] = $this->catalog[$pin];
         $this->delete_map($pin);
+        return true;
+    }
+    
+    public function move_map($pin, $map_number) {
+        if (!$this->catalog[$pin]) {
+            Logger::lg("Was asked to move map with pin " . $pin . " which doesn't exist");
+            return false;
+        }
+        if (!$this->wait_for_lock()) {
+            return false;
+        }
+        $original_levelnum = $this->catalog[$pin]['map_number'];
+        
+        $source_location = UPLOADS_FOLDER . DIRECTORY_SEPARATOR . get_source_wad_file_name($original_levelnum);
+        $location = UPLOADS_FOLDER . DIRECTORY_SEPARATOR . get_source_wad_file_name($map_number);
+        
+        if (file_exists($location)) {
+            Logger::lg("Removed previous " . $location);
+            unlink($location);
+        }
+        Logger::lg("Moving map " . $source_location . " to " . $location);
+        $result = rename($source_location, $location);
+
+        if(!$result){
+            return false;
+        }
+        
+        $map_lumpname = ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
+
+        //Now update the catalog... remove any existing map at this map number
+        foreach ($this->catalog as $oldpin => $data) {
+            if ($data['map_number'] == $map_number) {
+                unset($this->catalog[$oldpin]);
+            }
+        }
+        
+        //And update the map at our old pin to our new number.
+        $this->update_map_properties(
+            $pin,
+            [
+                'map_number' => $map_number,
+                'lumpname' => $map_lumpname
+            ]
+        );
+        Logger::lg("Wrote new map " . $map_number . ": " . $pin . " entry to catalog");
+
+        //Unmutex
+        unlink(LOCK_FILE_UPLOAD);
+        return true;
+    }
+    
+    function wait_for_lock() {
+        $tries = 0;
+
+        while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
+            sleep(1);
+            if ($tries > 10) {
+                return false;
+            }
+        }
+        file_put_contents(LOCK_FILE_UPLOAD, ":)");
+        Logger::lg("Lock acquired");
         return true;
     }
     
