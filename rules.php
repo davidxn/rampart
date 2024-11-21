@@ -1,4 +1,5 @@
 <?php
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <h3>How RAMP works</h3>
@@ -17,15 +18,19 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <h3>Resources</h3>
 
-<p>RAMP will run on DOOM2.WAD. Custom content is allowed, although bear in mind that it will be easier to upload WADs without it! Feel free to include what you like, as long as you don't overwrite any of the default DOOM2 lumps (unfortunately I can't support DEHACKED either). And if you're just beginning with Doom mapping, it might be easier to stay with the material in DOOM2.WAD for your first venture.</p>
+<p>RAMP will run on DOOM2.WAD in GZDoom. Textures from the resource packs 32in24 and OTEX_1.1.WAD are included in the project, so you don't need to do anything special if you want to use those - you can download a resource pack containing both of them in <a href="./rampstarterpack.zip">the starter pack</a> (or <a href="./ramp2024resources.pk3">here</a> for just the resources PK3).</p>
 
-<p>The textures of <a href="https://esselfortium.net/wasd/32in24-15_tex_v2.zip"><b>32in24-15_tex_v2.wad</b></a> and <a href="https://www.doomworld.com/idgames/graphics/otex_1_1"><b>OTEX_1.1.WAD</b></a> will be included in the project, so you don't need to do anything special to use those.</p>
+<p>Custom content is also supported, as long as you don't overwrite any of the default DOOM2 lumps or make changes that affect the entire game (such as DEHACKED). If you'd like to include anything, see the Custom Content section below.</p>
 
 <h3>How to submit</h3>
 
-<p>Use the <a href="./upload.php">Upload</a> page on this site! Submit a WAD containing a single map (of any Doom format), and the site backend will incorporate the map into the complete project so far. With the PIN you'll get the first time you upload, you can submit any further edits to your map you like.</p>
+<p>Use the <a href="./upload.php">Upload</a> page on this site! Submit a WAD containing a single map of any Doom format, and the site backend will incorporate the map into the complete project so far. You can download a snapshot version after uploading to compile the project including your latest changes - check the console icon next to your map in the Download page to see a report on what the compiler included.
+
+<p>You can submit changes to your map by going to the upload page and using the PIN that you'll be given the first time you upload. If you've lost it, the project owner can retrieve it.</p>
 
 <h3>Details on custom content</h3>
+
+<p>If you want to include custom Things (game objects), be aware of the DoomEd numbers you're using - each unique type of object in a Doom WAD needs to have a unique number, and this list is global across all maps. Check the <a href="./info.php">Build Info page</a> to have a look at the current list of DoomEd numbers that are occupied, and choose a range of numbers that won't interfere with others. The recommended formula is to use [(your map number) * 100] as a starting point, but this won't be possible for all maps due to the numbers of existing Doom objects.</p>
 
 <p>When you upload your WAD through this site, the uploader will recognize and include:</p>
 
@@ -49,14 +54,20 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 </ul></li>
 <li>Music:
 <ul>
-<li>If multiple MIDIs are included, they will all be included under their original names and can be named in MAPINFO or scripts.</li>
-<li>If one MIDI is provided, it will be assumed to be the map's music and will be set up automatically with no need for a MAPINFO definition.</li>
+<li>Name a lump D_RUNNIN to make it your map's background music.</li>
+<li>If you need multiple music files, include them between MS_START and MS_END tags and refer to them directly in your MAPINFO or scripts.</li>
 </ul></li>
-<li>Certain allowed properties in MAPINFO</li>
+<li>Certain allowed properties in MAPINFO:
+<ul>
+<?php
+foreach (ALLOWED_MAPINFO_PROPERTIES as $prop) {
+    echo ("<li>" . $prop . "</li>" . PHP_EOL);
+} ?>
+</ul>
+</li>
 </ul>
 
 <p>If you need more custom content, contact DavidN on <a href="https://discord.gg/afFGdGNhW2">the Discord</a> to get it into the project.</p>
 
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
-?>

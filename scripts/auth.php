@@ -9,11 +9,13 @@ if (!empty($password)) {
         header('WWW-Authenticate: Basic realm="RAMPART"');
         header('HTTP/1.0 401 Unauthorized');
         //HTTP auth in browser happens here...
+        require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
         echo $authfailstring;
         exit;
     }
 
     if ($_SERVER['PHP_AUTH_PW'] != $password) {
+        require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
         echo $authfailstring;
         exit;
     }
