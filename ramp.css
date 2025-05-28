@@ -1,14 +1,19 @@
 :root {
     
-  --bg-color-footer: #315;
+  --bg-color-outside: #000;
 
-  --bg-color-body: #424;
-  --text-color-body: #FDF;
-  --text-color-link: #FEF;
+  --bg-color-main: #135;
+  --bg-color-dark: #081828;
+  --bg-color-header: #222;
+  --border-color-header: #444;
+
+  --text-color-body: #FFF;
+  --text-color-tooltip: #EEF;
+  --text-color-link: #DDF;
   
-  --bg-color-button: #306;
-  --text-color-button: #FDF;
-  --border-color-button: #909;
+  --bg-color-button: #080808;
+  --text-color-button: #FFF;
+  --border-color-button: #333;
   
   --bg-color-button-disabled: #747;
   --text-color-button-disabled: #CCC;
@@ -27,7 +32,7 @@ a.quickstart {
 }
 
 body {
-    background-color: var(--bg-color-body);
+    background-color: var(--bg-color-outside);
     font-family: Exo, sans-serif;
     background-image: url('/img/bg.png');
     background-attachment: fixed;
@@ -104,7 +109,7 @@ textarea {
 
 .footer {
     color: white;
-    background-color: var(--bg-color-footer);
+    background-color: var(--bg-color-dark);
     font-size: 9pt;
     padding: 8px;
     border-radius: 0px 0px 8px 8px;
@@ -128,8 +133,8 @@ textarea {
     text-align: center;
     padding: 8px;
     background-color: #228;
-    border-top: 1px solid #114;
-    border-bottom: 1px solid #114;
+    border-top: 1px solid var(--border-color-header);
+    border-bottom: 1px solid var(--border-color-header);
 }
 
 .errormessage {
@@ -157,7 +162,7 @@ textarea {
 }
 
 .outer {
-    background-color: #226;
+    background-color: var(--bg-color-main);
     max-width: 1600px;
     margin: 0 auto;
     border-radius: 8px;
@@ -174,7 +179,7 @@ textarea {
 }
 
 .menubox {
-    background-color: #114;
+    background-color: var(--bg-color-dark);
     text-align: center;
 }
 
@@ -183,14 +188,14 @@ textarea {
     color: white;
     display: inline-block;
     padding: 10px 20px;
-    background-color: #226;
+    background-color: var(--bg-color-main);
     margin: 5px 2px;
     border-radius: 12px;
 }
 
 .lightbox {
-    border: 1px solid #226;
-    background-color: #227;
+    border: 1px solid var(--border-color-header);
+    background-color: var(--bg-color-header);
     border-radius: 8px;
     padding: 8px 16px;
 }
@@ -206,13 +211,13 @@ textarea {
 
 .upload-area{
     height: 64px;
-    border: 2px solid #AAC;
+    border: 2px solid var(--border-color-button);
     border-radius: 3px;
     margin: 0 auto;
     text-align: center;
     vertical-align: middle;
     overflow: auto;
-    background-color: #66A;
+    background-color: var(--bg-color-button);
 }
 
 .upload-area h1{
@@ -226,7 +231,7 @@ textarea {
 
 .smallnote {
     font-size: 8pt;
-    color: #AAC;
+    color: var(--text-color-tooltip);
     font-style: italic;
 }
 
@@ -236,7 +241,7 @@ table.upload_table {
 }
 
 table.upload_table td {
-    border-bottom: 1px solid #338;
+    border-bottom: 1px solid var(--border-color-header);
 }
 
 table.maps_table {
@@ -301,10 +306,10 @@ td.nopad {
 }
 
 h3 {
-    border: 1px solid #334;
+    border: 1px solid var(--border-color-header);
     padding: 4px 8px;
     border-radius: 4px;
-    background-color: #225;    
+    background-color: var(--bg-color-header);    
 }
 
 /******************/
