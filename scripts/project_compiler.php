@@ -176,9 +176,10 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
             $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
-            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'models', '.md3');
-            $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'models', '.obj');
-            $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'models', '.png');
+            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'iqm model', '.iqm');
+            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'md3 model', '.md3');
+            $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'obj model', '.obj');
+            $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'png texture', '.png');
             $this->import_between_markers($map_data, $wad_handler, ['FX_START'], ['FX_END'], 'fx', 'shaders', '.glsl');
             $this->import_modeldefs($map_data, $wad_handler);
             $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA', 'DECALDEF', 'TRNSLATE']);
