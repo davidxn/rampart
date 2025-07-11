@@ -69,7 +69,7 @@ foreach($file_table as $file_data) {
 }
 $table_string .= "</tbody></table>";
 
-?><!--
+?>
                 <p>You can generate and download a snapshot version of the project here. Snapshots will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
 
                 <p>There are <?=count($file_table)?> maps in the project.</p>
@@ -77,7 +77,7 @@ $table_string .= "</tbody></table>";
                 <center><button type="button" id="download_button">Download a snapshot version!<br/>Use GZDoom 4.12.2</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
-                <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>-->
+                <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
                 
                 <?=$table_string?>
 <?php
