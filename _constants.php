@@ -178,6 +178,7 @@ const COMPILE_ERRORS = [
     'ERR_LUMP_NEEDS_CONVERTED' => '$1 lumps are unsupported - convert to $2 with SLADE3',
     'ERR_LUMP_COLORMAP_UNSUPPORTED' => 'Found colormap-related lump $1, but colormaps are not supported',
     'ERR_LUMP_LOCKDEFS_CLEARLOCKS' => 'Found LOCKDEFS lump but refusing it as it performs CLEARLOCKS!',
+    'ERR_LUMP_LOCKDEFS_CONFLICTS' => 'Found LOCKDEFS lump but refusing it as it overwrites vanilla locks',
     
     'ERR_SOUND_SNDINFO_REDEFINITION' => 'SNDINFO tries to define the sound $1 as $2, but it\'s already defined as $3',
     'WARN_SOUND_SNDINFO_REDEFINITION' => 'SNDINFO defines the sound $1, which is already defined but it matches the existing definition $2',
