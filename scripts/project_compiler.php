@@ -371,8 +371,20 @@ class Project_Compiler {
                 
                 //Special case - reject LOCKDEFS if it tries to clear locks
                 if ($lump['name'] == 'LOCKDEFS' && strpos(strtolower($lump['data']), 'clearlocks') !== false) {
-                    Logger::pg("❌ Found " . $lump['name'] . " lump but refusing it as it performs CLEARLOCKS!", $map_data['map_number'], true);
+                    Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CLEARLOCKS'), $map_data['map_number'], true);
                     continue;
+                }
+                
+                // Reject lockdefs that contain at least 1 lock that overwrites a vanilla lock
+                if ($lump['name'] == 'LOCKDEFS') {
+                    $lumptxt = $lump['data'];
+                    $lumprgx = "/^lock\s+([0-6]|10[0-1]|129|13[0-4]|229)\s*\{/mi";
+                    preg_match_all($lumprgx, $lumptxt, $matches, PREG_SET_ORDER, 0);
+                    
+                    if (preg_match($lumprgx, $lumptxt)) {
+                        Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CONFLICTS'), $map_data['map_number'], true);
+                        continue;
+                    }
                 }
                 
                 //Another special case - reject TEXTURES if it redefines any existent lumps
