@@ -176,7 +176,7 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['FF_START', 'F_START'], ['FF_END', 'F_END'], 'flats', 'flat');
             $this->import_between_markers($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'], 'sprites', 'sprite');
             $this->import_between_markers($map_data, $wad_handler, ['MS_START'], ['MS_END'], 'music', 'music');
-            $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'iqm model', '.iqm');
+            $this->import_between_markers($map_data, $wad_handler, ['MQ_START'], ['MQ_END'], 'models', 'iqm model', '.iqm');
             $this->import_between_markers($map_data, $wad_handler, ['MD_START'], ['MD_END'], 'models', 'md3 model', '.md3');
             $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'obj model', '.obj');
             $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'png texture', '.png');
