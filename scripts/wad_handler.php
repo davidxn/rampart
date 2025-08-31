@@ -23,6 +23,9 @@ class Wad_Handler {
             return false;
         }
         $this->wad_file = fopen($wad_file, "r");
+        $wadStats = fstat($this->wad_file);
+        $wadSize = $wadStats['size'];
+
         $this->identification = $this->read_bytes(4, 'str');
         $this->numlumps = $this->read_bytes(4, 'int');
         $this->infotable_offset = $this->read_bytes(4, 'int');
@@ -32,8 +35,8 @@ class Wad_Handler {
         for ($i = 0; $i < $this->numlumps*16; $i += 16) {
             $lump_start_pos = $this->read_bytes(4, 'int');
             $lump_size = $this->read_bytes(4, 'int');
-            $lump_name = $this->read_bytes(8, 'str');
-            $this->lumps[] = ['name' => $lump_name, 'size' => $lump_size, 'position' => $lump_start_pos];
+            list($lump_compressed, $lump_name) = $this->read_lump_name();
+            $this->lumps[] = ['name' => $lump_name, 'size' => $lump_size, 'position' => $lump_start_pos, 'compressed' => $lump_compressed];
         }
         
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
@@ -41,7 +44,7 @@ class Wad_Handler {
             for ($i = 0; $i < $this->numlumps; $i++) {
                 $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
                 $this->lumps[$i]['type'] = $type;
-                $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
+                $this->lumps[$i]['data'] = $this->read_lump($wadSize, $this->lumps, $i);
                 if ($parse_map_lumps) {
                     $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
                 }
@@ -51,9 +54,24 @@ class Wad_Handler {
         return true;
     }
     
-    public function read_lump($lump) {
+    public function read_lump($wadSize, $lumps, $lumpIdx) {
+        $lump = $lumps[$lumpIdx];
+
         fseek($this->wad_file, $lump['position']);
-        return $this->read_bytes($lump['size']);
+
+        $size = $lump['size'];
+
+        if ($lump['compressed']) {
+            // The length of a compressed lump is implicit based on
+            // the next entry's position, or the end of the wad.
+            if ($i + 1 > count($lumps)) {
+                $size = $wadSize - $lump['position'];
+            } else {
+                $size = $lumps[$lumpIdx + 1]['position'] - $lump['position'];
+            }
+        }
+
+        return $this->read_bytes($size);
     }
     
     public function identify_lump($lump, $nextlump) {
@@ -81,6 +99,12 @@ class Wad_Handler {
             }
             return $type;
         }
+
+        // At this point, we need to look into the body of the lump. If the lump is
+        // compressed, don't bother decompressing it.
+        if ($lump['compressed'])
+            return 'unknown';
+
         //If the first four bytes match the music signatures, identify those
         if ($lump['size'] >= 4) {
             fseek($this->wad_file, $lump['position']);
@@ -168,11 +192,41 @@ class Wad_Handler {
             default: return $bytes;
         }
     }
+
+    public function read_lump_name() {
+        $bytes = fread($this->wad_file, 8);
+
+        // Compressed lumps set the high bit of the
+        // first character to denote LZSS compression
+        $compressed = false;
+        if (ord($bytes[0]) > 127) {
+            $compressed = true;
+
+            // Clear the high bit
+            $bytes[0] = chr(ord($bytes[0]) - 128);
+        }
+        
+        $str = "";
+        $chars = unpack("C" . strlen($bytes), $bytes);
+        $i = 1;
+        while ($i <= count($chars) && $chars[$i] != 0) {
+            $str .= chr($chars[$i]);
+            $i++;
+        }
+
+        return array($compressed, $str);
+    }
     
     public function wad_info() {
         $info = ($this->identification . ' with ' . $this->numlumps . ' lumps, and directory at ' . $this->infotable_offset . PHP_EOL);
         foreach ($this->lumps as $lump) {
-            $info .= sprintf("%' 9s", $lump['name']) . sprintf("%' 10s", $lump['type']) . sprintf("%' 12d", $lump['position']) . sprintf("%' 12d", $lump['size']);
+            $sizeStr = sprintf("%' 12d", $lump['size']);
+
+            if ($lump['compressed']) {
+                $sizeStr = sprintf("%' 11d", $lump['size']) . "*";
+            }
+
+            $info .= sprintf("%' 9s", $lump['name']) . sprintf("%' 10s", $lump['type']) . sprintf("%' 12d", $lump['position']) . $sizeStr;
             $info .= PHP_EOL;
         }
         return $info;
