@@ -64,7 +64,7 @@ class Wad_Handler {
         if ($lump['compressed']) {
             // The length of a compressed lump is implicit based on
             // the next entry's position, or the end of the wad.
-            if ($i + 1 > count($lumps)) {
+            if ($i + 1 >= count($lumps)) {
                 $size = $wadSize - $lump['position'];
             } else {
                 $size = $lumps[$lumpIdx + 1]['position'] - $lump['position'];
