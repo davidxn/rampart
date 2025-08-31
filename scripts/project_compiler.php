@@ -205,6 +205,10 @@ class Project_Compiler {
             if (in_array($lump['name'], ['C_START', 'C_END'])) {
                 Logger::pg("❌ " . $lump['name'] . ": Colormaps are unsupported", $map_number, true);
             }
+            
+            if ($lump['load_error']) {
+                Logger::pg("❌ " . $lump['name'] . ": failed to load", $map_number, true);
+            }
         }
     }
     
