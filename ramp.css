@@ -25,10 +25,11 @@ a {
     color: var(--text-color-link);
 }
 
-a.quickstart {
+div.starterpack {
     right: 8px;
     bottom: 4px;
     position: absolute;
+    text-align: center;
 }
 
 body {

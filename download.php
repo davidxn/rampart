@@ -46,21 +46,21 @@ foreach($file_table as $file_data) {
         $table_string .= "<td>" . $file_data['map_name'] . "</td>";
         $table_string .= "<td>" . $file_data['author'] . "</td>";
         $table_string .= "<td>";
-        if ($file_data['jumpcrouch']) {
-            $table_string .= ' <span class="map_property">Jump</span>';
-        }
         if ($file_data['wip']) {
             $table_string .= ' <span class="map_property">WIP</span>';
         }
         if ($file_data['locked']) {
             $table_string .= '<img src="/img/special_locked.png"/>';
         }
-	  if ($file_data['length']) {
-	  	$table_string .= ' <span class="map_length">' . $file_data['length'] . '</span>';
-	  }
-	  if ($file_data['difficulty']) {
-	  	$table_string .= ' <span class="map_difficulty">' . $file_data['difficulty'] . '</span>';
-	  }
+        if ($file_data['length']) {
+            $table_string .= ' <span class="map_length">' . $file_data['length'] . '</span>';
+        }
+        if ($file_data['difficulty']) {
+            $table_string .= ' <span class="map_difficulty">' . $file_data['difficulty'] . '</span>';
+        }
+        if ($file_data['jumpcrouch']) {
+            $table_string .= ' <span class="map_property">Jump</span>';
+        }      
         $table_string .= "</td>";
         $table_string .= "<td>" . $file_data['category'] . "</td>";
         $table_string .= "<td>" . $file_data['updated'] . "</td>";
@@ -74,7 +74,7 @@ $table_string .= "</tbody></table>";
 
                 <p>There are <?=count($file_table)?> maps in the project.</p>
 
-                <center><button type="button" id="download_button">Download a snapshot version!<br/>Use GZDoom 4.12.2</button>
+                <center><button type="button" id="download_button">Download a snapshot version!<br/>Use GZDoom 4.14.2</button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
                 <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>

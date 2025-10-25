@@ -5,15 +5,20 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php')
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/catalog_handler.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/pin_managers.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/wad_handler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "data/wad_validator.php");
 
 class Upload_Handler {
 
     public $txid = null;
     public $catalog_handler = null;
+    public $validator = null;
 
     function handle_upload($filename, $filesize, $tmpname, $pin) {
 
         Logger::lg("Starting an upload attempt");
+        
+        $this->validator = new Wad_Validator($filename);
 
         $mapname = $this->clean_text($_POST['mapname']);
         $authorname = $this->clean_text($_POST['authorname']);
@@ -27,7 +32,7 @@ class Upload_Handler {
         if (isset($_POST['wip'])) { $wip = $this->clean_text($_POST['wip']); }
         $pin = strtoupper($this->clean_text($pin));
 
-        $this->validate_fields($mapname, $authorname);
+        $this->validate_fields($mapname, $authorname, $musiccredit);
         $this->validate_ip();
         if ($tmpname) {
             $this->validate_header($tmpname);
@@ -39,7 +44,7 @@ class Upload_Handler {
         Logger::lg("POST data is: " . print_r($_POST, true));
 
         $catalog_handler = new Catalog_Handler();
-        
+
         $existing_map = null;
         if ($pin) {
             $existing_map = $this->validate_pin($pin, $catalog_handler);
@@ -139,8 +144,7 @@ class Upload_Handler {
     function validate_pin($pin, $catalog_handler) {
         $map = $catalog_handler->get_map($pin);
         if (!$map) {
-            echo json_encode(['error' => 'That PIN doesn\'t exist, stop messing with the site please']);
-            die();
+            $this->validator->handle_validation_failure();
         }
         $locked = $catalog_handler->is_map_locked($pin);
         if ($locked) {
@@ -161,20 +165,36 @@ class Upload_Handler {
             echo json_encode(['error' => 'That doesn\'t look like a WAD. Can you check?']);
             die();
         }
+        $this->validator->validate();
     }
 
     function validate_ip() {
         $ip = $_SERVER['REMOTE_ADDR'];
         Logger::lg("Recording upload from IP " . $ip);        
-        $filename = 'b' . str_replace(".", "", $ip) . 'b';
-        $banfilename = 'x' . $ip . 'x';
-        $ip_check_file = IPS_FOLDER . $filename;
+
         @mkdir(IPS_FOLDER);
+        
+        $ban_list_file = DATA_FOLDER . "ipbans";
+        if (file_exists($ban_list_file)) {
+            $ip_ban_list = file_get_contents($ban_list_file);
+            $ip_prefixes = explode("\n", $ip_ban_list);
+            foreach ($ip_prefixes as $ip_prefix) {
+                if (str_starts_with($ip, $ip_prefix)) {
+                    Logger::lg("Blocked upload attempt from IP " . $ip . " due to match with prefix " . $ip_prefix);
+                    $this->validator->handle_validation_failure();
+                }
+            }
+        }
+        
+        $banfilename = 'x' . $ip . 'x';
         if (file_exists(IPS_FOLDER . $banfilename)) {
             Logger::lg("Blocked upload attempt from IP " . $ip);
-            echo json_encode(['error' => 'Your WAD is too large! Check the maximum file size with the project owner']);
-            die();
-        }
+            $this->validator->handle_validation_failure();
+        }        
+
+        $filename = 'b' . $ip . 'b';
+        $ip_check_file = IPS_FOLDER . $filename;
+        
         if (file_exists($ip_check_file) && (time() - filemtime($ip_check_file)) < get_setting("UPLOAD_ATTEMPT_GAP")) {
             Logger::lg("IP " . $ip . " is submitting too fast");
             echo json_encode(['error' => 'You uploaded just a moment ago - hold on a minute before you submit again']);
@@ -183,7 +203,18 @@ class Upload_Handler {
         file_put_contents($ip_check_file, ":)");
     }
 
-    function validate_fields($mapname, $authorname) {
+    function validate_fields($mapname, $authorname, $musiccredit) {
+        $this->detect_bad_words($mapname);
+        $this->detect_bad_words($authorname);
+        $this->detect_bad_words($musiccredit);
+        if (strlen($mapname) > 50) {
+            echo json_encode(['error' => 'Map name can only be up to 50 characters']);
+            die();
+        }
+        if (strlen($authorname) > 50) {
+            echo json_encode(['error' => 'Author can only be up to 50 characters']);
+            die();
+        }        
         if (empty($mapname)) {
             echo json_encode(['error' => 'A map must have a name!']);
             die();            
@@ -191,6 +222,21 @@ class Upload_Handler {
         if (empty($authorname)) {
             echo json_encode(['error' => 'A map must have an author name!']);
             die();
+        }
+    }
+    
+    function detect_bad_words($phrase) {
+        $ban_list_file = DATA_FOLDER . "badwords";
+        if (file_exists($ban_list_file)) {
+            $ban_list = file_get_contents($ban_list_file);
+            $ban_array = explode("\n", $ban_list);
+            foreach ($ban_array as $ban) {
+                if (str_contains(strtolower($phrase), strtolower($ban))) {
+                    Logger::lg("Blocked upload attempt due to match with banned word");
+                    $validator = new Wad_Validator();
+                    $validator->handle_validation_failure();
+                }
+            }
         }
     }
 

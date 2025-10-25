@@ -35,7 +35,7 @@ class Logger {
         if ($map_number > 0) {
             file_put_contents(Logger::get_map_log_file($map_number), $log_line, FILE_APPEND);
             if ($is_error) {
-                touch(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err");
+                file_put_contents(Logger::get_map_error_file($map_number), $log_line, FILE_APPEND);
             }
         }
     }
@@ -70,6 +70,9 @@ class Logger {
         return PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".log";
     }
 
+    public static function get_map_error_file($map_number) {
+        return PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err";
+    }
         
     public static function record_pk3_generation($start_time, $seconds_array) {
         $times_string = implode(",", $seconds_array);

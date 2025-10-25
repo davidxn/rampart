@@ -60,8 +60,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 <h4><?=get_error_link('ERR_LUMP_LOCKDEFS_CLEARLOCKS')?></h4>
 <p>Your WAD contains a LOCKDEF that uses the clearlocks command, which would erase all other previously defined locks. Reupload your WAD without using this command.</p>
 
-<h4><?=get_error_link('ERR_LUMP_LOCKDEFS_CONFLICTS')?></h4>
-<p>Your WAD contains a LOCKDEF that overwrites vanilla doom locks, which would change them in all maps. Change the lock numbers, preferably around <code>your map number * 100</code> and reupload your WAD</p>
+
 
 <h3>Sound errors</h3>
 

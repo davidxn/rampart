@@ -133,7 +133,6 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
                 <?php } ?>
                 
                 <p>Add <input class="number-of-slots" style="width: 50px" type="number" value="1"></input> more map slots <button class="new-slots">Add slots</button></p>
-                <p><button class="renumber-slots">Renumber</button> the slots so the map numbers increase in the order shown (sorted by lump name)</p>
                 </div>
                 <script src="admin.js?xcache=9" type="text/javascript"></script>
 <?php

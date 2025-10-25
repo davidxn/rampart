@@ -15,6 +15,8 @@ if (!empty($password)) {
     }
 
     if ($_SERVER['PHP_AUTH_PW'] != $password) {
+        header('WWW-Authenticate: Basic realm="RAMPART"');
+        header('HTTP/1.0 401 Unauthorized');
         require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
         echo $authfailstring;
         exit;

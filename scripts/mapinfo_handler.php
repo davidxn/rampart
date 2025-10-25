@@ -57,7 +57,7 @@ class Mapinfo_Handler {
             
             if (in_array($key, ['sky1', 'skybox'])) {
                 $value = $this->strip_quotes($line_tokens[1]);
-                $terminatechar = strpos($value, ",");
+                $terminatechar = min(strpos($value, ","), strpos($value, " "));
                 if ($terminatechar) {
                     $value = trim(substr($value, 0, $terminatechar));
                 }

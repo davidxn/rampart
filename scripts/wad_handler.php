@@ -1,87 +1,5 @@
 <?php
 
-class Lzss
-{
-    /**
-     * Decompresses a LZSS-compressed stream into a decompressed stream
-     * 
-     * @param string $input A compressed blob of data
-     * @param string &$output A destination string that will be filled with decompressed data
-     * @param int $expectedOutputLength The expected length of the output
-     * @throws Exception
-     */
-    public static function decompress($input, &$output, $expectedOutputLength)
-    {
-        // An 8-wide bitfield that denotes whether the next eight
-        // blocks are compressed or stored. The least-significant
-        // bit denotes the nearest chunk.
-        $nextChunks = 0;
-        $chunkFieldCounter = 0;
-
-        $inputPosition = 0;
-        $outputPosition = 0;
-        $inputLength = strlen($input);
-        
-        // Initialize output string
-        $output = str_repeat("\0", $expectedOutputLength);
-
-        while ($inputPosition < $inputLength) {
-            // Get a new bitfield if necessary
-            if ($chunkFieldCounter == 0) {
-                $nextChunks = ord($input[$inputPosition++]);
-            }
-
-            // Roll the field counter over to read a new
-            // bitfield every 8 chunks
-            $chunkFieldCounter = ($chunkFieldCounter + 1) & 7;
-
-            // If the least-significant bit is set, the next
-            // chunk is compressed. Otherwise, it's stored.
-            if (($nextChunks & 1) != 0) {
-                $firstByte = ord($input[$inputPosition++]);
-                $secondByte = ord($input[$inputPosition++]);
-
-                // Construct a 12-bit offset into the current
-                // sliding window using this byte as the top
-                // 8 bits, and the top 4 bits of the next
-                // byte as the bottom 4 bits. The remaining
-                // 4 bits are a 1 + [0, 16)-byte length in that
-                // window.
-                $spanBits = ($firstByte << 8) | $secondByte;
-                $spanOffset = $spanBits >> 4;
-                $spanLength = ($spanBits & 0xF) + 1;
-
-                if ($spanLength == 1) {
-                    break;
-                }
-
-                // Calculate source position relative to current output position
-                $sourcePosition = $outputPosition - $spanOffset - 1;
-
-                // Copy bytes from the sliding window
-                for ($i = 0; $i < $spanLength; $i++) {
-                    $sourceByte = $output[$sourcePosition + $i];
-                    $output[$outputPosition++] = $sourceByte;
-                }
-            } else {
-                // Copy literal byte
-                $output[$outputPosition++] = $input[$inputPosition++];
-            }
-
-            // Select the next bitfield
-            $nextChunks >>= 1;
-        }
-
-        if ($inputPosition != $inputLength) {
-            throw new Exception("Did not reach end of input");
-        }
-
-        if ($outputPosition != $expectedOutputLength) {
-            throw new Exception("Did not reach end of output");
-        }
-    }
-}
-
 class Wad_Handler {
     
     public $txid = null;
@@ -114,28 +32,16 @@ class Wad_Handler {
         for ($i = 0; $i < $this->numlumps*16; $i += 16) {
             $lump_start_pos = $this->read_bytes(4, 'int');
             $lump_size = $this->read_bytes(4, 'int');
-            list($lump_compressed, $lump_name) = $this->read_lump_name();
-            $this->lumps[] = ['name' => $lump_name, 'size' => $lump_size, 'position' => $lump_start_pos, 'compressed' => $lump_compressed];
+            $lump_name = $this->read_bytes(8, 'str');
+            $this->lumps[] = ['name' => $lump_name, 'size' => $lump_size, 'position' => $lump_start_pos];
         }
         
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
         if ($load_data) {
             for ($i = 0; $i < $this->numlumps; $i++) {
-                $nextLump = (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null);
-                
-                try {
-                    $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i], $nextLump);
-                    $this->lumps[$i]['load_error'] = false;
-                } catch (Exception $e) {
-                    // Allow the lump to fail to load, but announce that error in the log
-                    $this->lumps[$i]['data'] = "";
-                    $this->lumps[$i]['load_error'] = true;
-                    continue;
-                }
-
-                $type = $this->identify_lump($this->lumps[$i], $nextLump);
+                $type = $this->identify_lump($this->lumps[$i], (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null));
                 $this->lumps[$i]['type'] = $type;
-
+                $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i]);
                 if ($parse_map_lumps) {
                     $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
                 }
@@ -145,38 +51,9 @@ class Wad_Handler {
         return true;
     }
     
-    public function read_lump($lump, $nextLump) {
+    public function read_lump($lump) {
         fseek($this->wad_file, $lump['position']);
-
-        $size = $lump['size'];
-
-        if ($size == 0) {
-            return "";
-        }
-
-        if (!$lump['compressed']) {
-            return $this->read_bytes($size);
-        }
-
-        // The length of a compressed lump is implicit based on
-        // the next entry's position. As per the spec, the last
-        // lump in a wad cannot be compressed, and is recommended
-        // to be a marker of some kind.
-        if ($nextLump) {
-            $size = $nextLump['position'] - $lump['position'];
-        } else {
-            throw new Exception("Last compressed lump must be followed by a non-compressed lump (e.g. a marker)");
-        }
-
-        // Decompress the lump data. We won't bother re-compressing it,
-        // since the resulting data will be DEFLATEd into a PK3, which
-        // will be stronger overall compression.
-        $compressed = $this->read_bytes($size);
-        $decompressed = [];
-
-        Lzss::decompress($compressed, $decompressed, $lump['size']);
-
-        return $decompressed;
+        return $this->read_bytes($lump['size']);
     }
     
     public function identify_lump($lump, $nextlump) {
@@ -204,11 +81,10 @@ class Wad_Handler {
             }
             return $type;
         }
-
         //If the first four bytes match the music signatures, identify those
         if ($lump['size'] >= 4) {
             fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 0, 4);
+            $string = $this->read_bytes(4, 'str');
             if ($string == 'MThd') {
                 return 'midi';
             }
@@ -233,7 +109,7 @@ class Wad_Handler {
         }
         if ($lump['size'] >= 3) {
             fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 0, 3);
+            $string = $this->read_bytes(3, 'str');
             if ($string == 'ID3' || substr($string, 0, 2) == "\xFF\xFB") {
                 return 'mp3';
             }
@@ -244,7 +120,8 @@ class Wad_Handler {
         //S3M files have their signature at position 44...
         if ($lump['size'] >= 48) {
             fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 44, 4);
+            $string = $this->read_bytes(44, 'str');
+            $string = $this->read_bytes(4, 'str');
             if ($string == 'SCRM') {
                 return 'module';
             }
@@ -264,7 +141,7 @@ class Wad_Handler {
                 $thing['angle'] = unpack("s", substr($entry, 4, 2))[1];
                 $thing['type'] = unpack("s", substr($entry, 6, 2))[1];
                 $thing['doomflags'] = unpack("s", substr($entry, 8, 2))[1];
-                $parsed_array[] = $thing;
+                $parsed_array[] = $thing;                
             }
         }
         return $parsed_array;
@@ -291,49 +168,11 @@ class Wad_Handler {
             default: return $bytes;
         }
     }
-
-    public function read_data_str($lump, $start, $num) {
-        if (!$num) {
-            return "";
-        }
-        
-        return substr($lump['data'], $start, $num);
-    }
-
-    public function read_lump_name() {
-        $bytes = fread($this->wad_file, 8);
-
-        // Compressed lumps set the high bit of the
-        // first character to denote LZSS compression
-        $compressed = false;
-        if (ord($bytes[0]) > 127) {
-            $compressed = true;
-
-            // Clear the high bit
-            $bytes[0] = chr(ord($bytes[0]) - 128);
-        }
-        
-        $str = "";
-        $chars = unpack("C" . strlen($bytes), $bytes);
-        $i = 1;
-        while ($i <= count($chars) && $chars[$i] != 0) {
-            $str .= chr($chars[$i]);
-            $i++;
-        }
-
-        return array($compressed, $str);
-    }
     
     public function wad_info() {
         $info = ($this->identification . ' with ' . $this->numlumps . ' lumps, and directory at ' . $this->infotable_offset . PHP_EOL);
         foreach ($this->lumps as $lump) {
-            $sizeStr = sprintf("%' 12d", $lump['size']);
-
-            if ($lump['compressed']) {
-                $sizeStr = sprintf("%' 11d", $lump['size']) . "*";
-            }
-
-            $info .= sprintf("%' 9s", $lump['name']) . sprintf("%' 10s", $lump['type']) . sprintf("%' 12d", $lump['position']) . $sizeStr;
+            $info .= sprintf("%' 9s", $lump['name']) . sprintf("%' 10s", $lump['type']) . sprintf("%' 12d", $lump['position']) . sprintf("%' 12d", $lump['size']);
             $info .= PHP_EOL;
         }
         return $info;
