@@ -70,7 +70,8 @@ class Project_Compiler {
             $this->write_guide_dialogue();
             if (get_setting("GENERATE_MARQUEES")) {
                 $this->set_status("Generating marquee textures...");
-                $this->generate_marquees($catalog_handler);
+                $generator = new Marquee_Generator();
+                $generator->generate_marquees($catalog_handler);
             }
             file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
             $milestone_times[] = time() - $start_time; //Generating hub resources
@@ -205,7 +206,6 @@ class Project_Compiler {
             if (in_array($lump['name'], ['C_START', 'C_END'])) {
                 Logger::pg("❌ " . $lump['name'] . ": Colormaps are unsupported", $map_number, true);
             }
-            
             if ($lump['load_error']) {
                 Logger::pg("❌ " . $lump['name'] . ": failed to load", $map_number, true);
             }
@@ -379,18 +379,18 @@ class Project_Compiler {
                     Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CLEARLOCKS'), $map_data['map_number'], true);
                     continue;
                 }
-                
+
                 // Reject lockdefs that contain at least 1 lock that overwrites a vanilla lock
                 if ($lump['name'] == 'LOCKDEFS') {
                     $lumptxt = $lump['data'];
                     $lumprgx = "/^lock\s+([0-6]|10[0-1]|129|13[0-4]|229)\s*\{/mi";
                     preg_match_all($lumprgx, $lumptxt, $matches, PREG_SET_ORDER, 0);
-                    
+
                     if (preg_match($lumprgx, $lumptxt)) {
                         Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CONFLICTS'), $map_data['map_number'], true);
                         continue;
                     }
-                }
+                }                
                 
                 //Another special case - reject TEXTURES if it redefines any existent lumps
                 if ($lump['name'] == 'TEXTURES') {
@@ -604,7 +604,7 @@ class Project_Compiler {
                 $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
                 
                 //If this is a ZSCRIPT file and it begins with a version declaration, we have to strip that out
-                if ($lump['name'] == 'ZSCRIPT' && substr($lump['data'], 0, 7) == "version") {
+                if ($lump['name'] == 'ZSCRIPT' && strtolower(substr($lump['data'], 0, 7)) == "version") {
                     Logger::pg("Taking version declaration out of ZSCRIPT lump");
                     $first_newline_position = strpos($lump['data'], PHP_EOL);
                     $lump['data'] = substr($lump['data'], $first_newline_position);
@@ -733,12 +733,12 @@ class Project_Compiler {
     function import_special_lumps($map_data, $wad_handler) {
         foreach ($wad_handler->lumps as $lump) {
             if (in_array(strtoupper($lump['name']), ['RAMPSHOT'])) {
-                //This is a screenshot, so include it under the screenshots folder
-                $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . 'textures' . DIRECTORY_SEPARATOR . 'hub' . DIRECTORY_SEPARATOR . 'shots' . DIRECTORY_SEPARATOR;
+                //This is a screenshot, so include it under the screenshots folder for processing later
+                $lump_folder = WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . DIRECTORY_SEPARATOR . 'RSHOT' . $map_data['map_number'];
+                $output_file = $lump_folder . 'RSHOT' . $map_data['map_number'];
                 file_put_contents($output_file, $lump['data']);
-                Logger::pg("📷 Included RAMPSHOT picture as " . $output_file, $map_data['map_number']);
+                Logger::pg("📷 Exported RAMPSHOT picture as " . $output_file, $map_data['map_number']);
             }
         }
     }
@@ -746,28 +746,6 @@ class Project_Compiler {
     function write_map_variable($map_number, $key, $value) {
         if (!isset($this->map_additional_mapinfo[$map_number])) { $this->map_additional_mapinfo[$map_number] = []; }
         $this->map_additional_mapinfo[$map_number][$key] = $value;
-    }
-    
-    function generate_marquees($catalog_handler) {
-        Logger::pg("Generating marquee textures");
-        $marquee_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "textures" . DIRECTORY_SEPARATOR . "marquee";
-        @mkdir($marquee_folder, 0755, true);
-        
-        $generator = new Marquee_Generator();
-        
-        $catalog = $catalog_handler->get_catalog();
-        foreach ($catalog as $map_data) {
-            
-            $map_name = $map_data['map_name'];
-            $map_author = $map_data['author'];
-            foreach([0, 1] as $is_blue) {
-                $image = $generator->generateImage($map_name . " - " . $map_author . "      ", !$is_blue, 'dosborder');
-                $marquee_prefix = $is_blue ? "MARX" : "MARQ";
-                $marquee_file = $marquee_folder . DIRECTORY_SEPARATOR . $marquee_prefix . $map_data['map_number'] . ".png";
-                imagepng($image, $marquee_file);
-                Logger::pg("Wrote " . $marquee_file);
-            }
-        }
     }
 
     /**
@@ -814,7 +792,20 @@ class Project_Compiler {
             $language .= $map_data['lumpname'] . "MUSC = \"" . (isset($map_data['music_credit']) ? $map_data['music_credit'] : '') . "\";" . PHP_EOL;
             $language .= PHP_EOL;
 
-            $rampdata[$map_data['map_number']] = implode(",", [$map_data['map_number'], $map_data['lumpname'], $map_allows_jump, $map_is_wip, $map_data['length'] ?? 0, $map_data['difficulty'] ?? 0, $map_data['monsters'] ?? 0, $map_data['category'] ?? '', $map_data['map_name']]);
+            $rampdata[$map_data['map_number']] = implode(",",
+                [
+                    $map_data['map_number'],
+                    $map_data['lumpname'],
+                    $map_allows_jump,
+                    $map_is_wip,
+                    $map_data['length'] ?? 0,
+                    $map_data['difficulty'] ?? 0,
+                    $map_data['monsters'] ?? 0,
+                    $map_data['category'] ?? '',
+                    Logger::map_has_errors($map_data['map_number']),
+                    $map_data['map_name']
+                ]
+            );
 
             if (!$write_mapinfo) {
                 continue;
@@ -823,7 +814,7 @@ class Project_Compiler {
             //Header
             $mapinfo .= "map " . $map_data['lumpname'] . " lookup " . $map_data['lumpname'] . "NAME" . PHP_EOL;
             
-            //The basics - include the name, author, and point everything to go back to MAP01
+            //The basics - include the name, author, and point everything to go back to the hub/intermission map
             $mapinfo .= "{" . PHP_EOL;
             $mapinfo .= "author = \"$" . $map_data['lumpname'] . "AUTH\"" . PHP_EOL;
             $mapinfo .= "levelnum = " . $map_data['map_number'] . PHP_EOL;
@@ -1138,7 +1129,7 @@ class Project_Compiler {
             $this->deleteAll($path . DIRECTORY_SEPARATOR);
             Logger::pg("Cleaned target folder");
         }
-        mkdir(PK3_FOLDER);
+        @mkdir(PK3_FOLDER);
         $path = realpath(PK3_FOLDER);
         foreach (PK3_REQUIRED_FOLDERS as $folder) {
             mkdir($path . DIRECTORY_SEPARATOR . $folder);

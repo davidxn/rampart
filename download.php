@@ -33,9 +33,9 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
 
 usort($file_table, function($a, $b) {
     if (substr($a['lumpname'], 0, 3) == "MAP" && substr($b['lumpname'], 0, 3) == "MAP") {
-        return (substr($a['lumpname'], 3)) > (substr($b['lumpname'], 3));
+        return intval(substr($a['lumpname'], 3)) <=> intval(substr($b['lumpname'], 3));
     }
-    return $a['lumpname'] > $b['lumpname'];
+    return $a['lumpname'] <=> $b['lumpname'];
 });
 
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Details</th><th>Category</th><th>Updated</th><th>Log</th></tr></thead><tbody>";

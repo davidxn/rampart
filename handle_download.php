@@ -7,11 +7,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/build_nu
 $path = get_project_full_path();
 $numberer = new Build_Numberer();
 
-$finfo = finfo_open(FILEINFO_MIME_TYPE);
-$mime_type = finfo_file($finfo, $path);
-
 header('Content-Description: File Transfer');
-header('Content-Type: ' . $mime_type);
+header('Content-Type: application/octet-stream');
 header('Content-Length: ' . filesize($path));
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: 0");

@@ -39,7 +39,7 @@ if (get_mtime(SETTINGS_FILE) > get_mtime(get_project_full_path())) {
 
 // Now check the fixedcontent folder... if we don't have a script, just keep the answer from before
 if (!empty($GLOBALS["STATIC_CONTENT_MTIME_SCRIPT"])) {
-    $static_content_mtime = trim(shell_exec($GLOBALS["STATIC_CONTENT_MTIME_SCRIPT"]));
+    @$static_content_mtime = trim(shell_exec($GLOBALS["STATIC_CONTENT_MTIME_SCRIPT"]));
     if (is_numeric($static_content_mtime) && !empty($static_content_mtime) && $static_content_mtime > get_mtime(get_project_full_path())) {
         Logger::lg("Static content folder has newer data than latest snapshot - will rebuild");
         $pk3_is_current = false;
