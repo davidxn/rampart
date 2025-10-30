@@ -1,5 +1,4 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <h3>How RAMP works</h3>

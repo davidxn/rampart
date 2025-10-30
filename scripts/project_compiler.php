@@ -1,16 +1,5 @@
 <?php
-
-require_once("_constants.php");
-require_once("_functions.php");
-require_once("scripts/wad_handler.php");
-require_once("scripts/mapinfo_handler.php");
-require_once("scripts/guide_writer.php");
-require_once("scripts/catalog_handler.php");
-require_once("scripts/build_numberer.php");
-require_once("scripts/sndinfo_handler.php");
-require_once("scripts/music_lump_mapper.php");
-require_once("scripts/lump_guardian.php");
-require_once("scripts/marquee_generator.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Project_Compiler {
 
@@ -1050,9 +1039,9 @@ class Project_Compiler {
     }
 
     function create_pk3() {
-        if (!empty($GLOBALS["ZIP_SCRIPT"])) {
+        if (!empty($GLOBALS["ZIP_SCRIPT_WINDOWS"])) {
             Logger::pg("--- ASKING EXTERNAL SCRIPT TO ZIP PK3 ---");
-            exec($GLOBALS["ZIP_SCRIPT"]);
+            exec($GLOBALS["ZIP_SCRIPT_WINDOWS"]);
             Logger::pg("Script finished");
             return;
         }

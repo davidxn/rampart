@@ -1,5 +1,5 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 $authfailstring = '<center><img src="/img/authfail.png"></img></center>';
 $password = '';
 require_once(PASSWORD_FILE);

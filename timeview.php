@@ -1,6 +1,5 @@
 <?php
-include_once('header.php');
-include_once('_constants.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <style type="text/css">
 .mapuploadtable td {

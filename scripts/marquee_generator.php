@@ -1,7 +1,5 @@
 <?php
-
-require_once("_constants.php");
-require_once("_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Marquee_Generator {
     

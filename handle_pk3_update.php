@@ -2,9 +2,7 @@
 
 set_time_limit(600);
 
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/project_compiler.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : false;
 $nocache = isset($_GET['nocache']) ? $_GET['nocache'] : false;

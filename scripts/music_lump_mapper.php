@@ -1,6 +1,5 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Music_Lump_Mapper {
     

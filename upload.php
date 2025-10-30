@@ -1,9 +1,7 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 ?>
-                <p>Submit or adjust a RAMP2024 map here!</p>
+                <p>Submit or adjust a RAMP 2025 map here!</p>
                 
                 <div class="lightbox">
                 <p>As well as a map, you can include these resources:</p>
