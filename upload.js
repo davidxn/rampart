@@ -129,6 +129,11 @@ function downloadProject() {
             }
             $('#download_button').text("Project generated!");
             window.location.href = './handle_download.php?xcache=' + Math.random();
+        },
+        error: function(response){
+            $('#download_status').text(response.responseText);
+            clearInterval(downloadStatus);
+            $('#download_button').text("Something went wrong!");
         }
     });
     

@@ -55,7 +55,7 @@ foreach($successful_dnums as $successful_dnum => $dnum_info) {
         if ($range[0] == $range[1]) {
             $rangeDisplay = $range[0];
         }
-		$table_string .= sprintf("<tr><td class=\"reservednumspan\" colspan=\"4\">%s %s</td></tr>", $rangeDisplay, $range[2]);
+		$table_string .= sprintf("<tr><td class=\"reservednumspan\">%s</td><td class=\"reservednumspan\" colspan=\"4\">%s</td></tr>", $rangeDisplay, $range[2]);
 		$reserved_range_pointer++;
 		$highest_num_range_start = Lump_Guardian::$reserved_doomed_ranges[$reserved_range_pointer][0] ?? 0;
 

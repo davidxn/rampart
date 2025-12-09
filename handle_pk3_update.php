@@ -58,13 +58,17 @@ if ($pk3_is_current) {
 }
 
 // Trigger a rebuild
-$handler = new Project_Compiler();
-if ($handler->compile_project(!$nozip)) {
-    if ($redirect) {
-        header("Location: admin/index.php");
+try {
+    $handler = new Project_Compiler();
+    if ($handler->compile_project(!$nozip)) {
+        if ($redirect) {
+            header("Location: admin/index.php");
+            die();
+        }
+        echo json_encode(['success' => true, 'newpk3' => true]);
         die();
     }
-    echo json_encode(['success' => true, 'newpk3' => true]);
-    die();
 }
-echo json_encode(['success' => false, 'error' => 'Something went wrong, the project admin should be able to see exactly what']);
+catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => 'Something went wrong, the project admin should be able to see exactly what']);
+}

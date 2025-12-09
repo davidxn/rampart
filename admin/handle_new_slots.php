@@ -1,11 +1,7 @@
 <?php
 
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_functions.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/catalog_handler.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/pin_managers.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/logger.php");
+$GLOBALS['auth'] = true;
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 $slots = $_POST['slots'];
 $template_name = isset($_POST['template']) ? $_POST['template'] : '';

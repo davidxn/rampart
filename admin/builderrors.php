@@ -1,17 +1,10 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/auth.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/catalog_handler.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'scripts/logger.php');
+$GLOBALS['auth'] = true;
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
 <h3>Build errors</h3>
 
 <?php
-// Get all maps in the catalogue
-// Sort them by map number
-//Check if an error file exists for each one
-//If it does, output header and contents
 
 function catalogCmp($a, $b) {
     return $a['map_number'] <=> $b['map_number'];

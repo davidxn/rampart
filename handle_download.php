@@ -1,8 +1,7 @@
 <?php
 set_time_limit(6000);
 
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_constants.php");
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/build_numberer.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "_bootstrap.php");
 
 $path = get_project_full_path();
 $numberer = new Build_Numberer();
