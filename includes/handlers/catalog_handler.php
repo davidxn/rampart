@@ -4,25 +4,33 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php')
 class Catalog_Handler {
     
     private $catalog = [];
+    private $pinsToRampIds = [];
     
     public function __construct() {
         $string_to_decode = "[]";
         if (file_exists(CATALOG_FILE)) {            
             $string_to_decode = file_get_contents(CATALOG_FILE);
         }
-        $this->catalog = json_decode($string_to_decode, true);
+        $decoded_json = json_decode($string_to_decode, true);
         if (json_last_error() != JSON_ERROR_NONE) {
             die("Catalogue file could not be JSON-decoded!");
         }
-        if (!$this->catalog) {
+        if (!$decoded_json) {
             $this->catalog = [];
+            return;
+        }
+        foreach ($decoded_json as $pin => $mapdata) {
+            $rampMap = new RampMap($pin, $mapdata);
+            $this->catalog[$rampMap->rampId] = $rampMap;
+            $this->pinsToRampIds[$pin] = $rampMap->rampId;
+            
         }
     }
     
     public function get_next_available_slot() {
         $occupied_slots = [];
-        foreach($this->catalog as $mapdata) {
-            $occupied_slots[$mapdata['map_number']] = true;
+        foreach($this->catalog as $rampMap) {
+            $occupied_slots[$rampMap->mapnum] = true;
         }
         $examined_slot = FIRST_USER_MAP_NUMBER;
         while (true) {
@@ -50,18 +58,14 @@ class Catalog_Handler {
     }
     
     public function get_map($pin) {
-        if ($this->catalog[$pin]) {
-            return $this->catalog[$pin];
+        if ($this->pinsToRampIds[$pin]) {
+            return $this->catalog[$this->pinsToRampIds[$pin]];
         }
         return false;
     }
     
-    public function get_map_by_number($map_number) {
-        foreach ($this->catalog as $pin => $data) {
-            if ($data['map_number'] == $map_number) {
-                return $data;
-            }
-        }
+    public function get_map_by_number($rampId) {
+        return $this->catalog[$rampId];
     }
     
     public function is_map_locked($pin) {
