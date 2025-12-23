@@ -1,7 +1,7 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php');
 
-function get_source_wad_file_name($slot) {
+function get_source_wad_file_name($slot): string {
     // Prefix under 10 with a 0
     if ($slot >= 0 && $slot < 10) {
         return ("RM" . (substr("0" . $slot, -2)) . ".WAD");
@@ -20,7 +20,7 @@ function get_safe_lump_file_name($name) {
     return str_replace("\\", "^", $name);
 }
 
-function html_radio_button($setting, $text, $value = null, $linebreak = false, $default = false) {
+function html_radio_button($setting, $text, $value = null, $linebreak = false, $default = false): string {
     $html = "";
     
     if ($linebreak) {
@@ -42,7 +42,7 @@ function html_radio_button($setting, $text, $value = null, $linebreak = false, $
     return $html;
 }
 
-function get_error_link($key, $args = []) {
+function get_error_link($key, $args = []): string {
     $error_string = COMPILE_ERRORS[$key] ?? "[Could not find error string]";
     $i = 1;
     foreach ($args as $arg) {

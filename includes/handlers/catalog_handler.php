@@ -2,9 +2,11 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Catalog_Handler {
-    
-    private $catalog = [];
-    private $pinsToRampIds = [];
+
+
+    /** @var RampMap[] $catalog */
+    private array $catalog = [];
+    private array $pinsToRampIds = [];
     
     public function __construct() {
         $string_to_decode = "[]";
@@ -23,11 +25,11 @@ class Catalog_Handler {
             $rampMap = new RampMap($pin, $mapdata);
             $this->catalog[$rampMap->rampId] = $rampMap;
             $this->pinsToRampIds[$pin] = $rampMap->rampId;
-            
         }
     }
     
-    public function get_next_available_slot() {
+    public function get_next_available_slot(): int
+    {
         $occupied_slots = [];
         foreach($this->catalog as $rampMap) {
             $occupied_slots[$rampMap->mapnum] = true;

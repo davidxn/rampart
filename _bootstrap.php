@@ -3,7 +3,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_constants.php')
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_functions.php');
 
 if (isset($GLOBALS['auth']) && $GLOBALS['auth'] == true) {
-    $authfailstring = '<center><img src="/img/authfail.png"></img></center>';
+    $auth_fail_string = '<center><img src="/img/authfail.png"></img></center>';
     $password = '';
     require_once(PASSWORD_FILE);
 
@@ -13,7 +13,7 @@ if (isset($GLOBALS['auth']) && $GLOBALS['auth'] == true) {
             header('HTTP/1.0 401 Unauthorized');
             //HTTP auth in browser happens here...
             require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
-            echo $authfailstring;
+            echo $auth_fail_string;
             exit;
         }
 
@@ -21,18 +21,18 @@ if (isset($GLOBALS['auth']) && $GLOBALS['auth'] == true) {
             header('WWW-Authenticate: Basic realm="RAMPART"');
             header('HTTP/1.0 401 Unauthorized');
             require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
-            echo $authfailstring;
+            echo $auth_fail_string;
             exit;
         }
     }
 }
 
 spl_autoload_register(function ($class) {
-    $handler_filename = 'includes/handlers/' . strtolower($class) . '.php';
+    $handler_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/handlers/' . strtolower($class) . '.php';
     if (file_exists($handler_filename)) {
         require_once $handler_filename;
     }
-    $model_filename = 'includes/models/' . strtolower($class) . '.php';
+    $model_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/models/' . strtolower($class) . '.php';
     if (file_exists($model_filename)) {
         require_once $model_filename;
     }

@@ -2,8 +2,15 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 $catalog_handler = new Catalog_Handler();
 
+if (!file_exists(BUILD_INFO_FILE)) {
+    echo ("No build information is available");
+    require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
+    die();
+}
 $build_info_string = file_get_contents(BUILD_INFO_FILE);
 if (!$build_info_string) {
+    echo ("No build information is available");
+    require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');
     die();
 }
 $build_info = json_decode($build_info_string, true);

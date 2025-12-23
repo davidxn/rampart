@@ -11,6 +11,8 @@ $setting_defaults = [
     "ALLOW_NEW_UPLOADS" => false,
     "ALLOW_EDIT_UPLOADS" => true,
     "HUB_MAP_NAME" => "",
+    "ALLOW_SNAPSHOT_DOWNLOAD" => true,
+    "DOOM_VERSION" => "UZDoom",
     
     # About uploads
     "ALLOW_CONTENT_MAPS" => true,

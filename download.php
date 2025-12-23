@@ -65,16 +65,17 @@ foreach($file_table as $file_data) {
 }
 $table_string .= "</tbody></table>";
 
+if (get_setting("ALLOW_SNAPSHOT_DOWNLOAD")) {
 ?>
                 <p>You can generate and download a snapshot version of the project here. Snapshots will use whatever resources have been added to the project by contributors, and aren't guaranteed to be stable.</p>
 
                 <p>There are <?=count($file_table)?> maps in the project.</p>
 
-                <center><button type="button" id="download_button">Download a snapshot version!<br/>Use GZDoom 4.14.2</button>
+                <center><button type="button" id="download_button">Download a snapshot version!<br/>Runs on <?=get_setting("DOOM_VERSION")?></button>
                 <p class="smallnote" id="download_status">&nbsp;</p></center>
                 
                 <p>Map catalogue updated <?=$date_catalog ? " at " . date("F j, Y, g:i a T", $date_catalog) : "(never updated)"?></p>
-                
+<?php } ?>
                 <?=$table_string?>
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . './footer.php');

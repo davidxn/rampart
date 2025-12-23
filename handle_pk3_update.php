@@ -4,9 +4,9 @@ set_time_limit(600);
 
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
-$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : false;
-$nocache = isset($_GET['nocache']) ? $_GET['nocache'] : false;
-$nozip = isset($_GET['nozip']) ? $_GET['nozip'] : false;
+$redirect = $_GET['redirect'] ?? false;
+$nocache = $_GET['nocache'] ?? false;
+$nozip = $_GET['nozip'] ?? false;
 
 $lock_file_recent = file_exists(LOCK_FILE_COMPILE) && (time() - get_mtime(LOCK_FILE_COMPILE)) < 600;
 $pk3_is_current = true;
