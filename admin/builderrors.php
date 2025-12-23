@@ -6,8 +6,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <?php
 
-function catalogCmp($a, $b) {
-    return $a['map_number'] <=> $b['map_number'];
+function catalogCmp(RampMap $a, RampMap $b): int
+{
+    return $a->mapnum <=> $b->mapnum;
 }
 
 $catalog_handler = new Catalog_Handler();
@@ -15,10 +16,10 @@ $catalog = $catalog_handler->get_catalog();
 usort($catalog, "catalogCmp");
 
 foreach ($catalog as $map_data) {
-    if (Logger::map_has_errors($map_data['map_number'])) {
-        print("<h3>" . $map_data['lumpname'] . ": " . $map_data['map_name']);
+    if (Logger::map_has_errors($map_data->mapnum)) {
+        print("<h3>" . $map_data->lump . ": " . $map_data->name);
         print('<div class="code">');
-        include_once(Logger::get_map_error_file($map_data['map_number']));
+        include_once(Logger::get_map_error_file($map_data->mapnum));
         print('</div></h3>');
     }
 }

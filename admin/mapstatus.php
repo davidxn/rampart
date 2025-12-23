@@ -3,8 +3,8 @@
 $GLOBALS['auth'] = true;
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
-$date_pk3 = @filemtime(get_project_full_path()) or 0;
-$date_catalog = @filemtime(CATALOG_FILE) or 0;
+$date_pk3 = @filemtime(get_project_full_path());
+$date_catalog = @filemtime(CATALOG_FILE);
 
 $catalog_handler = new Catalog_Handler();
 $file_table = [];
@@ -19,20 +19,21 @@ if (isset($_GET['action']) && $_GET['action'] == 'unlock') {
 $total_maps = 0;
 $locked_maps = 0;
 $wip_maps = 0;
-foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
-    $wad_path = UPLOADS_FOLDER . get_source_wad_file_name($map_data['map_number']);
+foreach($catalog_handler->get_catalog() as $ramp_id => $map_data) {
+    $wad_path = UPLOADS_FOLDER . get_source_wad_file_name($map_data->rampId);
     $row_data = [
-        'pin' => $identifier,
-        'map_name' => $map_data['map_name'],
-        'lumpname' => isset($map_data['lumpname']) ? $map_data['lumpname'] : ("MAP" . substr("0" . $map_data['map_number'], -2)),
-        'mapinfo' => isset($map_data['mapinfo']) ? $map_data['mapinfo'] : '',
-        'author' => $map_data['author'],
+        'ramp_id' => $ramp_id,
+        'pin' => $map_data->pin,
+        'map_name' => $map_data->name,
+        'lumpname' => $map_data->lump,
+        'mapinfo' => $map_data->mapInfoString ?? '',
+        'author' => $map_data->author,
         'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
-        'map_number' => $map_data['map_number'],
-        'jumpcrouch' => isset($map_data['jumpcrouch']) ? $map_data['jumpcrouch'] : 0,
-        'wip' => isset($map_data['wip']) ? $map_data['wip'] : 0,
-        'locked' => isset($map_data['locked']) ? $map_data['locked'] : 0,
-        'disabled' => isset($map_data['disabled']) ? $map_data['disabled'] : 0
+        'map_number' => $map_data->mapnum,
+        'jumpcrouch' => $map_data->jumpCrouch ?? 0,
+        'wip' => $map_data->wip ?? 0,
+        'locked' => $map_data->locked ?? 0,
+        'disabled' => $map_data->disabled ?? 0
     ];
     $file_table[] = $row_data;
     if ($row_data['locked']) { $locked_maps++; }
@@ -41,20 +42,21 @@ foreach($catalog_handler->get_catalog() as $identifier => $map_data) {
 }
 
 usort($file_table, function($a, $b) {
-    if (substr($a['lumpname'], 0, 3) == "MAP" && substr($b['lumpname'], 0, 3) == "MAP") {
+    if (str_starts_with($a['lumpname'], "MAP") && str_starts_with($b['lumpname'], "MAP")) {
         return (substr($a['lumpname'], 3)) <=> (substr($b['lumpname'], 3));
     }
     return $a['lumpname'] <=> $b['lumpname'];
 });
 
-$table_string = "<table class=\"maps_table\"><thead><tr><th>ID</th><th>Lump</th><th>PIN</th><th>Name</th><th>Author</th>";
+$table_string = "<table class=\"maps_table\"><thead><tr><th>Ramp ID</th><th>Mapnum</th><th>Lump</th><th>PIN</th><th>Name</th><th>Author</th>";
 if (get_setting("PROJECT_WRITE_MAPINFO")) {
     $table_string .= "<th>MAPINFO</th>";
 }
 $table_string .= "<th>Updated</th><th style=\"min-width: 90px\"></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
         $table_string .= "<tr>";
-        $table_string .= "<td>" . $file_data['map_number'] . "</td>";
+        $table_string .= "<td>" . $file_data['ramp_id'] . "</td>";
+        $table_string .= html_property_editor($file_data['pin'], 'mapnum', $file_data['map_number']);
         $table_string .= html_property_editor($file_data['pin'], 'lumpname', $file_data['lumpname']);
         $table_string .= html_property_editor($file_data['pin'], 'pin', $file_data['pin']);
         $table_string .= html_property_editor($file_data['pin'], 'map_name', $file_data['map_name']);

@@ -20,6 +20,7 @@ class RampMap implements JsonSerializable
     public string $pin;
     public string $rampId;
     public bool $wip;
+    public string $mapInfoString;
 
     public function __construct(string $pin, array $data)
     {
@@ -38,6 +39,7 @@ class RampMap implements JsonSerializable
         $this->pin = $pin;
         $this->rampId = $data['ramp_id'] ?? $data['map_number'] ?? 0;
         $this->wip = isset($data['wip']) && (bool)$data['wip'];
+        $this->mapInfoString = $data['mapinfo'] ?? '';
     }
 
     public function jsonSerialize(): mixed

@@ -9,14 +9,14 @@ function get_source_wad_file_name($slot): string {
     return "RM" . $slot . ".WAD";
 }
 
-function get_mtime($file) {
+function get_mtime($file): string {
     if (is_file($file)) {
         return filemtime($file);
     }
     return 0;
 }
 
-function get_safe_lump_file_name($name) {
+function get_safe_lump_file_name($name): string {
     return str_replace("\\", "^", $name);
 }
 
