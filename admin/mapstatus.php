@@ -41,12 +41,7 @@ foreach($catalog_handler->get_catalog() as $ramp_id => $map_data) {
     $total_maps++;
 }
 
-usort($file_table, function($a, $b) {
-    if (str_starts_with($a['lumpname'], "MAP") && str_starts_with($b['lumpname'], "MAP")) {
-        return (substr($a['lumpname'], 3)) <=> (substr($b['lumpname'], 3));
-    }
-    return $a['lumpname'] <=> $b['lumpname'];
-});
+usort($file_table, 'compare_lumpnamed_things');
 
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Ramp ID</th><th>Mapnum</th><th>Lump</th><th>PIN</th><th>Name</th><th>Author</th>";
 if (get_setting("PROJECT_WRITE_MAPINFO")) {

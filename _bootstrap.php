@@ -28,7 +28,7 @@ if (isset($GLOBALS['auth']) && $GLOBALS['auth'] == true) {
 }
 
 spl_autoload_register(function ($class) {
-    $handler_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/handlers/' . strtolower($class) . '.php';
+    $handler_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/classes/' . strtolower($class) . '.php';
     if (file_exists($handler_filename)) {
         require_once $handler_filename;
     }

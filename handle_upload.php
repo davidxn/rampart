@@ -35,7 +35,10 @@ class Upload_Handler {
         }
 
         //Mutex
-        $this->wait_for_lock();
+        if (!wait_for_upload_lock()) {
+            echo json_encode(['error' => 'Upload timeout! Probably a site problem, try pressing it again']);
+            die();
+        }
 
         Logger::lg("POST data is: " . print_r($_POST, true));
 
@@ -234,20 +237,6 @@ class Upload_Handler {
                 }
             }
         }
-    }
-
-    function wait_for_lock() {
-        $tries = 0;
-
-        while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
-            sleep(1);
-            if ($tries > 10) {
-                echo json_encode(['error' => 'Upload timeout! Probably a site problem, try pressing it again']);
-                die();
-            }
-        }
-        file_put_contents(LOCK_FILE_UPLOAD, ":)");
-        Logger::lg("Lock acquired");
     }
 }
 

@@ -12,8 +12,8 @@ if (!file_exists($path)) {
     die("No map file found");
 }
 
-$finfo = finfo_open(FILEINFO_MIME_TYPE);
-$mime_type = finfo_file($finfo, $path);
+$file_info = finfo_open(FILEINFO_MIME_TYPE);
+$mime_type = finfo_file($file_info, $path);
 
 header('Content-Description: File Transfer');
 header('Content-Type: ' . $mime_type);

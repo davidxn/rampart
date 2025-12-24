@@ -27,6 +27,10 @@ class Catalog_Handler {
             $this->pinsToRampIds[$pin] = $rampMap->rampId;
         }
     }
+
+    private function save_catalog(): void {
+        file_put_contents(CATALOG_FILE, json_encode($this->catalog));
+    }
     
     public function get_next_available_slot(): int
     {
@@ -44,83 +48,87 @@ class Catalog_Handler {
         return $examined_slot;
     }
     
-    public function update_map_properties($pin, $properties) {
-        if (!isset($this->catalog[$pin])) {
-            $this->catalog[$pin] = [];
+    public function update_map_properties($rampId, $properties): void
+    {
+        if (!isset($this->catalog[$rampId])) {
+            $this->catalog[$rampId] = [];
         }
         foreach ($properties as $property => $value) {
-            $this->catalog[$pin][$property] = $value;
+            $this->catalog[$rampId][$property] = $value;
         }
-        file_put_contents(CATALOG_FILE, json_encode($this->catalog));
+        $this->save_catalog();
     }
     
-    public function update_map_property($pin, $property, $value) {
-        $this->catalog[$pin][$property] = $value;
-        file_put_contents(CATALOG_FILE, json_encode($this->catalog));
+    public function update_map_property($rampId, $property, $value) {
+        $this->catalog[$rampId][$property] = $value;
+        $this->save_catalog();
     }
     
-    public function get_map($pin) {
+    public function get_map_by_pin($pin) {
         if ($this->pinsToRampIds[$pin]) {
             return $this->catalog[$this->pinsToRampIds[$pin]];
         }
         return false;
     }
     
-    public function get_map_by_number($rampId) {
+    public function get_map_by_ramp_id($rampId) {
         return $this->catalog[$rampId];
     }
     
-    public function is_map_locked($pin) {
-        $map = $this->get_map($pin);
+    public function is_map_locked($rampId) {
+        $map = $this->get_map_by_ramp_id($rampId);
         if (!$map) {
             return false;
         }
-        return isset($map['locked']) ? $map['locked'] : 0;
+        return $map['locked'] ?? 0;
     }
     
-    public function get_catalog() {
+    public function get_catalog(): array
+    {
         return $this->catalog;
     }
     
-    public function lock_map($pin) {
-        if ($this->catalog[$pin]) {
-            $this->update_map_property($pin, 'locked', 1);
+    public function lock_map($rampId): void
+    {
+        if ($this->catalog[$rampId]) {
+            $this->update_map_property($rampId, 'locked', 1);
         }
     }
     
-    public function unlock_map($pin) {
-        if ($this->catalog[$pin]) {
-            $this->update_map_property($pin, 'locked', 0);
+    public function unlock_map($rampId): void
+    {
+        if ($this->catalog[$rampId]) {
+            $this->update_map_property($rampId, 'locked', 0);
         }
     }
     
-    public function delete_map($pin) {
-        unset($this->catalog[$pin]);
-        file_put_contents(CATALOG_FILE, json_encode($this->catalog));    
+    public function delete_map($rampId): void {
+        unset($this->catalog[$rampId]);
+        $this->save_catalog();
     }
 
-    public function disable_map($pin) {
-        if ($this->catalog[$pin]) {
-            $this->update_map_property($pin, 'disabled', 1);
+    public function disable_map($rampId): void {
+        if ($this->catalog[$rampId]) {
+            $this->update_map_property($rampId, 'disabled', 1);
         }
     }    
     
-    public function change_pin($pin, $new_pin) {
+    public function change_pin($rampId, $new_pin): bool {
         $new_pin = strtoupper($new_pin);
-        if (isset($this->catalog[$new_pin])) {
+        if (isset($this->catalog[$rampId])) {
             return false;
         }
-        $this->catalog[$new_pin] = $this->catalog[$pin];
-        $this->delete_map($pin);
+        $this->catalog[$rampId]->pin = $new_pin;
         return true;
     }
-    
+
+    // TODO Remove this, should be made unnecessary!
     public function move_map($pin, $map_number) {
         if (!$this->catalog[$pin]) {
             Logger::lg("Was asked to move map with pin " . $pin . " which doesn't exist");
             return false;
         }
-        if (!$this->wait_for_lock()) {
+        if (!wait_for_upload_lock()) {
             return false;
         }
         $original_levelnum = $this->catalog[$pin]['map_number'];
@@ -162,19 +170,4 @@ class Catalog_Handler {
         unlink(LOCK_FILE_UPLOAD);
         return true;
     }
-    
-    function wait_for_lock() {
-        $tries = 0;
-
-        while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
-            sleep(1);
-            if ($tries > 10) {
-                return false;
-            }
-        }
-        file_put_contents(LOCK_FILE_UPLOAD, ":)");
-        Logger::lg("Lock acquired");
-        return true;
-    }
-    
 }

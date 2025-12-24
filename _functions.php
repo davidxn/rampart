@@ -20,6 +20,13 @@ function get_safe_lump_file_name($name): string {
     return str_replace("\\", "^", $name);
 }
 
+function compare_lumpnamed_things($a, $b): int {
+    if (str_starts_with($a['lumpname'], "MAP") && str_starts_with($b['lumpname'], "MAP")) {
+        return intval(substr($a['lumpname'], 3)) <=> intval(substr($b['lumpname'], 3));
+    }
+    return $a['lumpname'] <=> $b['lumpname'];
+}
+
 function html_radio_button($setting, $text, $value = null, $linebreak = false, $default = false): string {
     $html = "";
     
@@ -40,6 +47,22 @@ function html_radio_button($setting, $text, $value = null, $linebreak = false, $
     if ($linebreak) { $html .= "</div>"; }
     
     return $html;
+}
+
+function wait_for_upload_lock(): bool {
+    $tries = 0;
+
+    while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
+        sleep(1);
+        if ($tries > 10) {
+            Logger::lg("Couldn't acquire upload lock");
+            return false;
+        }
+        $tries++;
+    }
+    file_put_contents(LOCK_FILE_UPLOAD, ":)");
+    Logger::lg("Upload lock acquired");
+    return true;
 }
 
 function get_error_link($key, $args = []): string {
