@@ -43,7 +43,8 @@ $(function() {
     // Confirm property edit buttons
     $(".property-ok").click(function(){
         var td = $(this).closest("td.editable-property");
-        var pin = td.attr("name");
+        var tr = $(this).closest("tr");
+        var rampid = tr.attr("name");
         var field = td.children("div").children("input").attr("name");
         var value = td.children("div").children("input").val();
         if (field == null) {
@@ -51,7 +52,7 @@ $(function() {
             value = td.children("div").children("textarea").val();
         }
         myFormData = new FormData();
-        myFormData.set('pin', pin);
+        myFormData.set('rampid', rampid);
         myFormData.set('field', field);
         myFormData.set('value', value);
         submitEdit(myFormData, td);
@@ -67,11 +68,12 @@ $(function() {
 
     var handleLock = function(me) {
         var td = $(me).closest("td.editable-property");
-        var pin = td.attr("name");
+        var tr = $(me).closest("tr");
+        var ramp_id = tr.attr("name");
         var field = 'lock';
         var value = $(me).hasClass("property-unlocked") ? 1 : -1;
         myFormData = new FormData();
-        myFormData.set('pin', pin);
+        myFormData.set('rampid', ramp_id);
         myFormData.set('field', field);
         myFormData.set('value', value);
         submitLock(myFormData, td);
@@ -79,11 +81,12 @@ $(function() {
     
     var handleDisable = function(me) {
         var td = $(me).closest("td.editable-property");
-        var pin = td.attr("name");
+        var tr = $(me).closest("tr");
+        var ramp_id = tr.attr("name");
         var field = 'disabled';
         var value = $(me).hasClass("property-enabled") ? 1 : -1;
         myFormData = new FormData();
-        myFormData.set('pin', pin);
+        myFormData.set('rampid', ramp_id);
         myFormData.set('field', field);
         myFormData.set('value', value);
         submitDisable(myFormData, td);

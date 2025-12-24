@@ -22,7 +22,7 @@ class RampMap implements JsonSerializable
     public bool $wip;
     public string $mapInfoString;
 
-    public function __construct(string $pin, array $data)
+    public function __construct(int $rampId, array $data)
     {
         $this->author = $data['author'] ?? '';
         $this->category = $data['category'] ?? '';
@@ -31,13 +31,13 @@ class RampMap implements JsonSerializable
         $this->jumpCrouch = isset($data['jumpcrouch']) && (bool)$data['jumpcrouch'];
         $this->length = isset($data['length']) && (bool)$data['length'];
         $this->locked = isset($data['locked']) && (bool)$data['locked'];
-        $this->lump = $data['lumpname'] ?? '';
+        $this->lump = $data['lump'] ?? '';
         $this->name = $data['map_name'] ?? '';
         $this->mapnum = $data['map_number'] ?? '';
         $this->monsterCount = $data['monsters'] ?? 0;
         $this->musicCredit = $data['music_credit'] ?? 0;
-        $this->pin = $pin;
-        $this->rampId = $data['ramp_id'] ?? $data['map_number'] ?? 0;
+        $this->pin = $data['pin'] ?? '';
+        $this->rampId = $rampId;
         $this->wip = isset($data['wip']) && (bool)$data['wip'];
         $this->mapInfoString = $data['mapinfo'] ?? '';
     }

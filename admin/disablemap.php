@@ -3,13 +3,13 @@ $GLOBALS['auth'] = true;
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 $catalog = new Catalog_Handler();
-$pin = $_GET['mappin'];
+$ramp_id = $_GET['rampid'];
 
-if (!$catalog->get_map($pin)) {
+if (!$catalog->get_map_by_ramp_id($ramp_id)) {
     header("Location: mapstatus.php");
     die();
 }
 
-$catalog->disable_map($pin);
+$catalog->disable_map($ramp_id);
 header("Location: mapstatus.php");
 die();

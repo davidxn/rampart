@@ -10,10 +10,10 @@ $(function() {
             var type = me.attr('type');
             var val = me.val();
             var id = me.attr('id');
-            if (type == 'checkbox') {
+            if (type === 'checkbox') {
                 val = (me[0].checked);
             }
-            if (type == 'radio') {
+            if (type === 'radio') {
                 //Don't send empty radios
                 if (!me[0].checked) {
                     return;

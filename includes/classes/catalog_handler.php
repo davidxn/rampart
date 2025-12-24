@@ -48,34 +48,33 @@ class Catalog_Handler {
         return $examined_slot;
     }
     
-    public function update_map_properties($rampId, $properties): void
-    {
+    public function update_map_properties($rampId, $properties): void {
         if (!isset($this->catalog[$rampId])) {
             $this->catalog[$rampId] = [];
         }
         foreach ($properties as $property => $value) {
-            $this->catalog[$rampId][$property] = $value;
+            $this->catalog[$rampId]->$property = $value;
         }
         $this->save_catalog();
     }
     
-    public function update_map_property($rampId, $property, $value) {
-        $this->catalog[$rampId][$property] = $value;
+    public function update_map_property($rampId, $property, $value): void {
+        $this->catalog[$rampId]->$property = $value;
         $this->save_catalog();
     }
     
-    public function get_map_by_pin($pin) {
+    public function get_map_by_pin($pin): ?RampMap {
         if ($this->pinsToRampIds[$pin]) {
             return $this->catalog[$this->pinsToRampIds[$pin]];
         }
-        return false;
+        return null;
     }
     
-    public function get_map_by_ramp_id($rampId) {
+    public function get_map_by_ramp_id($rampId): RampMap {
         return $this->catalog[$rampId];
     }
     
-    public function is_map_locked($rampId) {
+    public function is_map_locked($rampId): bool {
         $map = $this->get_map_by_ramp_id($rampId);
         if (!$map) {
             return false;
@@ -115,7 +114,8 @@ class Catalog_Handler {
     
     public function change_pin($rampId, $new_pin): bool {
         $new_pin = strtoupper($new_pin);
-        if (isset($this->catalog[$rampId])) {
+        //A map PIN must be unique, check the list first
+        if (isset($this->pinsToRampIds[$new_pin])) {
             return false;
         }
         $this->catalog[$rampId]->pin = $new_pin;

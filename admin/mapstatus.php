@@ -49,26 +49,26 @@ if (get_setting("PROJECT_WRITE_MAPINFO")) {
 }
 $table_string .= "<th>Updated</th><th style=\"min-width: 90px\"></th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
-        $table_string .= "<tr>";
+        $table_string .= '<tr name="' . $file_data['ramp_id'] . '">';
         $table_string .= "<td>" . $file_data['ramp_id'] . "</td>";
-        $table_string .= html_property_editor($file_data['pin'], 'mapnum', $file_data['map_number']);
-        $table_string .= html_property_editor($file_data['pin'], 'lumpname', $file_data['lumpname']);
-        $table_string .= html_property_editor($file_data['pin'], 'pin', $file_data['pin']);
-        $table_string .= html_property_editor($file_data['pin'], 'map_name', $file_data['map_name']);
-        $table_string .= html_property_editor($file_data['pin'], 'author', $file_data['author']);
+        $table_string .= html_property_editor('mapnum', $file_data['map_number']);
+        $table_string .= html_property_editor('lump', $file_data['lumpname']);
+        $table_string .= html_property_editor('pin', $file_data['pin']);
+        $table_string .= html_property_editor('name', $file_data['map_name']);
+        $table_string .= html_property_editor('author', $file_data['author']);
         if (get_setting("PROJECT_WRITE_MAPINFO")) {
-            $table_string .= html_property_editor($file_data['pin'], 'mapinfo', $file_data['mapinfo'], 'textarea');
+            $table_string .= html_property_editor('mapinfo', $file_data['mapinfo'], 'textarea');
         }
 
         $table_string .= "<td>" . $file_data['updated'] . "</td>";
-        $table_string .= '<td class="editable-property" name="' . $file_data['pin'] . '">';
+        $table_string .= '<td class="editable-property">';
         if ($file_data['locked']) {
             $table_string .= '<button class="property property-locked"></button>';
         } else {
             $table_string .= '<button class="property property-unlocked"></button>';
         }
         $table_string .= '&nbsp;' . Logger::get_log_link($file_data['map_number']);
-        $table_string .= '&nbsp;<a href="downloadmap.php?mapnum=' . $file_data['map_number'] . '"><button class="property property-download"></button></a>';
+        $table_string .= '&nbsp;<a href="downloadmap.php?rampid=' . $file_data['ramp_id'] . '"><button class="property property-download"></button></a>';
         $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;';
         
         if ($file_data['disabled'] > 0) {
@@ -76,15 +76,15 @@ foreach($file_table as $file_data) {
         } else {
             $table_string .= '<button class="property property-enabled"></button>';
         }        
-        $table_string .= '<a href="deletemap.php?mappin=' . $file_data['pin'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
+        $table_string .= '<a href="deletemap.php?rampid=' . $file_data['ramp_id'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
         $table_string .= '</td>';
         $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
 
-function html_property_editor($pin, $property_name, $current_value, $type = 'text') {
+function html_property_editor($property_name, $current_value, $type = 'text') {
         $table_string = '';
-        $table_string .= "<td name=\"" . $pin . "\" class=\"editable-property\"><div class=\"property-editor\">";
+        $table_string .= "<td class=\"editable-property\"><div class=\"property-editor\">";
         if ($type == 'text') {
             $table_string .= "<input name=\"" . $property_name . "\" value=\"" . $current_value . "\"></input>";
         } else if ($type == 'textarea') {
@@ -110,7 +110,7 @@ function html_property_editor($pin, $property_name, $current_value, $type = 'tex
                 <p>Locked maps: <?=$locked_maps?></p>
                 
                 <?php if ($total_maps == 0) {
-                    echo('<p>No maps slots are in the project yet.</p>');
+                    echo('<p>No map slots are in the project yet.</p>');
                 }
                 else {
                     echo($table_string);

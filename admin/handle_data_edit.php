@@ -19,7 +19,7 @@ class Map_Data_Editor {
         }
 
         $catalog_handler = new Catalog_Handler();
-        if (in_array($field, ['lumpname', 'map_name', 'author', 'mapinfo', 'disabled'])) {
+        if (in_array($field, ['lump', 'name', 'author', 'mapinfo', 'mapnum', 'disabled'])) {
             $catalog_handler->update_map_property($rampId, $field, $value);
             echo(json_encode(['success' => true]));
             die();
@@ -55,9 +55,9 @@ class Map_Data_Editor {
     }
 }
 
-$rampId = $_POST['rampid'];
-$field = $_POST['field'];
-$value = $_POST['value'];
+$rampId = $_POST['rampid'] ?? null;
+$field = $_POST['field'] ?? null;
+$value = $_POST['value'] ?? null;
 
 $handler = new Map_Data_Editor();
 $handler->update_field($rampId, $field, $value);
