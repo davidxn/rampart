@@ -6,10 +6,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 <div class="lightbox">
 <p><a href="./settings.php">Edit project settings</a></p>
-<p><a href="./mapstatus.php">Edit map slots</a></p>
+<p><a href="./managemapslots.php">Manage map slots</a></p>
 <p><a href="./buildlog.php">Show last build log</a></p>
 <p><a href="./builderrors.php">Show build errors</a></p>
-<p><a href="./handle_settings_touch.php">Force new snapshot generation on next download</a></p>
+<p><a id="forceNewSnapshotLink" href="#">Force new snapshot generation on next download</a></p>
 <p><a href="../handle_pk3_update.php?nozip=1&nocache=1">Compile project without producing output file</a></p>
 <p><a href="./makecredits.php">Create map credits text</a></p>
 </div>
@@ -83,6 +83,7 @@ chart.render();
 }
 </script>
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script src="admin.js?xcache=9" type="text/javascript"></script>
 
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');

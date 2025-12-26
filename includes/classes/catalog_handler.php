@@ -111,6 +111,7 @@ class Catalog_Handler {
             return false;
         }
         $this->catalog[$rampId]->pin = $new_pin;
+        $this->save_catalog();
         return true;
     }
 }

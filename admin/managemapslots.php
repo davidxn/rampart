@@ -68,7 +68,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<button class="property property-unlocked"></button>';
         }
         $table_string .= '&nbsp;' . Logger::get_log_link($file_data['map_number']);
-        $table_string .= '&nbsp;<a href="downloadmap.php?rampid=' . $file_data['ramp_id'] . '"><button class="property property-download"></button></a>';
+        $table_string .= '&nbsp;<a href="./commands/handle_download_source_file.php?rampid=' . $file_data['ramp_id'] . '"><button class="property property-download"></button></a>';
         $table_string .= '&nbsp;&nbsp;&nbsp;&nbsp;';
         
         if ($file_data['disabled'] > 0) {
@@ -76,7 +76,7 @@ foreach($file_table as $file_data) {
         } else {
             $table_string .= '<button class="property property-enabled"></button>';
         }
-        $table_string .= '<a href="deletemap.php?rampid=' . $file_data['ramp_id'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
+        $table_string .= '<button class="property property-delete"></button>';
         $table_string .= '</td>';
         $table_string .= "</tr>";
 }

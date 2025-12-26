@@ -14,6 +14,7 @@ function catalogCmp(RampMap $a, RampMap $b): int
 $catalog_handler = new Catalog_Handler();
 $catalog = $catalog_handler->get_catalog();
 usort($catalog, "catalogCmp");
+$any_errors = false;
 
 foreach ($catalog as $map_data) {
     if (Logger::map_has_errors($map_data->mapnum)) {
@@ -21,7 +22,12 @@ foreach ($catalog as $map_data) {
         print('<div class="code">');
         include_once(Logger::get_map_error_file($map_data->mapnum));
         print('</div></h3>');
+        $any_errors = true;
     }
+}
+
+if (!$any_errors) {
+    print("<p>No errors to report!</p>");
 }
 ?>
 

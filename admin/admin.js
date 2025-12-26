@@ -57,14 +57,19 @@ $(function() {
         myFormData.set('value', value);
         submitEdit(myFormData, td);
     });
-    
+
+    var maps_table = $(".maps_table");
+
+    // Delete
+    maps_table.on("click", ".property-delete", function() {handleDelete(this); });
+
     // Lock and unlock
-    $(".maps_table").on("click", ".property-locked", function() {handleLock(this); });
-    $(".maps_table").on("click", ".property-unlocked", function() {handleLock(this); });
+    maps_table.on("click", ".property-locked", function() {handleLock(this); });
+    maps_table.on("click", ".property-unlocked", function() {handleLock(this); });
     
     // Enable and disable
-    $(".maps_table").on("click", ".property-disabled", function() {handleDisable(this); });
-    $(".maps_table").on("click", ".property-enabled", function() {handleDisable(this); });
+    maps_table.on("click", ".property-disabled", function() {handleDisable(this); });
+    maps_table.on("click", ".property-enabled", function() {handleDisable(this); });
 
     var handleLock = function(me) {
         var td = $(me).closest("td.editable-property");
@@ -91,14 +96,27 @@ $(function() {
         myFormData.set('value', value);
         submitDisable(myFormData, td);
     };
+
+    var handleDelete = function(me) {
+        var tr = $(me).closest("tr");
+        var name = tr.find('input[name="name"]')[0].value
+        var lump = tr.find('input[name="lump"]')[0].value
+        var ramp_id = tr.attr("name");
+        if (!confirm('Are you sure you want to delete RAMP map '
+                + ramp_id + ', "' + lump + ": " + name + '"?')) {
+            return;
+        }
+        myFormData = new FormData();
+        myFormData.set('rampid', ramp_id);
+        submitDelete(myFormData);
+    };
 });
 
 function submitEdit(formdata, td){
     var newValue = formdata.get("value");
-    var field = formdata.get("field");
 
     $.ajax({
-        url: './handle_data_edit.php',
+        url: './commands/handle_data_edit.php',
         type: 'post',
         data: formdata,
         contentType: false,
@@ -118,10 +136,6 @@ function submitEdit(formdata, td){
                 }
                 td.children('input').val(newValue);
                 td.children('span.property-edit').show();
-                //Just reload if we've changed PIN, too much to hack around
-                if (field === 'pin') {
-                    window.location.reload();
-                }
             }
         }
     });
@@ -131,7 +145,7 @@ function submitLock(formdata, td){
     var newValue = formdata.get("value");
 
     $.ajax({
-        url: './handle_data_edit.php',
+        url: './commands/handle_data_edit.php',
         type: 'post',
         data: formdata,
         contentType: false,
@@ -153,7 +167,7 @@ function submitDisable(formdata, td){
     var newValue = formdata.get("value");
 
     $.ajax({
-        url: './handle_data_edit.php',
+        url: './commands/handle_data_edit.php',
         type: 'post',
         data: formdata,
         contentType: false,
@@ -171,10 +185,9 @@ function submitDisable(formdata, td){
     });
 }
 
-function submitNewSlots(formdata){
-    
+function submitDelete(formdata){
     $.ajax({
-        url: './handle_new_slots.php',
+        url: './commands/handle_delete_map.php',
         type: 'post',
         data: formdata,
         contentType: false,
@@ -182,7 +195,42 @@ function submitNewSlots(formdata){
         dataType: 'json',
         success: function(response){
             if (!response.error) {
-                location.reload(true);
+                location.reload();
+            }
+        }
+    });
+}
+
+function submitNewSlots(formdata){
+    
+    $.ajax({
+        url: './commands/handle_new_slots.php',
+        type: 'post',
+        data: formdata,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            if (!response.error) {
+                location.reload();
+            }
+        }
+    });
+}
+
+$('#forceNewSnapshotLink').on("click", submitSettingsTouch);
+
+function submitSettingsTouch(){
+
+    $.ajax({
+        url: './commands/handle_settings_touch.php',
+        type: 'get',
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            if (!response.error) {
+                $('#forceNewSnapshotLink').text("Project will be regenerated on next download");
             }
         }
     });
