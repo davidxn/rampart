@@ -17,7 +17,7 @@ class Pin_Handler {
         $this->validate_ip();
         $catalog_handler = new Catalog_Handler();
         
-        $map = $catalog_handler->get_map($pin);
+        $map = $catalog_handler->get_map_by_pin($pin);
         if (!$map) {
             echo json_encode(['error' => 'Sorry, I couldn\'t find a map with that PIN']);
             die();
@@ -28,15 +28,15 @@ class Pin_Handler {
             die();
         }
 
-        $jumpcrouch = isset($map['jumpcrouch']) ? $map['jumpcrouch'] : 0;
-        $wip = isset($map['wip']) ? $map['wip'] : 0;
+        $jumpcrouch = $map['jumpcrouch'] ?? 0;
+        $wip = $map['wip'] ?? 0;
         $category = $map['category'] ?? 0;
         $length = $map['length'] ?? 0;
         $difficulty = $map['difficulty'] ?? 0;
         $monsters = $map['monsters'] ?? 0;
        
         echo json_encode([
-            "mapname" => $map['map_name'],
+            "name" => $map['map_name'],
             "author" => $map['author'],
             "musiccredit" => (isset($map['music_credit']) ? $map['music_credit'] : ''),
             "jumpcrouch" => $jumpcrouch,

@@ -34,23 +34,14 @@ class Catalog_Handler {
     
     public function get_next_available_slot(): int
     {
-        $occupied_slots = [];
-        foreach($this->catalog as $rampMap) {
-            $occupied_slots[$rampMap->mapnum] = true;
-        }
-        $examined_slot = FIRST_USER_MAP_NUMBER;
-        while (true) {
-            if (!isset($occupied_slots[$examined_slot])) {
-                break;
-            }
-            $examined_slot++;
-        }
-        return $examined_slot;
+
+        $max_slot = max(array_keys($this->catalog));
+        return $max_slot + 1;
     }
     
     public function update_map_properties($rampId, $properties): void {
         if (!isset($this->catalog[$rampId])) {
-            $this->catalog[$rampId] = [];
+            $this->catalog[$rampId] = new RampMap($rampId, $properties);
         }
         foreach ($properties as $property => $value) {
             $this->catalog[$rampId]->$property = $value;
@@ -60,6 +51,7 @@ class Catalog_Handler {
     
     public function update_map_property($rampId, $property, $value): void {
         $this->catalog[$rampId]->$property = $value;
+        Logger::lg("Edited $rampId property: $property to $value");
         $this->save_catalog();
     }
     
@@ -119,55 +111,6 @@ class Catalog_Handler {
             return false;
         }
         $this->catalog[$rampId]->pin = $new_pin;
-        return true;
-    }
-
-    // TODO Remove this, should be made unnecessary!
-    public function move_map($pin, $map_number) {
-        if (!$this->catalog[$pin]) {
-            Logger::lg("Was asked to move map with pin " . $pin . " which doesn't exist");
-            return false;
-        }
-        if (!wait_for_upload_lock()) {
-            return false;
-        }
-        $original_levelnum = $this->catalog[$pin]['map_number'];
-        
-        $source_location = UPLOADS_FOLDER . DIRECTORY_SEPARATOR . get_source_wad_file_name($original_levelnum);
-        $location = UPLOADS_FOLDER . DIRECTORY_SEPARATOR . get_source_wad_file_name($map_number);
-        
-        if (file_exists($location)) {
-            Logger::lg("Removed previous " . $location);
-            unlink($location);
-        }
-        Logger::lg("Moving map " . $source_location . " to " . $location);
-        $result = rename($source_location, $location);
-
-        if(!$result){
-            return false;
-        }
-        
-        $map_lumpname = ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
-
-        //Now update the catalog... remove any existing map at this map number
-        foreach ($this->catalog as $oldpin => $data) {
-            if ($data['map_number'] == $map_number) {
-                unset($this->catalog[$oldpin]);
-            }
-        }
-        
-        //And update the map at our old pin to our new number.
-        $this->update_map_properties(
-            $pin,
-            [
-                'map_number' => $map_number,
-                'lumpname' => $map_lumpname
-            ]
-        );
-        Logger::lg("Wrote new map " . $map_number . ": " . $pin . " entry to catalog");
-
-        //Unmutex
-        unlink(LOCK_FILE_UPLOAD);
         return true;
     }
 }

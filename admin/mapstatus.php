@@ -57,7 +57,7 @@ foreach($file_table as $file_data) {
         $table_string .= html_property_editor('name', $file_data['map_name']);
         $table_string .= html_property_editor('author', $file_data['author']);
         if (get_setting("PROJECT_WRITE_MAPINFO")) {
-            $table_string .= html_property_editor('mapinfo', $file_data['mapinfo'], 'textarea');
+            $table_string .= html_property_editor('mapInfoString', $file_data['mapinfo'], 'textarea');
         }
 
         $table_string .= "<td>" . $file_data['updated'] . "</td>";
@@ -75,7 +75,7 @@ foreach($file_table as $file_data) {
             $table_string .= '<button class="property property-disabled"></button>';
         } else {
             $table_string .= '<button class="property property-enabled"></button>';
-        }        
+        }
         $table_string .= '<a href="deletemap.php?rampid=' . $file_data['ramp_id'] . '" onclick="return confirm(\'Are you sure you want to delete map: ' . $file_data['map_name'] . '?\')"><button class="property property-delete"></button></a>';
         $table_string .= '</td>';
         $table_string .= "</tr>";

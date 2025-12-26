@@ -10,16 +10,16 @@ class Map_Data_Editor {
             die();
         }
         
-        if ($field != 'mapinfo') {
+        if ($field != 'mapInfoString') {
             $value = $this->clean_text($value);
-        }
-        if (!$value) {
-            echo(json_encode(['success' => false, 'error' => 'No value provided']));
-            die();
+            if (!$value) {
+                echo(json_encode(['success' => false, 'error' => 'No value provided']));
+                die();
+            }
         }
 
         $catalog_handler = new Catalog_Handler();
-        if (in_array($field, ['lump', 'name', 'author', 'mapinfo', 'mapnum', 'disabled'])) {
+        if (in_array($field, ['lump', 'name', 'author', 'mapInfoString', 'mapnum', 'disabled'])) {
             $catalog_handler->update_map_property($rampId, $field, $value);
             echo(json_encode(['success' => true]));
             die();

@@ -60,6 +60,7 @@ class RampMap implements JsonSerializable
             'pin' => $this->pin,
             'ramp_id' => $this->rampId,
             'wip' => $this->wip,
+            'mapinfo' => $this->mapInfoString,
         ];
     }
 }

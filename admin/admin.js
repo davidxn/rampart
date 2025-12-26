@@ -119,7 +119,7 @@ function submitEdit(formdata, td){
                 td.children('input').val(newValue);
                 td.children('span.property-edit').show();
                 //Just reload if we've changed PIN, too much to hack around
-                if (field == 'pin') {
+                if (field === 'pin') {
                     window.location.reload();
                 }
             }
@@ -188,19 +188,3 @@ function submitNewSlots(formdata){
     });
 }
 
-function moveMap(formdata){
-    
-    $.ajax({
-        url: './handle_move.php',
-        type: 'post',
-        data: formdata,
-        contentType: false,
-        processData: false,
-        dataType: 'json',
-        success: function(response){
-            if (!response.error) {
-                location.reload(true);
-            }
-        }
-    });
-}
