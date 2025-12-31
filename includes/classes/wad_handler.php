@@ -277,6 +277,10 @@ class Wad_Handler {
         switch ($type) {
             case 'int':
                 $int = unpack("L", $bytes);
+                if (!$int) {
+                    print_r(debug_backtrace());
+                    die();
+                }
                 return $int[1];
             case 'str':
                 $str = "";

@@ -23,13 +23,13 @@ class Mapinfo_Handler {
         while ($this->current_line_number < count($this->mapinfo_lines)) {
             $line = trim($this->mapinfo_lines[$this->current_line_number]);
 
-            if(substr($this->clean_token($line), 0, 10) == "doomednums") {
+            if(str_starts_with($this->clean_token($line), "doomednums")) {
                 Logger::pg("Found doomednums");
                 $parsed_data['doomednums'] = $this->parseDoomedNums();
                 continue;
             }
             
-            if(substr($this->clean_token($line), 0, 9) == "spawnnums") {
+            if(str_starts_with($this->clean_token($line), "spawnnums")) {
                 Logger::pg("Found spawnnums");
                 $parsed_data['spawnnums'] = $this->parseSpawnNums();
                 continue;

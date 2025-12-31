@@ -35,7 +35,7 @@ class Upload_Handler {
         }
 
         //Mutex
-        if (!wait_for_upload_lock()) {
+        if (!wait_for_lock(LOCK_FILE_UPLOAD)) {
             echo json_encode(['error' => 'Upload timeout! Probably a site problem, try pressing it again']);
             die();
         }
@@ -101,7 +101,7 @@ class Upload_Handler {
         Logger::lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
 
         //Unmutex
-        unlink(LOCK_FILE_UPLOAD);
+        release_lock(LOCK_FILE_UPLOAD);
         Logger::record_upload(time(), $map_number, $location ? filesize($location) : 0);
         Logger::lg("Lock released");
         

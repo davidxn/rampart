@@ -9,7 +9,7 @@ class Guide_Dialogue_Writer {
 
         $maps = [];
         foreach($catalog_handler->get_catalog() as $mapdata) {
-            $maps[$mapdata['map_number']] = $mapdata['map_name'];
+            $maps[$mapdata->mapnum] = $mapdata->name;
         }
 
         asort($maps, SORT_FLAG_CASE | SORT_STRING);

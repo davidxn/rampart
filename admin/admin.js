@@ -236,3 +236,20 @@ function submitSettingsTouch(){
     });
 }
 
+$('#releaseLocksLink').on("click", submitReleaseLocks);
+
+function submitReleaseLocks(){
+
+    $.ajax({
+        url: './commands/handle_release_locks.php',
+        type: 'get',
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            if (!response.error) {
+                $('#releaseLocksLink').text("Locks released");
+            }
+        }
+    });
+}

@@ -10,7 +10,7 @@ class RampMap implements JsonSerializable
     public int $difficulty;
     public bool $disabled;
     public bool $jumpCrouch;
-    public bool $length;
+    public int $length;
     public bool $locked;
     public string $lump;
     public string $name;
@@ -27,10 +27,10 @@ class RampMap implements JsonSerializable
         $this->author = $data['author'] ?? '';
         $this->category = $data['category'] ?? '';
         $this->difficulty = $data['difficulty'] ?? 0;
-        $this->disabled = isset($data['disabled']) && (bool)$data['disabled'];
-        $this->jumpCrouch = isset($data['jumpcrouch']) && (bool)$data['jumpcrouch'];
-        $this->length = isset($data['length']) && (bool)$data['length'];
-        $this->locked = isset($data['locked']) && (bool)$data['locked'];
+        $this->disabled = isset($data['disabled']) && $data['disabled'];
+        $this->jumpCrouch = isset($data['jumpcrouch']) && $data['jumpcrouch'];
+        $this->length = isset($data['length']) && $data['length'];
+        $this->locked = isset($data['locked']) && $data['locked'];
         $this->lump = $data['lump'] ?? '';
         $this->name = $data['map_name'] ?? '';
         $this->mapnum = $data['map_number'] ?? '';
@@ -38,7 +38,7 @@ class RampMap implements JsonSerializable
         $this->musicCredit = $data['music_credit'] ?? 0;
         $this->pin = $data['pin'] ?? '';
         $this->rampId = $rampId;
-        $this->wip = isset($data['wip']) && (bool)$data['wip'];
+        $this->wip = isset($data['wip']) && $data['wip'];
         $this->mapInfoString = $data['mapinfo'] ?? '';
     }
 

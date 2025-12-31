@@ -49,20 +49,24 @@ function html_radio_button($setting, $text, $value = null, $linebreak = false, $
     return $html;
 }
 
-function wait_for_upload_lock(): bool {
+function wait_for_lock(string $lock_file_name): bool {
     $tries = 0;
 
-    while (file_exists(LOCK_FILE_UPLOAD) && (time() - filemtime(LOCK_FILE_UPLOAD)) < 60) {
+    while (file_exists($lock_file_name) && (time() - filemtime($lock_file_name)) < 60) {
         sleep(1);
         if ($tries > 10) {
-            Logger::lg("Couldn't acquire upload lock");
+            Logger::lg("Couldn't acquire lock for $lock_file_name");
             return false;
         }
         $tries++;
     }
-    file_put_contents(LOCK_FILE_UPLOAD, ":)");
-    Logger::lg("Upload lock acquired");
+    file_put_contents($lock_file_name, ":)");
+    Logger::lg("Lock acquired for $lock_file_name");
     return true;
+}
+
+function release_lock(string $lock_file_name): void {
+    @unlink($lock_file_name);
 }
 
 function get_error_link($key, $args = []): string {

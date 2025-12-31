@@ -70,5 +70,6 @@ try {
     }
 }
 catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Something went wrong, the project admin should be able to see exactly what']);
+    release_lock(LOCK_FILE_COMPILE);
+    echo json_encode(['success' => false, 'error' => 'Something went wrong, the project admin should be able to see exactly what. ' . $e->getMessage()]);
 }
