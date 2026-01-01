@@ -11,6 +11,8 @@ $setting_defaults = [
     "ALLOW_NEW_UPLOADS" => false,
     "ALLOW_EDIT_UPLOADS" => true,
     "HUB_MAP_NAME" => "",
+    "ALLOW_SNAPSHOT_DOWNLOAD" => true,
+    "DOOM_VERSION" => "UZDoom",
     
     # About uploads
     "ALLOW_CONTENT_MAPS" => true,
@@ -88,7 +90,7 @@ if (!$settings) {
 
 const FIRST_USER_MAP_NUMBER = 1;
 
-function get_project_full_path() {
+function get_project_full_path(): string {
     return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME") . "." . strtolower(get_setting("PROJECT_FORMAT"));
 }
 

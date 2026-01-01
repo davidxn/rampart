@@ -58,9 +58,17 @@ if (get_setting("ALLOW_NEW_UPLOADS") || get_setting("ALLOW_EDIT_UPLOADS")) {
                     <a href="/upload.php"><div class="menuitem"><?=$update_verb?> a Map</div></a>
 <?php
 }
+if (get_setting("ALLOW_SNAPSHOT_DOWNLOAD")) {
 ?>
-                    <a href="/download.php"><div class="menuitem">Maps</div></a>
+                    <a href="/download.php"><div class="menuitem">Download</div></a>
                     <a href="/info.php"><div class="menuitem">Build Info</div></a>
+<?php
+} else {
+?>
+        <a href="/download.php"><div class="menuitem">Maps</div></a>
+<?php
+}
+?>
                     <a href="https://discord.gg/afFGdGNhW2"><div class="menuitem"><b>Join Discord</b></div></a>
                 </div>
             </div>

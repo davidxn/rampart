@@ -21,6 +21,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             ?></input></td>
                         </tr>
                         <tr>
+                            <td width="200">Target Doom source port/version:</td>
+                            <td>
+                                <div class="smallnote">Will be shown on the Download Snapshot page</div>
+                                <input type="text" id="DOOM_VERSION" value="<?=htmlspecialchars(get_setting("DOOM_VERSION"))?>"></input>
+                            </td>
+                        </tr>
+                        <tr>
                             <td width="200">Project output folder:</td>
                             <td><input type="text" id="PROJECT_OUTPUT_FOLDER" value="<?=htmlspecialchars(get_setting("PROJECT_OUTPUT_FOLDER"))?>"></input></td>
                         </tr>
@@ -40,6 +47,16 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                                 <div class="smallnote">Turn this off if you want to freeze the project and disallow uploads and edits.</div>
                                 <label class="checkmarkcontainer">
                                     <input type="checkbox" id="ALLOW_EDIT_UPLOADS" <?=get_setting("ALLOW_EDIT_UPLOADS", "checkbox")?"checked=\"checked\"":""?>>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Allow snapshot downloads:</td>
+                            <td>
+                                <div class="smallnote">Turn this off once the project is out! The snapshot download button will become unavailable and you'll need to provide your own link to the final project somewhere.</div>
+                                <label class="checkmarkcontainer">
+                                    <input type="checkbox" id="ALLOW_SNAPSHOT_DOWNLOAD" <?=get_setting("ALLOW_SNAPSHOT_DOWNLOAD", "checkbox")?"checked=\"checked\"":""?>>
                                     <span class="checkmark"></span>
                                 </label>
                             </td>

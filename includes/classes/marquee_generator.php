@@ -30,7 +30,7 @@ class Marquee_Generator {
         "none" => 9
     ];    
     
-    function generate_marquees($catalog_handler) {
+    function generate_marquees(Catalog_Handler $catalog_handler) {
         Logger::pg("Generating marquee textures");
         @mkdir($marquee_folder, 0755, true);
         
@@ -56,18 +56,17 @@ class Marquee_Generator {
         }
         ";
 
-        $catalog = $catalog_handler->get_catalog();
-        foreach ($catalog as $map_data) {
-            $map_name = $map_data['map_name'];
-            $map_author = $map_data['author'];
-            $map_number = $map_data['map_number'];
-            $map_category = $map_data['category'];
+        foreach ($catalog_handler->get_catalog() as $map_data) {
+            $map_name = $map_data->name;
+            $map_author = $map_data->author;
+            $map_number = $map_data->mapnum;
+            $map_category = $map_data->category;
             $zone_id = $this->ZONE_IDS[$map_category];
             $screenshot_width = $this->generatePatches($map_name, $map_number, $map_author, $map_category);
             $half_screenshot_width = round($screenshot_width / 2);
             Logger::pg("Wrote marquee patches for map " . $map_number);
             
-            $screenshot_patch_text = "";            
+            $screenshot_patch_text = "";
             if ($half_screenshot_width > 0) {
                 $screenshot_patch_text = "Patch \"RSHOT" . $map_number . "\", " . 310 - $half_screenshot_width . ", 237";
             }

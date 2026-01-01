@@ -2,10 +2,8 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Pin_Handler {
-    
-    public $txid = null;
 
-    function handle_pin() {
+    function handle_pin(): void {
 
         Logger::lg("Starting a PIN check");
         $pin = strtoupper($this->clean_text($_POST['pin']));
@@ -17,34 +15,27 @@ class Pin_Handler {
         $this->validate_ip();
         $catalog_handler = new Catalog_Handler();
         
-        $map = $catalog_handler->get_map($pin);
+        $map = $catalog_handler->get_map_by_pin($pin);
         if (!$map) {
-            echo json_encode(['error' => 'Sorry, I couldn\'t find a map with that PIN']);
+            echo json_encode(['error' => "Sorry, I couldn't find a map with that PIN"]);
             die();
         }
-        $locked = $catalog_handler->is_map_locked($pin);
+        $locked = $catalog_handler->is_map_locked($map->rampId);
         if ($locked) {
             echo json_encode(['error' => 'This map is locked for edits! Contact the project owner if you need to update it.']);
             die();
         }
 
-        $jumpcrouch = isset($map['jumpcrouch']) ? $map['jumpcrouch'] : 0;
-        $wip = isset($map['wip']) ? $map['wip'] : 0;
-        $category = $map['category'] ?? 0;
-        $length = $map['length'] ?? 0;
-        $difficulty = $map['difficulty'] ?? 0;
-        $monsters = $map['monsters'] ?? 0;
-       
         echo json_encode([
-            "mapname" => $map['map_name'],
-            "author" => $map['author'],
-            "musiccredit" => (isset($map['music_credit']) ? $map['music_credit'] : ''),
-            "jumpcrouch" => $jumpcrouch,
-            "wip" => $wip,
-            "category" => $category,
-            "length" => $length,
-            "difficulty" => $difficulty,
-            "monsters" => $monsters
+            "name" => $map->name,
+            "author" => $map->author,
+            "musiccredit" => $map->musicCredit ?? '',
+            "jumpcrouch" => $map->jumpCrouch ?? 0,
+            "wip" => $map->wip ?? 0,
+            "category" => $map->category ?? 0,
+            "length" => $map->length ?? 0,
+            "difficulty" => $map->difficulty ?? 0,
+            "monsters" => $map->monsterCount ?? 0,
         ]);
     }
 
