@@ -8,15 +8,15 @@ class Marquee_Generator {
     public $CHARACTER_MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -':";
     public $CHARACTER_MAP_MORE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-=_+:,.\"'!@#$%^&*()/? ";
     public $ZONE_FONTS = [
-        "space" => 'fonts/Robofan Free.otf',
-        "uac" => 'fonts/DOOM.TTF',
-        "castle" => 'fonts/DOMINICA.TTF',
-        "hell" => 'fonts/Frightmare.ttf',
-        "cave" => 'fonts/Berenika-BoldOblique.ttf',
-        "ancient" => 'fonts/MountOlympus.otf',
-        "mystery" => 'fonts/Winsconsin.otf',
-        "city" => 'fonts/transporth.ttf',
-        "none" => 'fonts/F25_Bank_Printer.ttf'
+        "space" => '../fonts/Robofan Free.otf',
+        "uac" => '../fonts/DOOM.TTF',
+        "castle" => '../fonts/DOMINICA.TTF',
+        "hell" => '../fonts/Frightmare.ttf',
+        "cave" => '../fonts/Berenika-BoldOblique.ttf',
+        "ancient" => '../fonts/MountOlympus.otf',
+        "mystery" => '../fonts/Winsconsin.otf',
+        "city" => '../fonts/transporth.ttf',
+        "none" => '../fonts/F25_Bank_Printer.ttf'
     ];
     public $ZONE_IDS = [
         "space" => 0,

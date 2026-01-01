@@ -11,7 +11,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 <p><a href="./builderrors.php">Show build errors</a></p>
 <p><a id="forceNewSnapshotLink" href="#">Force new snapshot generation on next download</a></p>
 <p><a id="releaseLocksLink" href="#">Delete upload/compile lock files</a></p>
-<p><a href="../handle_pk3_update.php?nozip=1&nocache=1">Compile project without producing output file</a></p>
+<p><a href="../commands/handle_pk3_update.php?nozip=1&nocache=1">Compile project without producing output file</a></p>
 <p><a href="./makecredits.php">Create map credits text</a></p>
 </div>
 <div style="clear: both;">&nbsp;</div>

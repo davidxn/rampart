@@ -118,7 +118,7 @@ let compileStatusInterval;
 function downloadProject() {
     compileStatusInterval = setInterval(readStatus, 800);
     $.ajax({
-        url: './handle_pk3_update.php?xcache=' + Math.random(),
+        url: './commands/handle_pk3_update.php?xcache=' + Math.random(),
         type: 'get',
         dataType: 'json',
         success: function(response){
@@ -132,7 +132,7 @@ function downloadProject() {
                 return;
             }
             $('#download_button').text("Project generated!");
-            window.location.href = './handle_download.php?xcache=' + Math.random();
+            window.location.href = './commands/handle_download.php?xcache=' + Math.random();
         },
         error: function(response){
             clearInterval(compileStatusInterval);
@@ -169,7 +169,7 @@ function uploadData(formdata){
     $('#upload_wad').text("Working...");
 
     $.ajax({
-        url: './handle_upload.php',
+        url: './commands/handle_upload.php',
         type: 'post',
         data: formdata,
         contentType: false,
@@ -187,7 +187,7 @@ function submitPin(formdata){
     $('#confirm_pin').text("Working...");
 
     $.ajax({
-        url: './handle_pin.php',
+        url: './commands/handle_pin.php',
         type: 'post',
         data: formdata,
         contentType: false,
