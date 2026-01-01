@@ -5,41 +5,31 @@
  */
 class RampMap implements JsonSerializable
 {
-    public string $author;
-    public string $category;
-    public int $difficulty;
-    public bool $disabled;
-    public bool $jumpCrouch;
-    public int $length;
-    public bool $locked;
-    public string $lump;
-    public string $name;
-    public string $mapnum;
-    public int $monsterCount;
-    public string $musicCredit;
-    public string $pin;
-    public string $rampId;
-    public bool $wip;
-    public string $mapInfoString;
+    public string $author = '';
+    public string $category = '';
+    public int $difficulty = 0;
+    public bool $disabled = false;
+    public bool $jumpCrouch = false;
+    public int $length = 0;
+    public bool $locked = false;
+    public string $lump = '';
+    public string $name = '';
+    public int $mapnum = 0;
+    public int $monsterCount = 0;
+    public string $musicCredit = '';
+    public string $pin = '';
+    public int $rampId = 0;
+    public bool $wip = true;
+    public string $mapInfoString = '';
 
     public function __construct(int $rampId, array $data)
     {
-        $this->author = $data['author'] ?? '';
-        $this->category = $data['category'] ?? '';
-        $this->difficulty = $data['difficulty'] ?? 0;
-        $this->disabled = isset($data['disabled']) && $data['disabled'];
-        $this->jumpCrouch = isset($data['jumpcrouch']) && $data['jumpcrouch'];
-        $this->length = isset($data['length']) && $data['length'];
-        $this->locked = isset($data['locked']) && $data['locked'];
-        $this->lump = $data['lump'] ?? '';
-        $this->name = $data['map_name'] ?? '';
-        $this->mapnum = $data['map_number'] ?? '';
-        $this->monsterCount = $data['monsters'] ?? 0;
-        $this->musicCredit = $data['music_credit'] ?? 0;
-        $this->pin = $data['pin'] ?? '';
         $this->rampId = $rampId;
-        $this->wip = isset($data['wip']) && $data['wip'];
-        $this->mapInfoString = $data['mapinfo'] ?? '';
+        foreach ($data as $property => $value) {
+            if (property_exists($this, $property)) {
+                $this->$property = $value;
+            }
+        }
     }
 
     public function jsonSerialize(): mixed
@@ -53,14 +43,14 @@ class RampMap implements JsonSerializable
             'length' => $this->length,
             'locked' => $this->locked,
             'lump' => $this->lump,
-            'map_name' => $this->name,
-            'map_number' => $this->mapnum,
-            'monsters' => $this->monsterCount,
-            'music_credit' => $this->musicCredit,
+            'name' => $this->name,
+            'mapnum' => $this->mapnum,
+            'monsterCount' => $this->monsterCount,
+            'musicCredit' => $this->musicCredit,
             'pin' => $this->pin,
-            'ramp_id' => $this->rampId,
+            'rampId' => $this->rampId,
             'wip' => $this->wip,
-            'mapinfo' => $this->mapInfoString,
+            'mapInfoString' => $this->mapInfoString,
         ];
     }
 }

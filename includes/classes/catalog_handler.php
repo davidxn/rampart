@@ -21,10 +21,10 @@ class Catalog_Handler {
             $this->catalog = [];
             return;
         }
-        foreach ($decoded_json as $pin => $mapdata) {
-            $rampMap = new RampMap($pin, $mapdata);
+        foreach ($decoded_json as $ramp_id => $mapdata) {
+            $rampMap = new RampMap($ramp_id, $mapdata);
             $this->catalog[$rampMap->rampId] = $rampMap;
-            $this->pinsToRampIds[$pin] = $rampMap->rampId;
+            $this->pinsToRampIds[$rampMap->pin] = $rampMap->rampId;
         }
     }
 
@@ -42,6 +42,8 @@ class Catalog_Handler {
     public function update_map_properties($rampId, $properties): void {
         if (!isset($this->catalog[$rampId])) {
             $this->catalog[$rampId] = new RampMap($rampId, $properties);
+            $this->save_catalog();
+            return;
         }
         foreach ($properties as $property => $value) {
             $this->catalog[$rampId]->$property = $value;
@@ -56,7 +58,7 @@ class Catalog_Handler {
     }
     
     public function get_map_by_pin($pin): ?RampMap {
-        if ($this->pinsToRampIds[$pin]) {
+        if (isset($this->pinsToRampIds[$pin])) {
             return $this->catalog[$this->pinsToRampIds[$pin]];
         }
         return null;
@@ -71,7 +73,7 @@ class Catalog_Handler {
         if (!$map) {
             return false;
         }
-        return $map['locked'] ?? 0;
+        return $map->locked;
     }
     
     public function get_catalog(): array

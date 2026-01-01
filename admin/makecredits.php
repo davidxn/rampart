@@ -4,19 +4,15 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php')
 
 header("Content-Type: text/plain");
 
-$catalog = @json_decode(file_get_contents(CATALOG_FILE), true);
-if (empty($catalog)) {
-    $catalog = [];
-}
-
+$catalog = new Catalog_Handler();
 $credits_table = [];
 
-foreach ($catalog as $map_data) {
-    $author = strtoupper($map_data['author']);
+foreach ($catalog->get_catalog() as $map_data) {
+    $author = strtoupper($map_data->author);
     if (!isset($credits_table[$author])) {
         $credits_table[$author] = [];
     }
-    $credits_table[$author][] = $map_data['map_name'];
+    $credits_table[$author][] = $map_data->name;
 }
 
 ksort($credits_table);

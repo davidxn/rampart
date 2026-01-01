@@ -230,7 +230,7 @@ function populateMapInfo(response) {
     } else {
         $("#upload-question-pin").hide();
         $("#upload-question-details").show();
-        $("#input_map_name").val(response.mapname);
+        $("#input_map_name").val(response.name);
         $("#input_author_name").val(response.author);
         $("#input_music_credit").val(response.musiccredit);
         $('#input_map_jumpcrouch')[0].checked = response.jumpcrouch == 0 ? false : true;

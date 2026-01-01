@@ -1,16 +1,14 @@
 <?php
 
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "scripts/pin_managers.php");
+require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "includes/classes/pin_managers.php");
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "data/wad_validator.php");
 
 class Upload_Handler {
 
-    public $txid = null;
-    public $catalog_handler = null;
-    public $validator = null;
+    public Wad_Validator $validator;
 
-    function handle_upload($filename, $filesize, $tmpname, $pin) {
+    function handle_upload($filename, $filesize, $tmp_name, $pin) {
 
         Logger::lg("Starting an upload attempt");
         
@@ -24,14 +22,13 @@ class Upload_Handler {
         $length = $this->clean_text($_POST['length']);
         $difficulty = $this->clean_text($_POST['difficulty']);
         $monsters = $this->clean_number($_POST['monsters']);
-        $wip = 0;
-        if (isset($_POST['wip'])) { $wip = $this->clean_text($_POST['wip']); }
+        $wip = isset($_POST['wip']) ? $this->clean_text($_POST['wip']) : 0;
         $pin = strtoupper($this->clean_text($pin));
 
         $this->validate_fields($mapname, $authorname, $musiccredit);
         $this->validate_ip();
-        if ($tmpname) {
-            $this->validate_header($tmpname);
+        if ($tmp_name) {
+            $this->validate_wad_header($tmp_name);
         }
 
         //Mutex
@@ -40,15 +37,14 @@ class Upload_Handler {
             die();
         }
 
-        Logger::lg("POST data is: " . print_r($_POST, true));
-
         $catalog_handler = new Catalog_Handler();
 
         $existing_map = null;
         if ($pin) {
             $existing_map = $this->validate_pin($pin, $catalog_handler);
-            $map_number = $existing_map['map_number'];
-            $map_lumpname = isset($existing_map['lumpname']) ? $existing_map['lumpname'] : ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
+            $ramp_id = $existing_map->rampId;
+            $map_lumpname = $existing_map->lump;
+            $map_number = $existing_map->mapnum;
         }
         else {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
@@ -57,22 +53,23 @@ class Upload_Handler {
                 echo json_encode(['error' => 'Error creating a PIN! Ask the project owner about this.']);
                 die();
             }
-            $map_number = $catalog_handler->get_next_available_slot();
-            $map_lumpname = ($map_number < 10 ? ('MAP0' . $map_number) : ('MAP' . $map_number));
+            $ramp_id = $catalog_handler->get_next_available_slot();
+            $map_lumpname = ($ramp_id < 10 ? ('MAP0' . $ramp_id) : ('MAP' . $ramp_id));
+            $map_number = $ramp_id;
             Logger::lg("Assigning PIN: " . $pin);
-            Logger::lg("Assigning map number: " . $map_number);
+            Logger::lg("Assigning RAMP ID and map number: " . $ramp_id);
         }
         
         $location = null;
-        //Finalize the file, if we have one
-        if ($tmpname) {
+        //If a file has been uploaded, move it to our store.
+        if ($tmp_name) {
             @mkdir(UPLOADS_FOLDER);
-            $location = UPLOADS_FOLDER . get_source_wad_file_name($map_number);
-            Logger::lg("Moving file " . $tmpname . " to " . $location);
+            $location = UPLOADS_FOLDER . get_source_wad_file_name($ramp_id);
+            Logger::lg("Moving file " . $tmp_name . " to " . $location);
             if (file_exists($location)) {
                 unlink($location);
             }
-            $result = move_uploaded_file($tmpname, $location);
+            $result = move_uploaded_file($tmp_name, $location);
 
             if(!$result){
                 echo json_encode(['error' => 'Upload error!']);
@@ -82,31 +79,33 @@ class Upload_Handler {
 
         //Now update the catalog
         $catalog_handler->update_map_properties(
-            $pin,
+            $ramp_id,
             [
-                'map_name' => $mapname,
+                'pin' => $pin,
+                'lump' => $map_lumpname,
+                'mapnum' => $map_number,
+                'disabled' => 0, // Re-enable a map on reupload
+
+                'name' => $mapname,
                 'author' => $authorname,
-                'music_credit' => $musiccredit,
-                'map_number' => $map_number,
-                'lumpname' => $map_lumpname,
-                'jumpcrouch' => $jumpcrouch,
+                'musicCredit' => $musiccredit,
+                'jumpCrouch' => $jumpcrouch,
                 'wip' => $wip,
                 'category' => $category,
                 'length' => $length,
                 'difficulty' => $difficulty,
-                'monsters' => $monsters,
-                'disabled' => 0 // Re-enable a map on reupload
+                'monsterCount' => $monsters,
             ]
         );
-        Logger::lg("Wrote map " . $map_number . ": " . $pin . " entry to catalog");
+        Logger::lg("Wrote map ID " . $ramp_id . ": " . $pin . " entry to catalog");
 
         //Unmutex
         release_lock(LOCK_FILE_UPLOAD);
-        Logger::record_upload(time(), $map_number, $location ? filesize($location) : 0);
+        Logger::record_upload(time(), $ramp_id, $location ? filesize($location) : 0);
         Logger::lg("Lock released");
         
         //Remove any existing logs for this map
-        Logger::clear_log_for_map($map_number);
+        Logger::clear_log_for_map($ramp_id);
         
         if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
             mail(get_setting('NOTIFY_EMAIL'), "RAMPART: New map added", "A new map '" . $mapname . "' by " . $authorname . " has been added to the project as " . $map_lumpname . ".");
@@ -114,9 +113,11 @@ class Upload_Handler {
             mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lumpname . " " . $mapname . "' by " . $authorname . " has just been updated.");
         }
 
-        $success_message = "Success! Your WAD has been added to the project as map MAP" . $map_number . ". Your PIN is: <div style=\"font-size: 64pt; font-weight: bold; text-align: center\">" . $pin . "</div>Use this if you ever need to update your level.";
+        $success_message = "Success! Your WAD has been added to the project with map ID " . $ramp_id .
+            " It will be included in the project as " . $map_lumpname . ". " .
+            "Your PIN is: <div style=\"font-size: 64pt; font-weight: bold; text-align: center\">" . $pin . "</div>Use this if you ever need to update your level.";
         if ($existing_map) {
-            $success_message = "Success! Your WAD in slot " . $map_number . " with PIN <b>" . $pin . "</b> has been updated.";
+            $success_message = "Success! Map ID " . $ramp_id . " in lump " . $map_lumpname . "</b> has been updated.";
         }
 
         echo json_encode(["name" => $filename, "size" => $filesize, "pin" => $pin, "map_number" => $map_number, "success" => $success_message]);
@@ -140,12 +141,14 @@ class Upload_Handler {
        return $string;
     }
 
-    function validate_pin($pin, $catalog_handler) {
-        $map = $catalog_handler->get_map($pin);
+    function validate_pin(string $pin, Catalog_Handler $catalog_handler) {
+        $map = $catalog_handler->get_map_by_pin($pin);
         if (!$map) {
-            $this->validator->handle_validation_failure();
+            sleep(10);
+            echo json_encode(['error' => 'Provided PIN did not match any map']);
+            die();
         }
-        $locked = $catalog_handler->is_map_locked($pin);
+        $locked = $catalog_handler->is_map_locked($map->rampId);
         if ($locked) {
             echo json_encode(['error' => 'This map is locked for edits! Contact the project owner if you need to update it.']);
             die();
@@ -154,14 +157,14 @@ class Upload_Handler {
         return $map;
     }
 
-    function validate_header($filename) {
+    function validate_wad_header($filename): void {
         $file = fopen($filename,"r");
         $bytes = fread($file, 4);
         fclose($file);
         $match = ($bytes == "PWAD");
         Logger::lg("First four bytes " . ($match ? "match" : "do not match") . " PWAD header");
         if (!$match) {
-            echo json_encode(['error' => 'That doesn\'t look like a WAD. Can you check?']);
+            echo json_encode(['error' => "That doesn't look like a WAD. Can you check?"]);
             die();
         }
         $this->validator->validate();
@@ -184,12 +187,6 @@ class Upload_Handler {
                 }
             }
         }
-        
-        $banfilename = 'x' . $ip . 'x';
-        if (file_exists(IPS_FOLDER . $banfilename)) {
-            Logger::lg("Blocked upload attempt from IP " . $ip);
-            $this->validator->handle_validation_failure();
-        }        
 
         $filename = 'b' . $ip . 'b';
         $ip_check_file = IPS_FOLDER . $filename;
@@ -213,7 +210,11 @@ class Upload_Handler {
         if (strlen($authorname) > 50) {
             echo json_encode(['error' => 'Author can only be up to 50 characters']);
             die();
-        }        
+        }
+        if (strlen($musiccredit) > 50) {
+            echo json_encode(['error' => 'Music credit can only be up to 50 characters']);
+            die();
+        }
         if (empty($mapname)) {
             echo json_encode(['error' => 'A map must have a name!']);
             die();            
@@ -232,7 +233,7 @@ class Upload_Handler {
             foreach ($ban_array as $ban) {
                 if (str_contains(strtolower($phrase), strtolower($ban))) {
                     Logger::lg("Blocked upload attempt due to match with banned word");
-                    $validator = new Wad_Validator();
+                    $validator = new Wad_Validator('');
                     $validator->handle_validation_failure();
                 }
             }
@@ -243,12 +244,12 @@ class Upload_Handler {
 //Let's make it look like we're working (discourages spamming this script)
 sleep(2);
 
-$filename = isset($_FILES['file']['name']) ? $_FILES['file']['name'] : null;
-$filesize = isset($_FILES['file']['size']) ? $_FILES['file']['size'] : 0;
-$tmpname = isset($_FILES['file']['tmp_name']) ? $_FILES['file']['tmp_name'] : null;
-$pin = isset($_POST['pin']) ? $_POST['pin'] : null;
+$filename = $_FILES['file']['name'] ?? '';
+$filesize = $_FILES['file']['size'] ?? 0;
+$tmp_name = $_FILES['file']['tmp_name'] ?? null;
+$pin = $_POST['pin'] ?? null;
 
-if (empty($pin) && (empty($filename) || empty($filesize) || empty($tmpname))) {
+if (empty($pin) && (empty($filename) || empty($filesize) || empty($tmp_name))) {
     echo json_encode(['error' => 'No file was uploaded!']);
     die();
 }
@@ -263,6 +264,5 @@ if ($pin && !get_setting("ALLOW_EDIT_UPLOADS")) {
     die();
 }
 
-
 $handler = new Upload_Handler();
-$handler->handle_upload($filename, $filesize, $tmpname, $pin);
+$handler->handle_upload($filename, $filesize, $tmp_name, $pin);

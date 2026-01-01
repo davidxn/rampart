@@ -3,9 +3,9 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php')
 
 class Mapinfo_Handler {
     
-    private $bytes = null;
-    private $current_line_number = 0;
-    private $mapinfo_lines = [];
+    private string $bytes;
+    private int $current_line_number = 0;
+    private array $mapinfo_lines = [];
     
     public function __construct($bytes) {
         $this->bytes = $bytes;
