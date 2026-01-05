@@ -89,7 +89,7 @@ $(function() {
         var tr = $(me).closest("tr");
         var ramp_id = tr.attr("name");
         var field = 'disabled';
-        var value = $(me).hasClass("property-enabled") ? 1 : -1;
+        var value = $(me).hasClass("property-enabled") ? 1 : 0;
         myFormData = new FormData();
         myFormData.set('rampid', ramp_id);
         myFormData.set('field', field);

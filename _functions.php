@@ -79,3 +79,21 @@ function get_error_link($key, $args = []): string {
     $emoji = str_starts_with($key, 'ERR') ? '❌' : '⚠';
     return sprintf('<a name="%s"><a href="/errors.php#%s">%s %s</a>', $key, $key, $emoji, $error_string);
 }
+
+function clean_text(string $string, int $length = 0): string {
+    $string = trim($string);
+    $string = preg_replace('/[^A-Za-z0-9\-\'!:\)\(\.\? ]/', '', $string); // Removes special chars.
+    if ($length) {
+        $string = substr($string, 0, $length);
+    }
+    return $string;
+}
+
+function clean_numeric(string $string, int $length = 0): string {
+    $string = trim($string);
+    $string = preg_replace('/[^0-9]/', '', $string);
+    if ($length) {
+        $string = substr($string, 0, $length);
+    }
+    return $string;
+}

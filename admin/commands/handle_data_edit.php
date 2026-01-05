@@ -9,9 +9,9 @@ class Map_Data_Editor {
             echo(json_encode(['success' => false, 'error' => 'No Ramp map ID provided']));
             die();
         }
-        
+
         if ($field != 'mapInfoString') {
-            $value = $this->clean_text($value);
+            $value = clean_text($value);
             if (!$value) {
                 echo(json_encode(['success' => false, 'error' => 'No value provided']));
                 die();
@@ -43,15 +43,6 @@ class Map_Data_Editor {
             die();
         }
         echo(json_encode(['success' => false, 'error' => 'Not a supported field']));
-    }
-
-    function clean_text($string, $length = 0): string {
-       $string = trim($string);
-       $string = preg_replace('/[^A-Za-z0-9\-\'! ]/', '', $string); // Removes special chars.
-       if ($length) {
-           $string = substr($string, 0, $length);
-       }
-       return $string;
     }
 }
 

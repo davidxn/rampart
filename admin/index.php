@@ -19,22 +19,22 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 <div id="chartContainer" style="height: 300px">&nbsp;</div>
 
 <?php
- 
+
 $dataPoints = ['Preparation' => [], 'Map compiling' => [], 'Copying static content' => [], 'Generating hub resources' => [], 'Writing project file' => []];
 
-$lines = "";
+$lines = [];
 exec("tail " . PK3_GEN_HISTORY_FILE, $lines);
 foreach ($lines as $line) {
-    $linedata = explode(",", $line);
+    $line_data = explode(",", $line);
     $date = new DateTime();
-    $date->setTimestamp($linedata[0]);
+    $date->setTimestamp($line_data[0]);
     $label = $date->format("M d H:i:s");
-    $dataPoints['Preparation'][] = ["y" => $linedata[1], "label" => $label];
-    //Weird case here is for when the third linedata element was for file size
-    $dataPoints['Map compiling'][] = ["y" => isset($linedata[2]) && $linedata[2] < 10000 ? $linedata[2] - $linedata[1] : 0, "label" => $label];
-    $dataPoints['Copying static content'][] = ["y" => isset($linedata[3]) ? $linedata[3] - $linedata[2] : 0, "label" => $label];
-    $dataPoints['Generating hub resources'][] = ["y" => isset($linedata[4]) && $linedata[4] < 10000 ? $linedata[4] - $linedata[3] : 0, "label" => $label];
-    $dataPoints['Writing project file'][] = ["y" => isset($linedata[5]) ? $linedata[5] - $linedata[4] : 0, "label" => $label];
+    $dataPoints['Preparation'][] = ["y" => $line_data[1], "label" => $label];
+    //Weird case here is for when the third line data element was for file size
+    $dataPoints['Map compiling'][] = ["y" => isset($line_data[2]) && $line_data[2] < 10000 ? $line_data[2] - $line_data[1] : 0, "label" => $label];
+    $dataPoints['Copying static content'][] = ["y" => isset($line_data[3]) ? $line_data[3] - $line_data[2] : 0, "label" => $label];
+    $dataPoints['Generating hub resources'][] = ["y" => isset($line_data[4]) && $line_data[4] < 10000 ? $line_data[4] - $line_data[3] : 0, "label" => $label];
+    $dataPoints['Writing project file'][] = ["y" => isset($line_data[5]) ? $line_data[5] - $line_data[4] : 0, "label" => $label];
 }
  
 ?>

@@ -14,16 +14,16 @@ class Upload_Handler {
         
         $this->validator = new Wad_Validator($filename);
 
-        $mapname = $this->clean_text($_POST['mapname']);
-        $authorname = $this->clean_text($_POST['authorname']);
-        $musiccredit = $this->clean_text($_POST['musiccredit']);
-        $jumpcrouch = $this->clean_text($_POST['jumpcrouch']);
-        $category = $this->clean_text($_POST['category']);
-        $length = $this->clean_text($_POST['length']);
-        $difficulty = $this->clean_text($_POST['difficulty']);
-        $monsters = $this->clean_number($_POST['monsters']);
-        $wip = isset($_POST['wip']) ? $this->clean_text($_POST['wip']) : 0;
-        $pin = strtoupper($this->clean_text($pin));
+        $mapname =     clean_text($_POST['mapname']);
+        $authorname =  clean_text($_POST['authorname']);
+        $musiccredit = clean_text($_POST['musiccredit']);
+        $jumpcrouch =  clean_text($_POST['jumpcrouch']);
+        $category =    clean_text($_POST['category']);
+        $length =      clean_text($_POST['length']);
+        $difficulty =  clean_text($_POST['difficulty']);
+        $monsters =    clean_numeric($_POST['monsters']);
+        $wip = isset($_POST['wip']) ? clean_text($_POST['wip']) : 0;
+        $pin = strtoupper(clean_text($pin));
 
         $this->validate_fields($mapname, $authorname, $musiccredit);
         $this->validate_ip();
@@ -121,24 +121,6 @@ class Upload_Handler {
         }
 
         echo json_encode(["name" => $filename, "size" => $filesize, "pin" => $pin, "map_number" => $map_number, "success" => $success_message]);
-    }
-
-    function clean_text($string, $length = 0) {
-       $string = trim($string);
-       $string = preg_replace('/[^A-Za-z0-9\-\'!:\)\(\. ]/', '', $string); // Removes special chars.
-       if ($length) {
-           $string = substr($string, 0, $length);
-       }
-       return $string;
-    }
-    
-    function clean_number($string, $length = 0) {
-       $string = trim($string);
-       $string = preg_replace('/[^0-9]/', '', $string);
-       if ($length) {
-           $string = substr($string, 0, $length);
-       }
-       return $string;
     }
 
     function validate_pin(string $pin, Catalog_Handler $catalog_handler) {

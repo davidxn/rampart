@@ -40,7 +40,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 
 
 
-<h3>Other resource errors</h4>
+<h3>Other resource errors</h3>
 
 <h4><?=get_error_link('ERR_LUMP_DUPLICATE_BASE', ['BCRATEL1'])?></h4>
 <h4><?=get_error_link('ERR_LUMP_DUPLICATE_OTHER', ['LILDV1', '38'])?></h4>

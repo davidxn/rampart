@@ -88,8 +88,6 @@ if (!$settings) {
     $settings = [];
 }
 
-const FIRST_USER_MAP_NUMBER = 1;
-
 function get_project_full_path(): string {
     return get_setting("PROJECT_OUTPUT_FOLDER") . DIRECTORY_SEPARATOR . get_setting("PROJECT_FILE_NAME") . "." . strtolower(get_setting("PROJECT_FORMAT"));
 }
@@ -132,7 +130,7 @@ const ALLOWED_MAPINFO_PROPERTIES = [
 // RAMPART constants that you probably don't need to modify
 ///////////////////////////////////////////////////////////
 
-const RAMPART_VERSION = "BETA v3";
+const RAMPART_VERSION = "2.0 beta";
 
 const PK3_REQUIRED_FOLDERS  = ["music", "maps", "textures"];
 

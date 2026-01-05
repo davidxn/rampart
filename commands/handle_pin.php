@@ -6,7 +6,7 @@ class Pin_Handler {
     function handle_pin(): void {
 
         Logger::lg("Starting a PIN check");
-        $pin = strtoupper($this->clean_text($_POST['pin']));
+        $pin = strtoupper(clean_text($_POST['pin']));
         if (empty($pin)) {
             echo json_encode(['error' => 'No PIN was submitted!']);
             die();
@@ -37,15 +37,6 @@ class Pin_Handler {
             "difficulty" => $map->difficulty ?? 0,
             "monsters" => $map->monsterCount ?? 0,
         ]);
-    }
-
-    function clean_text($string, $length = 0) {
-       $string = trim($string);
-       $string = preg_replace('/[^A-Za-z0-9\-\'! ]/', '', $string); // Removes special chars.
-       if ($length) {
-           $string = substr($string, 0, $length);
-       }
-       return $string;
     }
 
     function validate_ip() {
