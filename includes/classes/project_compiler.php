@@ -1001,9 +1001,13 @@ class Project_Compiler {
     }
 
     function create_pk3() {
-        if (!empty($GLOBALS["ZIP_SCRIPT"])) {
+        $zip_script = $GLOBALS["ZIP_SCRIPT"];
+        if (str_starts_with(PHP_OS, "WIN")) {
+            $zip_script = $GLOBALS["ZIP_SCRIPT_WINDOWS"];
+        }
+        if (!empty($zip_script)) {
             Logger::pg("--- ASKING EXTERNAL SCRIPT TO ZIP PK3 ---");
-            exec($GLOBALS["ZIP_SCRIPT"]);
+            exec($zip_script);
             Logger::pg("Script finished");
             return;
         }

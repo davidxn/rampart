@@ -34,8 +34,7 @@ class Catalog_Handler {
     
     public function get_next_available_slot(): int
     {
-
-        $max_slot = max(array_keys($this->catalog));
+        $max_slot = $this->catalog ? max(array_keys($this->catalog)) : 0;
         return $max_slot + 1;
     }
     

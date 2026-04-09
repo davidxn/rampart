@@ -152,7 +152,8 @@ class Upload_Handler {
         $this->validator->validate();
     }
 
-    function validate_ip() {
+    function validate_ip(): void
+    {
         $ip = $_SERVER['REMOTE_ADDR'];
         Logger::lg("Recording upload from IP " . $ip);        
 
@@ -163,7 +164,7 @@ class Upload_Handler {
             $ip_ban_list = file_get_contents($ban_list_file);
             $ip_prefixes = explode("\n", $ip_ban_list);
             foreach ($ip_prefixes as $ip_prefix) {
-                if (str_starts_with($ip, $ip_prefix)) {
+                if (trim($ip_prefix) != "" && str_starts_with($ip, $ip_prefix)) {
                     Logger::lg("Blocked upload attempt from IP " . $ip . " due to match with prefix " . $ip_prefix);
                     $this->validator->handle_validation_failure();
                 }
@@ -181,7 +182,8 @@ class Upload_Handler {
         file_put_contents($ip_check_file, ":)");
     }
 
-    function validate_fields($mapname, $authorname, $musiccredit) {
+    function validate_fields($mapname, $authorname, $musiccredit): void
+    {
         $this->detect_bad_words($mapname);
         $this->detect_bad_words($authorname);
         $this->detect_bad_words($musiccredit);
