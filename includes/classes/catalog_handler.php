@@ -63,8 +63,8 @@ class Catalog_Handler {
         return null;
     }
     
-    public function get_map_by_ramp_id($rampId): RampMap {
-        return $this->catalog[$rampId];
+    public function get_map_by_ramp_id($rampId): ?RampMap {
+        return $this->catalog[$rampId] ?? null;
     }
     
     public function is_map_locked($rampId): bool {
@@ -107,10 +107,6 @@ class Catalog_Handler {
     
     public function change_pin($rampId, $new_pin): bool {
         $new_pin = strtoupper($new_pin);
-        //A map PIN must be unique, check the list first
-        if (isset($this->pinsToRampIds[$new_pin])) {
-            return false;
-        }
         $this->catalog[$rampId]->pin = $new_pin;
         $this->save_catalog();
         return true;

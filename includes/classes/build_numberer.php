@@ -3,26 +3,29 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php')
 
 class Build_Numberer {
 
-    private $current_build_number = 0;
+    private int $current_build_number;
     
     public function __construct() {
         if (file_exists(SNAPSHOT_ID_FILE)) {            
-            $this->current_build_number = file_get_contents(SNAPSHOT_ID_FILE);
+            $this->current_build_number = intval(file_get_contents(SNAPSHOT_ID_FILE));
         } else {
             $this->current_build_number = 0;
         }
     }
     
-    public function get_current_build() {
+    public function get_current_build(): int
+    {
         return $this->current_build_number;
     }
     
-    public function set_new_build_number($number) {
+    public function set_new_build_number($number): void
+    {
         $this->current_build_number = $number;
         file_put_contents(SNAPSHOT_ID_FILE, $this->current_build_number);
     }
     
-    public function get_current_build_filename() {
+    public function get_current_build_filename(): string
+    {
         $name = get_setting('PROJECT_FILE_NAME');
         $extension = strtolower(substr($name, -4));
         if ($extension == ".pk3" || $extension == ".wad") {

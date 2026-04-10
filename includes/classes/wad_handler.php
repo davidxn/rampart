@@ -84,10 +84,8 @@ class Lzss
 }
 
 class Wad_Handler {
-    
-    public $txid = null;
-    
-    public $map_lump_names = ['TEXTMAP', 'THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS', 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 'BEHAVIOR', 'SCRIPTS', 'DIALOGUE', 'ZNODES', 'ENDMAP'];
+
+    public array $map_lump_names = ['TEXTMAP', 'THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS', 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 'BEHAVIOR', 'SCRIPTS', 'DIALOGUE', 'ZNODES', 'ENDMAP'];
 
     public $wad_file = null;
     public $identification = null;
@@ -122,7 +120,7 @@ class Wad_Handler {
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
         if ($load_data) {
             for ($i = 0; $i < $this->numlumps; $i++) {
-                $nextLump = (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null);
+                $nextLump = ($this->lumps[$i + 1] ?? null);
                 
                 try {
                     $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i], $nextLump);
@@ -172,14 +170,15 @@ class Wad_Handler {
         // since the resulting data will be DEFLATEd into a PK3, which
         // will be stronger overall compression.
         $compressed = $this->read_bytes($size);
-        $decompressed = [];
+        $decompressed = "";
 
         Lzss::decompress($compressed, $decompressed, $lump['size']);
 
         return $decompressed;
     }
     
-    public function identify_lump($lump, $nextlump) {
+    public function identify_lump($lump, $next_lump): string
+    {
         //Check for map data by name
         if (in_array($lump['name'], $this->map_lump_names)) {
             return 'mapdata';
@@ -199,7 +198,7 @@ class Wad_Handler {
         //If the length is 0 it's just a marker. If the next lump is either TEXTMAP or THINGS it's a map.
         if ($lump['size'] == 0) {
             $type = 'marker';
-            if ($nextlump && in_array($nextlump['name'], ['TEXTMAP', 'THINGS'])) {
+            if ($next_lump && in_array($next_lump['name'], ['TEXTMAP', 'THINGS'])) {
                 $type = 'mapmarker';
             }
             return $type;
