@@ -15,14 +15,14 @@ if (!$build_info_string) {
 }
 $build_info = json_decode($build_info_string, true);
 
-$successful_dnums = $build_info['custom_defined_doomednums'];
+$successful_dnums = $build_info['doomEdNums'];
 ksort($successful_dnums);
 
-$rejected_dnums = $build_info['rejected_doomednums'];
+$rejected_dnums = $build_info['rejectedDoomEdNums'];
 ksort($rejected_dnums);
 
-$ambients = $build_info['global_ambient_list'];
-ksort($ambients);
+//$ambients = $build_info['global_ambient_list'];
+//ksort($ambients);
 ?>
 
 <?php if ($rejected_dnums) { ?>
@@ -31,15 +31,19 @@ ksort($ambients);
 $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Class</th><th>Rejected from map</th><th>By author</th><th>Defined in map</th><th>By author</th></tr></thead><tbody>";
 foreach($rejected_dnums as $rejected_dnum_info) {
 
-        $original_map_data = $catalog_handler->get_map_by_ramp_id($rejected_dnum_info['original_definer']);
-        $rejected_map_data = $catalog_handler->get_map_by_ramp_id($rejected_dnum_info['failed_definer']);
+        $original_map_data = $catalog_handler->get_map_by_ramp_id($rejected_dnum_info['ownerRampId']);
+        $rejected_map_data = $catalog_handler->get_map_by_ramp_id($rejected_dnum_info['attemptRampId']);
         $table_string .= "<tr>";
-        $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['dnum'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['classname'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $rejected_map_data['lumpname'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $rejected_map_data['author'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $original_map_data['lumpname'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $original_map_data['author'] . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['number'] . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['className'] . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->lump . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->author . "</td>";
+        if ($rejected_dnum_info['ownerRampId'] == ReservedLump::LUMP_OWNER_IWAD) {
+            $table_string .= "<td class=\"nopad\" colspan=\"2\">(Base resources)</td>";
+        } else {
+            $table_string .= "<td class=\"nopad\">" . $original_map_data->lump . "</td>";
+            $table_string .= "<td class=\"nopad\">" . $original_map_data->author . "</td>";
+        }
         $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
@@ -54,27 +58,28 @@ echo ($table_string);
 $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Class</th><th>Lump Name</th><th>Map Author</th></tr></thead><tbody>";
 $highest_num_range_start = -1;
 $reserved_range_pointer = 0;
+
+$lump_registry = new Lump_Registry();
 foreach($successful_dnums as $successful_dnum => $dnum_info) {
 
-	while ($successful_dnum >= $highest_num_range_start && $reserved_range_pointer < count(Lump_Guardian::$reserved_doomed_ranges)) {
-        $range = Lump_Guardian::$reserved_doomed_ranges[$reserved_range_pointer];
-        $rangeDisplay = $range[0] . "-" . $range[1];
-        if ($range[0] == $range[1]) {
-            $rangeDisplay = $range[0];
+	while ($successful_dnum >= $highest_num_range_start && $reserved_range_pointer < count($lump_registry->reservedDoomEdNumRanges)) {
+        $range = $lump_registry->reservedDoomEdNumRanges[$reserved_range_pointer];
+        $rangeDisplay = $range->start . "-" . $range->end;
+        if ($range->start == $range->end) {
+            $rangeDisplay = $range->start;
         }
-		$table_string .= sprintf("<tr><td class=\"reservednumspan\">%s</td><td class=\"reservednumspan\" colspan=\"4\">%s</td></tr>", $rangeDisplay, $range[2]);
+		$table_string .= sprintf("<tr><td class=\"reservednumspan\">%s</td><td class=\"reservednumspan\" colspan=\"4\">%s</td></tr>", $rangeDisplay, $range->name);
 		$reserved_range_pointer++;
-		$highest_num_range_start = Lump_Guardian::$reserved_doomed_ranges[$reserved_range_pointer][0] ?? 0;
-
+		$highest_num_range_start = $lump_registry->reservedDoomEdNumRanges[$reserved_range_pointer]->start ?? 0;
 	}
       
-        $map_data = $catalog_handler->get_map_by_ramp_id($dnum_info['map_number']);
-        $table_string .= "<tr>";
-        $table_string .= "<td class=\"nopad\">" . $successful_dnum . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $dnum_info['classname'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $map_data->lump . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $map_data->author . "</td>";
-        $table_string .= "</tr>";
+    $map_data = $catalog_handler->get_map_by_ramp_id($dnum_info['ownerRampId']);
+    $table_string .= "<tr>";
+    $table_string .= "<td class=\"nopad\">" . $successful_dnum . "</td>";
+    $table_string .= "<td class=\"nopad\">" . $dnum_info['className'] . "</td>";
+    $table_string .= "<td class=\"nopad\">" . $map_data->lump . "</td>";
+    $table_string .= "<td class=\"nopad\">" . $map_data->author . "</td>";
+    $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
 
