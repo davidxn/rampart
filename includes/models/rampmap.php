@@ -33,7 +33,7 @@ class RampMap implements JsonSerializable
         }
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize(): array
     {
         return [
             'author' => $this->author,

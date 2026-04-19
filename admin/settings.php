@@ -107,10 +107,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             </td>
                         </tr>
                         <tr>
-                            <td width="200">Hub map name:</td>
+                            <td width="200">Post-level map name:</td>
                             <td>
-                                <div class="smallnote">Lump name for the hub map, if players are to be returned to a hub after each level. Otherwise leave blank</div>
-                                <input type="text" id="HUB_MAP_NAME" value="<?=htmlspecialchars(get_setting("HUB_MAP_NAME"))?>"></input>
+                                <div class="smallnote">Lump name for the map to send the player after a map, if players are to be returned to a hub or a custom intermission level after each map. Otherwise leave blank</div>
+                                <input type="text" id="POST_LEVEL_MAP_NAME" value="<?=htmlspecialchars(get_setting("POST_LEVEL_MAP_NAME"))?>"></input>
                             </td>
                         </tr>
 
@@ -142,19 +142,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <td width="200">MAPINFO properties allowed in uploads:</td>
                             <td>
                                 <div class="smallnote">If a contributor includes a MAPINFO in their WAD, allow these properties to transfer into the final project's MAPINFO</div>
-                                <textarea class="code" id="PROJECT_MAPINFO_PROPERTIES"><?=htmlspecialchars(get_setting("PROJECT_MAPINFO_PROPERTIES"))?></textarea>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="200">Use music from upload:</td>
-                            <td>
-                            <div class="smallnote">You can set RAMPART to use the first music lump in the WAD as the map's background music, or only include music if it's pointed to by the MAPINFO.</div>
-                            <div>
-                                <?php
-                                    echo html_radio_button('PROJECT_QUICK_MUSIC', 'Use first music lump', true);
-                                    echo html_radio_button('PROJECT_QUICK_MUSIC', 'Only use music in MAPINFO', false);
-                                ?>
-                            </div>
+                                <textarea class="code" id="PROJECT_ALLOWED_MAPINFO_PROPERTIES"><?=implode("\n", get_setting("PROJECT_ALLOWED_MAPINFO_PROPERTIES"))?></textarea>
                             </td>
                         </tr>
                         <tr>
@@ -248,6 +236,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                                     <span class="checkmark"></span>
                                 </label>
                             </td>
+                        </tr>
+                        <tr>
+                            <td width="200">Map name in which to put guide script:</td>
+                            <td><input type="text" id="GUIDE_MAP_NAME" value="<?=htmlspecialchars(get_setting("GUIDE_MAP_NAME"))?>"></input></td>
                         </tr>
                         <tr>
                             <td width="200">Actor class for guide:</td>

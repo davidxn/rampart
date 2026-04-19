@@ -57,7 +57,7 @@
     <li>Certain allowed properties in MAPINFO:
         <ul>
             <?php
-            foreach (ALLOWED_MAPINFO_PROPERTIES as $prop) {
+            foreach (get_setting("PROJECT_ALLOWED_MAPINFO_PROPERTIES") as $prop) {
                 echo ("<li>" . $prop . "</li>" . PHP_EOL);
             } ?>
         </ul>

@@ -36,7 +36,7 @@ foreach ($lines as $line) {
     $dataPoints['Generating hub resources'][] = ["y" => isset($line_data[4]) && $line_data[4] < 10000 ? $line_data[4] - $line_data[3] : 0, "label" => $label];
     $dataPoints['Writing project file'][] = ["y" => isset($line_data[5]) ? $line_data[5] - $line_data[4] : 0, "label" => $label];
 }
- 
+
 ?>
 <script>
 window.onload = function() {

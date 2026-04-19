@@ -1,23 +1,53 @@
 :root {
-    
-  --bg-color-outside: #000;
+    --bg-color-outside: #000;
 
-  --bg-color-main: #135;
-  --bg-color-dark: #081828;
-  --bg-color-header: #222;
-  --border-color-header: #444;
+    --bg-color-main: #135;
+    --bg-color-dark: #081828;
+    --bg-color-header: #222;
+    --border-color-header: #444;
 
-  --text-color-body: #FFF;
-  --text-color-tooltip: #EEF;
-  --text-color-link: #DDF;
-  
-  --bg-color-button: #080808;
-  --text-color-button: #FFF;
-  --border-color-button: #333;
-  
-  --bg-color-button-disabled: #747;
-  --text-color-button-disabled: #CCC;
-  --border-color-button-disabled: #949;
+    --bg-color-banner: #228;
+
+    --bg-color-code: #003;
+    --text-color-code: #CCC;
+    --border-color-code: #225;
+
+    --text-color-body: #FFF;
+    --text-color-tooltip: #EEF;
+    --text-color-link: #DDF;
+
+    --bg-color-button: #080808;
+    --text-color-button: #FFF;
+    --border-color-button: #333;
+
+    --bg-color-button-disabled: #747;
+    --text-color-button-disabled: #CCC;
+    --border-color-button-disabled: #949;
+
+    --border-color-error: #800;
+    --bg-color-error: #A00;
+
+    --border-color-success: #44A;
+    --bg-color-success: #66F;
+
+    --bg-color-menuitem: #135;
+    --bg-color-menuitem-hover: #227;
+
+    --bg-color-table-header: #88B;
+    --border-color-table-header: #559;
+    --bg-color-table-data: #337;
+    --border-color-table-data: #225;
+
+    --bg-color-checkbox-off: #666;
+    --border-color-checkbox-off: #888;
+
+    --bg-color-map-length: #44F;
+    --bg-color-map-difficulty: #900;
+    --bg-color-map-property: #090;
+
+    --border-color-map-length: #22D;
+    --border-color-map-difficulty: #700;
+    --border-color-map-property: #070;
 }
 
 a {
@@ -93,9 +123,9 @@ textarea {
 
 .code {
     font-family: monospace;
-    border: 1px solid #225;
-    background-color: #003;
-    color: #CCC;
+    border: 1px solid var(--border-color-code);
+    background-color: var(--bg-color-code);
+    color: var(--text-color-code);
     border-radius: 4px;
     white-space: pre-wrap;
     padding: 8px;
@@ -113,7 +143,7 @@ textarea {
     background-color: var(--bg-color-dark);
     font-size: 9pt;
     padding: 8px;
-    border-radius: 0px 0px 8px 8px;
+    border-radius: 0 0 8px 8px;
     display: flex;
     justify-content: space-between;
 }
@@ -124,7 +154,7 @@ textarea {
 
 #vidmask {
     position: absolute;
-    top: 0px;
+    top: 0;
     width: 100%;
     height: 100%;
 }
@@ -133,7 +163,7 @@ textarea {
     font-weight: bold;
     text-align: center;
     padding: 8px;
-    background-color: #228;
+    background-color: var(--bg-color-banner);
     border-top: 1px solid var(--border-color-header);
     border-bottom: 1px solid var(--border-color-header);
 }
@@ -142,10 +172,10 @@ textarea {
     font-weight: bold;
     text-align: center;
     padding: 8px;
-    background-color: #A00;
-    color: white;
-    border-top: 1px solid #800;
-    border-bottom: 1px solid #800;
+    background-color: var(--bg-color-error);
+    color: var(--text-color-body);
+    border-top: 1px solid var(--border-color-error);
+    border-bottom: 1px solid var(--border-color-error);
 }
 
 .clearme {
@@ -167,7 +197,7 @@ textarea {
     max-width: 1600px;
     margin: 0 auto;
     border-radius: 8px;
-    box-shadow: 0px 0px 8px 0px;
+    box-shadow: 0 0 8px 0;
 }
 
 .titlebox {
@@ -189,9 +219,14 @@ textarea {
     color: white;
     display: inline-block;
     padding: 10px 20px;
-    background-color: var(--bg-color-main);
+    background-color: var(--bg-color-menuitem);
     margin: 5px 2px;
     border-radius: 12px;
+}
+
+.menuitem:hover {
+    text-decoration: none;
+    background-color: var(--bg-color-menuitem-hover);
 }
 
 .lightbox {
@@ -199,11 +234,6 @@ textarea {
     background-color: var(--bg-color-header);
     border-radius: 8px;
     padding: 8px 16px;
-}
-
-.menuitem:hover {
-    text-decoration: none;
-    background-color: #227;
 }
 
 .mainbox {
@@ -254,17 +284,17 @@ table.maps_table {
 table.maps_table td {
     margin: 4px;
     padding: 8px;
-    background-color: #337;
     text-align: center;
-    border: 1px solid #225;
+    background-color: var(--bg-color-table-data);
+    border: 1px solid var(--border-color-table-data);
     border-radius: 2px;
 }
 
 table.maps_table th {
     margin: 4px;
     padding: 8px;
-    background-color: #88B;
-    border: 1px solid #559;
+    background-color: var(--bg-color-table-header);
+    border: 1px solid var(--border-color-table-header);
     border-radius: 2px;
 }
 
@@ -297,13 +327,13 @@ td.nopad {
 }
 
 .fail {
-    border: 2px solid #A22;
-    background-color: #F44;
+    border: 2px solid var(--border-color-error);
+    background-color: var(--bg-color-error);
 }
 
 .success {
-    border: 2px solid #44A;
-    background-color: #66F;
+    border: 2px solid var(--border-color-success);
+    background-color: var(--bg-color-success);
 }
 
 h3 {
@@ -326,7 +356,6 @@ h3 {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    height: 16px;
     vertical-align: middle;
     height: 27px;
 }
@@ -347,20 +376,20 @@ h3 {
   left: 0;
   height: 25px;
   width: 25px;
-  background-color: #666;
-  border: 1px solid #888;
+  background-color: var(--bg-color-checkbox-off);
+  border: 1px solid var(--border-color-checkbox-off);
   border-radius: 6px;
 }
 
 /* On mouse-over, add a background color */
 .checkmarkcontainer:hover input ~ .checkmark {
-  background-color: #66a;
+  background-color: var(--bg-color-main);
 }
 
 /* When the checkbox is checked, add a blue background */
 .checkmarkcontainer input:checked ~ .checkmark {
-  background-color: #2196F3;
-  background-image: linear-gradient(#2196F3, #0156B3);
+  background-color: var(--bg-color-success);
+  background-image: linear-gradient(var(--bg-color-success), var(--border-color-success));
 }
 
 /* Create the checkmark/indicator (hidden when not checked) */
@@ -380,7 +409,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]+label {
-    border: 1px solid #558;
+    border: 1px solid var(--border-color-success);
     border-radius: 6px;
     height: 25px;
     padding: 0px 8px;
@@ -389,9 +418,9 @@ input[type="radio"]+label {
 
 input[type="radio"]:checked+label {
     font-weight: bold;
-    background-color: #2196F3;
-    background-image: linear-gradient(#2196F3, #0156B3);
-    color: white;
+    background-color: var(--bg-color-success);
+    background-image: linear-gradient(var(--bg-color-success), var(--border-color-success));
+    color: var(--text-color-body);
 }
 
 
@@ -460,7 +489,7 @@ div.randompicture-inner {
     border: 1px solid var(--text-color-body);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 3px 3px 4px 0px black;
+    box-shadow: 3px 3px 4px 0 black;
     animation: fadeIn 1s;
 }
 
@@ -473,7 +502,6 @@ div.randompicture div.mapnumber {
     padding: 4px;
     border-radius: 8px;
     left: 8px;
-}
 }
 
 @keyframes fadeIn {
@@ -494,25 +522,28 @@ button.property-enabled {background-image: url("/img/lightbulb.png");   }
 
 .map_length {
   display: inline-block;
-  Background-color: #44F;
-  Border: 1px solid #22D;
-  Border-radius: 8px;
-  Width: 16px;
+    background-color: var(--bg-color-map-length);
+    background-image: linear-gradient(var(--bg-color-map-length), var(--border-color-map-length));
+    border: 1px solid var(--border-color-map-length);
+    border-radius: 8px;
+    width: 16px;
 }
 
 .map_difficulty {
-  display: inline-block;
-  Background-color: #900;
-  Border: 1px solid #700;
-  Border-radius: 8px;
-  Width: 16px;
+    display: inline-block;
+    background-color: var(--bg-color-map-difficulty);
+    background-image: linear-gradient(var(--bg-color-map-difficulty), var(--border-color-map-difficulty));
+    border: 1px solid var(--border-color-map-difficulty);
+    border-radius: 8px;
+    width: 16px;
 }
 
 .map_property {
     display: inline-block;
-    Background-color: #090;
-    Border: 1px solid #070;
-    Border-radius: 8px;
+    background-color: var(--bg-color-map-property);
+    background-image: linear-gradient(var(--bg-color-map-property), var(--border-color-map-property));
+    border: 1px solid var(--border-color-map-property);
+    border-radius: 8px;
     padding: 0 4px;
 }
 
@@ -522,6 +553,6 @@ button.property-enabled {background-image: url("/img/lightbulb.png");   }
 }
 
 table.maps_table td.reservednumspan {
-    Background-color: #333;
-    Border: 1px solid #111;
+    background-color: var(--bg-color-header);
+    border: 1px solid var(--border-color-header);
 }

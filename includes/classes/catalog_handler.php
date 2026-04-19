@@ -74,7 +74,10 @@ class Catalog_Handler {
         }
         return $map->locked;
     }
-    
+
+    /**
+     * @return RampMap[]
+     */
     public function get_catalog(): array
     {
         return $this->catalog;
