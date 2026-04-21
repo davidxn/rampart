@@ -34,8 +34,7 @@ class Catalog_Handler {
     
     public function get_next_available_slot(): int
     {
-
-        $max_slot = max(array_keys($this->catalog));
+        $max_slot = $this->catalog ? max(array_keys($this->catalog)) : 0;
         return $max_slot + 1;
     }
     
@@ -64,8 +63,8 @@ class Catalog_Handler {
         return null;
     }
     
-    public function get_map_by_ramp_id($rampId): RampMap {
-        return $this->catalog[$rampId];
+    public function get_map_by_ramp_id($rampId): ?RampMap {
+        return $this->catalog[$rampId] ?? null;
     }
     
     public function is_map_locked($rampId): bool {
@@ -75,7 +74,10 @@ class Catalog_Handler {
         }
         return $map->locked;
     }
-    
+
+    /**
+     * @return RampMap[]
+     */
     public function get_catalog(): array
     {
         return $this->catalog;
@@ -108,10 +110,6 @@ class Catalog_Handler {
     
     public function change_pin($rampId, $new_pin): bool {
         $new_pin = strtoupper($new_pin);
-        //A map PIN must be unique, check the list first
-        if (isset($this->pinsToRampIds[$new_pin])) {
-            return false;
-        }
         $this->catalog[$rampId]->pin = $new_pin;
         $this->save_catalog();
         return true;

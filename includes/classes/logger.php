@@ -3,14 +3,15 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php')
 
 class Logger {
     
-    private static $me = null;
-    private $txid = 0;
+    private static ?Logger $me = null;
+    private int $txid;
     
     private function __construct() {
         $this->txid = rand(10000,99999);
     }
     
-    public static function get_instance() {
+    public static function get_instance(): Logger
+    {
         if (self::$me == null) {
             self::$me = new Logger();
         }
@@ -18,14 +19,14 @@ class Logger {
     }
     
     //Normal log file
-    public static function lg($string) {
+    public static function lg($string): void {
         $logger = self::get_instance();
         $time = date("F d Y H:i:s", time());
         file_put_contents(LOG_FILE, $time . " " . $logger->txid . " " . $string . PHP_EOL, FILE_APPEND);
     }
     
     //PK3 generation log
-    public static function pg($string, $map_number = 0, $is_error = false) {
+    public static function pg($string, $map_number = 0, $is_error = false): void {
         $logger = self::get_instance();
         $time = date("F d Y H:i:s", time());
         $log_line = $time . " " . $logger->txid . " " . $string . PHP_EOL;
@@ -40,18 +41,18 @@ class Logger {
     }
     
     //Individual map generation files
-    public static function clear_pk3_log() {
+    public static function clear_pk3_log(): void {
         @unlink(PK3_GEN_LOG_FILE);
         @mkdir(PK3_GEN_LOG_FOLDER, 0777, true);
         $logfiles = scandir(PK3_GEN_LOG_FOLDER);
         foreach ($logfiles as $logfile) {
-            if (substr($logfile, 0, 10) == "rampartlog") {
+            if (str_starts_with($logfile, "rampartlog")) {
                 @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . $logfile);
             }
         }
     }
     
-    public static function clear_log_for_map($map_number) {
+    public static function clear_log_for_map($map_number): void {
         @mkdir(PK3_GEN_LOG_FOLDER, 0777, true);
         @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".log");
         @unlink(PK3_GEN_LOG_FOLDER . DIRECTORY_SEPARATOR . "rampartlog" . $map_number . ".err");
@@ -94,9 +95,9 @@ class Logger {
         return $log_link;
     }
     
-    public static function save_build_info($data, $lump_guardian) {
-        $data['global_ambient_list'] = $lump_guardian->global_ambient_list;
-        $json = json_encode($data);
+    public static function save_build_info($projectBuildData, $lump_guardian): void
+    {
+        $json = json_encode($projectBuildData);
         @file_put_contents(WORK_FOLDER . DIRECTORY_SEPARATOR . "buildinfo.log", $json);
     }
 }

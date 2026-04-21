@@ -84,16 +84,17 @@ class Lzss
 }
 
 class Wad_Handler {
-    
-    public $txid = null;
-    
-    public $map_lump_names = ['TEXTMAP', 'THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS', 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 'BEHAVIOR', 'SCRIPTS', 'DIALOGUE', 'ZNODES', 'ENDMAP'];
+
+    public array $map_lump_names = ['TEXTMAP', 'THINGS', 'LINEDEFS', 'SIDEDEFS', 'VERTEXES', 'SEGS', 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 'BEHAVIOR', 'SCRIPTS', 'DIALOGUE', 'ZNODES', 'ENDMAP'];
 
     public $wad_file = null;
     public $identification = null;
     public $numlumps = 0;
     public $infotable_offset = 0;
-    public $lumps = [];
+    /**
+     * @var Lump[]
+     */
+    public array $lumps = [];
 
     public function __construct($file_name = null, $load_data = true, $parse_map_lumps = false) {
         if ($file_name) {
@@ -101,7 +102,8 @@ class Wad_Handler {
         }
     }
 
-    public function load_wad($wad_file, $load_data = true, $parse_map_lumps = false) {
+    public function load_wad($wad_file, $load_data = true, $parse_map_lumps = false): bool
+    {
         if (!file_exists($wad_file)) {
             return false;
         }
@@ -116,28 +118,29 @@ class Wad_Handler {
             $lump_start_pos = $this->read_bytes(4, 'int');
             $lump_size = $this->read_bytes(4, 'int');
             list($lump_compressed, $lump_name) = $this->read_lump_name();
-            $this->lumps[] = ['name' => $lump_name, 'size' => $lump_size, 'position' => $lump_start_pos, 'compressed' => $lump_compressed];
+            $this->lumps[] = new Lump($lump_name, $lump_size, $lump_start_pos, $lump_compressed);
         }
         
         //We've got the lumps! Let's try to identify them, then put their bytes in our array
         if ($load_data) {
             for ($i = 0; $i < $this->numlumps; $i++) {
-                $nextLump = (isset($this->lumps[$i+1]) ? $this->lumps[$i+1] : null);
+                $nextLump = ($this->lumps[$i + 1] ?? null);
                 
                 try {
-                    $this->lumps[$i]['data'] = $this->read_lump($this->lumps[$i], $nextLump);
-                    $this->lumps[$i]['load_error'] = false;
+                    $this->lumps[$i]->data = $this->read_lump($this->lumps[$i], $nextLump);
+                    $this->lumps[$i]->hasLoadError = false;
                 } catch (Exception $e) {
                     // Allow the lump to fail to load, but announce that error in the log
-                    $this->lumps[$i]['data'] = "";
-                    $this->lumps[$i]['load_error'] = true;
+                    $this->lumps[$i]->data = "";
+                    $this->lumps[$i]->hasLoadError = true;
+                    Logger::pg("Failed to load data for lump " . $this->lumps[$i]->name . " in " . $wad_file . ": " . $e->getMessage());
                     continue;
                 }
 
                 $type = $this->identify_lump($this->lumps[$i], $nextLump);
-                $this->lumps[$i]['type'] = $type;
+                $this->lumps[$i]->type = $type;
                 if ($parse_map_lumps) {
-                    $this->lumps[$i]['parsed'] = $this->parse_lump($this->lumps[$i]);
+                    $this->lumps[$i]->parsedData = $this->parse_lump($this->lumps[$i]);
                 }
             }
         }
@@ -145,16 +148,16 @@ class Wad_Handler {
         return true;
     }
     
-    public function read_lump($lump, $nextLump) {
-        fseek($this->wad_file, $lump['position']);
+    public function read_lump(Lump $lump, ?Lump $nextLump) {
+        fseek($this->wad_file, $lump->position);
 
-        $size = $lump['size'];
+        $size = $lump->size;
 
         if ($size == 0) {
             return "";
         }
 
-        if (!$lump['compressed']) {
+        if (!$lump->compressed) {
             return $this->read_bytes($size);
         }
 
@@ -163,7 +166,7 @@ class Wad_Handler {
         // lump in a wad cannot be compressed, and is recommended
         // to be a marker of some kind.
         if ($nextLump) {
-            $size = $nextLump['position'] - $lump['position'];
+            $size = $nextLump->position - $lump->position;
         } else {
             throw new Exception("Last compressed lump must be followed by a non-compressed lump (e.g. a marker)");
         }
@@ -172,89 +175,68 @@ class Wad_Handler {
         // since the resulting data will be DEFLATEd into a PK3, which
         // will be stronger overall compression.
         $compressed = $this->read_bytes($size);
-        $decompressed = [];
+        $decompressed = "";
 
-        Lzss::decompress($compressed, $decompressed, $lump['size']);
+        Lzss::decompress($compressed, $decompressed, $lump->size);
 
         return $decompressed;
     }
     
-    public function identify_lump($lump, $nextlump) {
+    public function identify_lump(Lump $lump, ?Lump $next_lump): string
+    {
         //Check for map data by name
-        if (in_array($lump['name'], $this->map_lump_names)) {
+        if (in_array($lump->name, $this->map_lump_names)) {
             return 'mapdata';
         }
         //DECORATE or ZSCRIPT?
-        if (in_array($lump['name'], ['DECORATE', 'ZSCRIPT'])) {
-            return strtolower($lump['name']);
+        if (in_array($lump->name, ['DECORATE', 'ZSCRIPT'])) {
+            return strtolower($lump->name);
         }            
         //Could be a MAPINFO
-        if (in_array($lump['name'], ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
+        if (in_array($lump->name, ['MAPINFO', 'ZMAPINFO', 'UMAPINFO'])) {
             return 'mapinfo';
         }
-        if (in_array($lump['name'], ['SNDINFO', 'SNDSEQ', 'TEXTURES', 'TEXTURE1', 'TEXTURE2', 'PNAMES', 'GLDEFS', 'LOCKDEFS'])) {
-            return strtolower($lump['name']);
+        if (in_array($lump->name, ['SNDINFO', 'SNDSEQ', 'TEXTURES', 'TEXTURE1', 'TEXTURE2', 'PNAMES', 'GLDEFS', 'LOCKDEFS'])) {
+            return strtolower($lump->name);
         }
         
         //If the length is 0 it's just a marker. If the next lump is either TEXTMAP or THINGS it's a map.
-        if ($lump['size'] == 0) {
+        if ($lump->size == 0) {
             $type = 'marker';
-            if ($nextlump && in_array($nextlump['name'], ['TEXTMAP', 'THINGS'])) {
+            if ($next_lump && in_array($next_lump->name, ['TEXTMAP', 'THINGS'])) {
                 $type = 'mapmarker';
             }
             return $type;
         }
         //If the first four bytes match the music signatures, identify those
-        if ($lump['size'] >= 4) {
-            fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 0, 4);
-            if ($string == 'MThd') {
-                return 'midi';
-            }
-            if ($string == 'OggS') {
-                return 'ogg';
-            }
-            if ($string == 'IMPM' || $string == 'Exte') {
-                return 'module';
-            }
-            if ($string == 'fLaC') {
-                return 'flac';
-            }
-            if ($string == "MUS\x1A") {
-                return 'mus';
-            }
-            if ($string == "\x89\x50\x4E\x47") {
-                return 'image';
-            }
-            if ($string == "FON2") {
-                return 'font';
-            }
-        }
-        if ($lump['size'] >= 3) {
-            fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 0, 3);
-            if ($string == 'ID3' || substr($string, 0, 2) == "\xFF\xFB") {
-                return 'mp3';
-            }
-            if ($string == "\xFF\xD8\xFF") {
-                return 'image';
-            }
-        }
-        //S3M files have their signature at position 44...
-        if ($lump['size'] >= 48) {
-            fseek($this->wad_file, $lump['position']);
-            $string = $this->read_data_str($lump, 44, 4);
-            if ($string == 'SCRM') {
-                return 'module';
-            }
-        }
+        if ($this->lumpDataContains($lump, 0, 'MThd')) { return 'midi'; }
+        if ($this->lumpDataContains($lump, 0, 'OggS')) { return 'ogg'; }
+        if ($this->lumpDataContains($lump, 0, 'IMPM')) { return 'module'; }
+        if ($this->lumpDataContains($lump, 0, 'Exte')) { return 'module'; }
+        if ($this->lumpDataContains($lump, 44, 'SCRM')) { return 'module'; }
+        if ($this->lumpDataContains($lump, 0, 'fLaC')) { return 'flac'; }
+        if ($this->lumpDataContains($lump, 0, 'MUS\x1A')) { return 'mus'; }
+        if ($this->lumpDataContains($lump, 0, '\x89\x50\x4E\x47')) { return 'image'; }
+        if ($this->lumpDataContains($lump, 0, '\xFF\xD8\xFF')) { return 'image'; }
+        if ($this->lumpDataContains($lump, 0, 'FON2')) { return 'font'; }
+        if ($this->lumpDataContains($lump, 0, 'ID3')) { return 'mp3'; }
+        if ($this->lumpDataContains($lump, 0, '\xFF\xFB')) { return 'mp3'; }
         return 'unknown';
     }
+
+    private function lumpDataContains($lump, $startPosition, $dataToMatch): bool {
+        if (strlen($lump->data) - $startPosition < strlen($dataToMatch)) {
+            return false;
+        }
+        fseek($this->wad_file, $lump->position);
+        $stringFromLump = $this->read_data_str($lump, $startPosition, strlen($dataToMatch));
+        return ($stringFromLump == $lump->data);
+    }
     
-    public function parse_lump($lump) {
+    public function parse_lump(Lump $lump): array {
         $parsed_array = [];
-        $bytes = $lump['data'];
-        if ($lump['name'] == 'THINGS') {
+        $bytes = $lump->data;
+        if ($lump->name == 'THINGS') {
             for ($i = 0; $i < strlen($bytes); $i += 10) {
                 $thing = [];
                 $entry = substr($bytes, $i, 10);
@@ -300,7 +282,7 @@ class Wad_Handler {
             return "";
         }
         
-        return substr($lump['data'], $start, $num);
+        return substr($lump->data, $start, $num);
     }
 
     public function read_lump_name() {
@@ -327,51 +309,54 @@ class Wad_Handler {
         return array($compressed, $str);
     }
     
-    public function wad_info() {
+    public function wad_info(): string
+    {
         $info = ($this->identification . ' with ' . $this->numlumps . ' lumps, and directory at ' . $this->infotable_offset . PHP_EOL);
         foreach ($this->lumps as $lump) {
-            $sizeStr = sprintf("%' 12d", $lump['size']);
+            $sizeStr = sprintf("%' 12d", $lump->size);
 
-            if ($lump['compressed']) {
-                $sizeStr = sprintf("%' 11d", $lump['size']) . "*";
+            if ($lump->compressed) {
+                $sizeStr = sprintf("%' 11d", $lump->size) . "*";
             }
 
-            $info .= sprintf("%' 9s", $lump['name']) . sprintf("%' 10s", $lump['type']) . sprintf("%' 12d", $lump['position']) . $sizeStr;
+            $info .= sprintf("%' 9s", $lump->name) . sprintf("%' 10s", $lump->type) . sprintf("%' 12d", $lump->position) . $sizeStr;
             $info .= PHP_EOL;
         }
         return $info;
     }
     
-    public function add_lump($lump) {
+    public function add_lump($lump): void
+    {
         $this->lumps[] = $lump;
         $this->numlumps++;
     }
     
-    public function count_lumps() {
+    public function count_lumps(): int
+    {
         return count($this->lumps);
     }
     
-    public function get_lump_for_map($mapname, $lumpname) {
+    public function get_lump_for_map($mapName, $lumpName) {
         $i = 0;
-        $foundmap = "";
-        $foundlump = null;
-        while ($foundmap == "") {
-            $examinedlump = $this->lumps[$i]['name'];
-            if ($examinedlump == $mapname) {
-                $foundmap = $mapname;
+        $foundMap = "";
+        $foundLump = null;
+        while ($foundMap == "") {
+            $examinedLump = $this->lumps[$i]->name;
+            if ($examinedLump == $mapName) {
+                $foundMap = $mapName;
             }
             $i++;
         }
-        if (!$foundmap) {
+        if (!$foundMap) {
             return false;
         }
 
-        while ($foundlump == null) {
-            $examinedlump = $this->lumps[$i]['name'];
-            if ($examinedlump == $lumpname) {
+        while ($foundLump == null) {
+            $examinedLump = $this->lumps[$i]->name;
+            if ($examinedLump == $lumpName) {
                 return $this->lumps[$i];
             }
-            if (!in_array($examinedlump, $this->map_lump_names)) {
+            if (!in_array($examinedLump, $this->map_lump_names)) {
                 return false;
             }
         }
@@ -379,11 +364,12 @@ class Wad_Handler {
         return false;
     }
     
-    public function get_map_markers() {
+    public function get_map_markers(): array
+    {
         $mapmarkers = [];
         foreach ($this->lumps as $lump) {
-            if ($lump['type'] == 'mapmarker') {
-                $mapmarkers[] = $lump['name'];
+            if ($lump->type == 'mapmarker') {
+                $mapmarkers[] = $lump->name;
             }
         }
         return $mapmarkers;
@@ -398,11 +384,11 @@ class Wad_Handler {
         $lumps_bytes = "";
         $directory_bytes = "";
         foreach($this->lumps as $lump) {
-            $lumps_bytes .= $lump['data'];
-            $lump['size'] = strlen($lump['data']); //Recalculate size of lump
-            $new_directory_bytes = pack("L", (12 + $total_lump_size)) . pack("L", $lump['size']) . str_pad($lump['name'], 8, "\x00");
+            $lumps_bytes .= $lump->data;
+            $lump->size = strlen($lump->data); //Recalculate size of lump
+            $new_directory_bytes = pack("L", (12 + $total_lump_size)) . pack("L", $lump->size) . str_pad($lump->name, 8, "\x00");
             $directory_bytes .= $new_directory_bytes;
-            $total_lump_size += $lump['size'];
+            $total_lump_size += $lump->size;
         }
         
         //Create our header!
@@ -420,21 +406,27 @@ class Wad_Handler {
         return $bytes_written;
     }
     
-    public function get_lump($lumpname) {
-        $lumpname = strtolower($lumpname);
+    public function get_lump($lumpName): ?Lump
+    {
+        $lumpName = strtolower($lumpName);
         foreach ($this->lumps as $lump) {
-            if (strtolower($lump['name']) == $lumpname) {
+            if (strtolower($lump->name) == $lumpName) {
                 return $lump;
             }
         }
         return null;
     }
-    
-    public function get_lumps($lumpname) {
+
+    /**
+     * @param $lumpName
+     * @return Lump[]
+     */
+    public function get_lumps($lumpName): array
+    {
         $lumps = [];
-        $lumpname = strtolower($lumpname);
+        $lumpName = strtolower($lumpName);
         foreach ($this->lumps as $lump) {
-            if (strtolower($lump['name']) == $lumpname) {
+            if (strtolower($lump->name) == $lumpName) {
                 $lumps[] = $lump;
             }
         }

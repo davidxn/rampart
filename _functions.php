@@ -97,3 +97,12 @@ function clean_numeric(string $string, int $length = 0): string {
     }
     return $string;
 }
+
+function strip_quotes($string): string {
+    $string = trim($string);
+    return str_replace(["\"", "'"], "", $string);
+}
+
+function trim_and_lowercase($str) {
+    return strtolower(trim($str));
+}

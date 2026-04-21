@@ -27,12 +27,13 @@ class RampMap implements JsonSerializable
         $this->rampId = $rampId;
         foreach ($data as $property => $value) {
             if (property_exists($this, $property)) {
+                if (gettype($this->$property) == 'integer' && !is_numeric($value)) { $value = 0; }
                 $this->$property = $value;
             }
         }
     }
 
-    public function jsonSerialize(): mixed
+    public function jsonSerialize(): array
     {
         return [
             'author' => $this->author,
