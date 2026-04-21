@@ -142,7 +142,8 @@ class ProjectBuildData implements JsonSerializable
             'spawnNums' => $this->spawnNums,
             'rejectedDoomEdNums' => $this->rejectedDoomEdNums,
             'rejectedSpawnNums' => $this->rejectedSpawnNums,
-            'mapsWithRejectedScripts' => $this->rampIdsWithRejectedScripts
+            'mapsWithRejectedScripts' => $this->rampIdsWithRejectedScripts,
+            'globalAmbientList' => $this->lumpRegistry->global_ambient_list
         ];
     }
 }

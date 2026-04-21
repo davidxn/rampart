@@ -21,8 +21,8 @@ ksort($successful_dnums);
 $rejected_dnums = $build_info['rejectedDoomEdNums'];
 ksort($rejected_dnums);
 
-//$ambients = $build_info['global_ambient_list'];
-//ksort($ambients);
+$ambients = $build_info['globalAmbientList'];
+ksort($ambients);
 ?>
 
 <?php if ($rejected_dnums) { ?>

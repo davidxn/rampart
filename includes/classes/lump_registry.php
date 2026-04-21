@@ -17,9 +17,9 @@ class Lump_Registry {
      * @var ReservedLump[]
      */
     public array $global_texture_list = [];
-    public $global_sound_definition_list = [];
-    public $global_sound_sequence_list = [];
-    public $global_ambient_list = [];
+    public array $global_sound_definition_list = [];
+    public array $global_sound_sequence_list = [];
+    public array $global_ambient_list = [];
     /**
      * @var string[]
      */
