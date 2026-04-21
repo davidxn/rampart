@@ -33,6 +33,10 @@ class RampMap implements JsonSerializable
         }
     }
 
+    public function getMapLink() {
+        return "<a href=\"/maplog.php?id=" . $this->rampId . "\">" . strtoupper($this->lump) . ": " . $this->name . "</a>";
+    }
+
     public function jsonSerialize(): array
     {
         return [

@@ -1,7 +1,7 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
-class Lump_Registry {
+class LumpRegistry implements JsonSerializable {
 
     /**
      * @var ReservedDoomEdNumRange[]
@@ -11,7 +11,12 @@ class Lump_Registry {
     /**
      * @var ReservedLump[]
      */
-    public array $global_lump_list = [];
+    public array $reservedLumps = [];
+
+    /**
+     * @var RejectedLump[]
+     */
+    public array $rejectedLumps = [];
 
     /**
      * @var ReservedLump[]
@@ -24,8 +29,39 @@ class Lump_Registry {
      * @var string[]
      */
     public array $ignore_special_lump_list = ['rampshot', 'rsky1'];
+
+    /**
+     * @var ReservedIdentifier[]
+     */
+    private array $doomEdNums;
+
+    /**
+     * @var ReservedIdentifier[]
+     */
+    private array $spawnNums;
+
+    /**
+     * @var RejectedIdentifier[]
+     */
+    private array $rejectedDoomEdNums;
+
+    /**
+     * @var RejectedIdentifier[]
+     */
+    private array $rejectedSpawnNums;
+
+    /**
+     * @var int[]
+     */
+    private array $rampIdsWithRejectedScripts;
     
     public function __construct() {
+        $this->doomEdNums = [];
+        $this->spawnNums = [];
+        $this->rejectedDoomEdNums = [];
+        $this->rejectedSpawnNums = [];
+        $this->rampIdsWithRejectedScripts = [];
+
         $this->set_up_reserved_ranges();
         $this->add_doom2_lumps();
         $this->add_doom2_sound_definitions();
@@ -51,6 +87,35 @@ class Lump_Registry {
         }
         return null;
     }
+
+    private function addDoomEdNum($number, $rampId, $className) {
+        $this->doomEdNums[$number] = new ReservedIdentifier($number, $rampId, $className);
+    }
+
+    private function addSpawnNum($number, $rampId, $className) {
+        $this->spawnNums[$number] = new ReservedIdentifier($number, $rampId, $className);
+    }
+
+    private function addRejectedDoomEdNum($number, $owningRampId, $attemptingRampId, $className) {
+        $this->rejectedDoomEdNums[$number] = new RejectedIdentifier($number, $owningRampId, $attemptingRampId, $className);
+    }
+
+    private function addRejectedSpawnNum($number, $owningRampId, $attemptingRampId, $className) {
+        $this->rejectedSpawnNums[$number] = new RejectedIdentifier($number, $owningRampId, $attemptingRampId, $className);
+    }
+
+    public function addRejectedScript($attemptingRampId) {
+        $this->rampIdsWithRejectedScripts[] = $attemptingRampId;
+    }
+
+    public function getDoomEdNum($number) {
+        return $this->doomEdNums[$number] ?? null;
+    }
+
+    public function getSpawnNum($number) {
+        return $this->spawnNums[$number] ?? null;
+    }
+
     
     public function add_ambients($requested_ambients, $map_number) {
         foreach ($requested_ambients as $index => $definition) {
@@ -178,32 +243,101 @@ class Lump_Registry {
         }
         return ['success' => $success, 'cleaned_data' => $final_sndseq_data];
     }
+
+    public function reserveDoomEdNumber($number, $rampId, $className): bool
+    {
+        $detected_doomed_num_range = $this->getRangeForDoomEdNum($number);
+        if ($detected_doomed_num_range) {
+            Logger::pg("❌ DoomedNum conflict: " . $number . " for " . $className . " is in reserved range " . $detected_doomed_num_range->toString() . ", see the Build Info page - rejecting it", $rampId, true);
+            $this->addRejectedDoomEdNum($number, 0, $rampId, $className);
+            return false;
+        }
+
+        $alreadyReservedDoomEdNumber = $this->getDoomEdNum($number);
+
+        if ($alreadyReservedDoomEdNumber) {
+            if (strtolower($className) != strtolower($alreadyReservedDoomEdNumber->className)) {
+                Logger::pg("❌ DoomedNum conflict: " . $number . " for " . $className . " already refers to " . $alreadyReservedDoomEdNumber->className . " from map " . $alreadyReservedDoomEdNumber->ownerRampId . ", rejecting it", $rampId, true);
+                $this->addRejectedDoomEdNum($number, $alreadyReservedDoomEdNumber->ownerRampId, $rampId, $className);
+                return false;
+            }
+            Logger::pg("⚠️ DoomedNum " . $number . " is already defined for " . $className . " in map " . $alreadyReservedDoomEdNumber->ownerRampId . ". Skipping it, but not considering it an error", $rampId);
+            return true;
+        }
+        $this->addDoomEdNum($number, $rampId, $className);
+        Logger::pg("Reserved DoomEdNum " . $number . " = " . $className, $rampId);
+        return true;
+    }
+
+    public function reserveSpawnNumber($number, $rampId, $className): bool
+    {
+        $alreadyReservedSpawnNumber = $this->getSpawnNum($number);
+        if ($alreadyReservedSpawnNumber) {
+            if (strtolower($className) != strtolower($alreadyReservedSpawnNumber->number)) {
+                Logger::pg("❌ Spawnnum conflict: " . $number . " for " . $className . " already refers to " . $alreadyReservedSpawnNumber->className . " from map " . $alreadyReservedSpawnNumber->ownerRampId . ", rejecting it", $rampId, true);
+                $this->addRejectedSpawnNum($number, $alreadyReservedSpawnNumber->ownerRampId, $rampId, $className);
+                return false;
+            }
+            Logger::pg("⚠️ Spawnnum " . $number . " is already defined for " . $className . " in map " . $alreadyReservedSpawnNumber->ownerRampId . ". Skipping it, but not considering it an error", $rampId);
+            return true;
+        }
+        $this->addSpawnNum($number, $rampId, $className);
+        Logger::pg("Reserved Spawnnum " . $number . " = " . $className, $rampId);
+        return true;
+    }
+
+    public function mapHasRejectedScript($rampId): bool
+    {
+        return (bool) ($this->rampIdsWithRejectedScripts[$rampId] ?? false);
+    }
+
+    public function hasDoomEdNumbers(): bool
+    {
+        return count($this->doomEdNums) > 0;
+    }
+
+    public function hasSpawnNumbers(): bool
+    {
+        return count($this->spawnNums) > 0;
+    }
+
+    public function getDoomEdNumbers(): array
+    {
+        return $this->doomEdNums;
+    }
+
+    public function getSpawnNumbers(): array
+    {
+        return $this->spawnNums;
+    }
     
-    private function add_lump_to_global_list($lump_name, $data_hash, $owning_map_ramp_id): bool
+    private function add_lump_to_global_list($lump_name, $data_hash, $attemptingMapRampId): bool
     {
         if (empty($lump_name)) { return false; }
 
         $lump_name = strtolower($lump_name);
 
         //If we have no lump by this name recorded, add it
-        if (!isset($this->global_lump_list[$lump_name])) {
-            $this->global_lump_list[$lump_name] = new ReservedLump($lump_name, $owning_map_ramp_id, $data_hash);
+        if (!isset($this->reservedLumps[$lump_name])) {
+            $this->reservedLumps[$lump_name] = new ReservedLump($lump_name, $attemptingMapRampId, $data_hash);
             return true;
         }
         //We already had a lump with this name. Look to see if it belongs to our base resources or a map, and if it's identical to the existing one
         //IWAD overwrites are never allowed
-        if ($this->global_lump_list[$lump_name]->ownerRampId == ReservedLump::LUMP_OWNER_IWAD) {
-            Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_BASE', [$lump_name]), $owning_map_ramp_id, true);
+        if ($this->reservedLumps[$lump_name]->ownerRampId == ReservedLump::LUMP_OWNER_IWAD) {
+            $this->rejectedLumps[] = new RejectedLump($lump_name, $this->reservedLumps[$lump_name]->ownerRampId, $attemptingMapRampId, $data_hash);
+            Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_BASE', [$lump_name]), $attemptingMapRampId, true);
             return false;
         }
         
         //If the hash matches, notify but don't count as error
-        $existing_hash = $this->global_lump_list[$lump_name]->definition;
+        $existing_hash = $this->reservedLumps[$lump_name]->definition;
         if ($existing_hash == $data_hash) {
-            Logger::pg(get_error_link('WARN_LUMP_DUPLICATE_OTHER', [$lump_name, $this->global_lump_list[$lump_name]->ownerRampId]), $owning_map_ramp_id);
+            Logger::pg(get_error_link('WARN_LUMP_DUPLICATE_OTHER', [$lump_name, $this->reservedLumps[$lump_name]->ownerRampId]), $attemptingMapRampId);
             return true;
         }
-        Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_OTHER', [$lump_name, $this->global_lump_list[$lump_name]->ownerRampId]), $owning_map_ramp_id, true);
+        $this->rejectedLumps[] = new RejectedLump($lump_name, $this->reservedLumps[$lump_name]->ownerRampId, $attemptingMapRampId, $data_hash);
+        Logger::pg(get_error_link('ERR_LUMP_DUPLICATE_OTHER', [$lump_name, $this->reservedLumps[$lump_name]->ownerRampId]), $attemptingMapRampId, true);
         return false;
     }
     
@@ -280,6 +414,19 @@ class Lump_Registry {
             new ReservedDoomEdNumRange(14001 ,14067,"Sound objects"),
             new ReservedDoomEdNumRange(14101 ,14165,"Music changers"),
             new ReservedDoomEdNumRange(32000 ,32000,"Doom Builder Camera")
+        ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'doomEdNums' => $this->doomEdNums,
+            'spawnNums' => $this->spawnNums,
+            'rejectedDoomEdNums' => $this->rejectedDoomEdNums,
+            'rejectedSpawnNums' => $this->rejectedSpawnNums,
+            'mapsWithRejectedScripts' => $this->rampIdsWithRejectedScripts,
+            'globalAmbientList' => $this->global_ambient_list,
+            'rejectedLumps' => $this->rejectedLumps,
         ];
     }
 

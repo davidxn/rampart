@@ -6,19 +6,18 @@ class Project_Compiler {
     public array $map_additional_mapinfo = [];
 
     public Music_Lump_Mapper $music_lump_mapper;
-    public Lump_Registry $lump_guardian;
-    public ProjectBuildData $project_build_data;
+    public LumpRegistry $lumpRegistry;
+
     public Catalog_Handler $catalog_handler;
     public Build_Numberer $build_numberer;
     
     private string $decorate_id_number_prefix = "DECORATE class:";
 
     public function __construct() {
-        $this->lump_guardian = new Lump_Registry();
+        $this->lumpRegistry = new LumpRegistry();
         $this->catalog_handler = new Catalog_Handler();
         $this->build_numberer = new Build_Numberer();
         $this->music_lump_mapper = new Music_Lump_Mapper();
-        $this->project_build_data = new ProjectBuildData($this->lump_guardian);
     }
 
     function compile_project($prepare_file = true): bool {
@@ -31,7 +30,7 @@ class Project_Compiler {
             $spawn_num = strtolower(trim($elements[0]));
             $classname = strtolower(trim($elements[1]));
             if ($classname != "") {
-                $this->project_build_data->reserveSpawnNumber($spawn_num, 0, $classname);
+                $this->lumpRegistry->reserveSpawnNumber($spawn_num, 0, $classname);
             }
         }
 
@@ -90,7 +89,7 @@ class Project_Compiler {
         Logger::pg("Project generated in " . $seconds . " seconds, build number " . $new_build_number);
         Logger::record_pk3_generation($start_time, $milestone_times);
         $this->build_numberer->set_new_build_number($new_build_number);
-        Logger::save_build_info($this->project_build_data, $this->lump_guardian);
+        Logger::save_build_info($this->lumpRegistry);
         return true;
     }
 
@@ -226,13 +225,13 @@ class Project_Compiler {
                 $requested_lump_names = $sndinfo_result['requested_lump_names'];
                 $requested_definitions = $sndinfo_result['requested_definitions'];
                 $requested_ambients = $sndinfo_result['requested_ambients'];
-                $ambient_result = $this->lump_guardian->add_ambients($requested_ambients, $map_data->rampId);
+                $ambient_result = $this->lumpRegistry->add_ambients($requested_ambients, $map_data->rampId);
                 if ($ambient_result === false) {
                     Logger::pg("❌ Not importing this SNDINFO", $map_data->rampId, true);
                     continue;
                 }
                 for ($i = 0; $i < count($requested_lump_names); $i++) {
-                    if (!$this->lump_guardian->add_sndinfo_definition($requested_definitions[$i], $requested_lump_names[$i], $map_data->rampId)) {
+                    if (!$this->lumpRegistry->add_sndinfo_definition($requested_definitions[$i], $requested_lump_names[$i], $map_data->rampId)) {
                         Logger::pg("❌ Not importing this SNDINFO", $map_data->rampId, true);
                         continue 2;
                     }
@@ -245,7 +244,7 @@ class Project_Compiler {
             foreach ($wad_handler->lumps as $lump) {
                 if (in_array($lump->name, $sound_lumps_to_extract)) {
                     Logger::pg("🔈 Found " . $lump->name . " mentioned in SNDINFO - assuming it's a sound", $map_data->rampId);
-                    if (!$this->lump_guardian->reserveLump($lump, $map_data->rampId)) {
+                    if (!$this->lumpRegistry->reserveLump($lump, $map_data->rampId)) {
                         continue;
                     }
                     //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
@@ -344,10 +343,10 @@ class Project_Compiler {
                 continue;
             }
             if ($in_zone && $lump->data) {
-                if ($this->lump_guardian->nameIsInSpecialLumpList($lump)) {
+                if ($this->lumpRegistry->nameIsInSpecialLumpList($lump)) {
                     continue;
                 }
-                if (!$this->lump_guardian->reserveLump($lump, $map_data->rampId)) {
+                if (!$this->lumpRegistry->reserveLump($lump, $map_data->rampId)) {
                     continue;
                 }
                 $lump_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . $folder_name . DIRECTORY_SEPARATOR . $map_data->lump . DIRECTORY_SEPARATOR;
@@ -396,7 +395,7 @@ class Project_Compiler {
                 
                 //Another special case - reject TEXTURES if it redefines any existent lumps
                 if ($lump->name == 'TEXTURES') {
-                    $texture_validation_result = $this->lump_guardian->validate_textures($lump->data, $map_data->rampId);
+                    $texture_validation_result = $this->lumpRegistry->validate_textures($lump->data, $map_data->rampId);
                     $lump->data = $texture_validation_result['cleaned_data'];
                     if (!$texture_validation_result['success']) {
                         Logger::pg(get_error_link('ERR_TEX_CONFLICTS'), $map_data->rampId, true);
@@ -404,7 +403,7 @@ class Project_Compiler {
                 }
 
                 if ($lump->name == 'SNDSEQ') {
-                    $sndseq_result = $this->lump_guardian->add_sound_sequences($lump->data, $map_data->rampId);
+                    $sndseq_result = $this->lumpRegistry->add_sound_sequences($lump->data, $map_data->rampId);
                     $lump->data = $sndseq_result['cleaned_data'];
                     if (!$sndseq_result['success']) {
                         Logger::pg(get_error_link('ERR_SOUND_SNDSEQ_CONFLICTS'), $map_data->rampId, true);
@@ -423,7 +422,7 @@ class Project_Compiler {
                             Logger::pg("Couldn't find brightmap " . $bmlumpname . " to import, trusting it's already included", $map_data->rampId);
                             continue;
                         }
-                        if (!$this->lump_guardian->reserveLump($bmlump, $map_data->rampId)) {
+                        if (!$this->lumpRegistry->reserveLump($bmlump, $map_data->rampId)) {
                             continue;
                         }
                         Logger::pg("Adding brightmap " . $bmlumpname . " as a graphic", $map_data->rampId);
@@ -448,7 +447,7 @@ class Project_Compiler {
                 Logger::pg("Wrote " . strlen($lump->data) . " bytes to " . $data_path, $map_data->rampId);
             }
             if ($lump->type == 'font') {
-                if (!$this->lump_guardian->reserveLump($lump, $map_data->rampId)) {
+                if (!$this->lumpRegistry->reserveLump($lump, $map_data->rampId)) {
                     continue;
                 }
                 Logger::pg("💾 Including " . $lump->name . " lump as font", $map_data->rampId);
@@ -526,7 +525,7 @@ class Project_Compiler {
             if (in_array(strtoupper($lump->name), ['DECORATE', 'ZSCRIPT'])) {
                 if (stripos($lump->data, "replaces") !== false) { //Okay, I don't have time to write a proper parser
                     Logger::pg("❌ Found " . $lump->name . " lump but refusing it as it performs replacements!", $map_data->rampId, true);
-                    $this->project_build_data->addRejectedScript($map_data->rampId);
+                    $this->lumpRegistry->addRejectedScript($map_data->rampId);
                     continue;
                 }
                 
@@ -541,10 +540,10 @@ class Project_Compiler {
                         for ($i = 0; $i < count($matches[1]); $i++) {
                             $classname = $matches[1][$i];
                             $doomed_number = $matches[2][$i];
-                            $result = $this->project_build_data->reserveDoomEdNumber($doomed_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
+                            $result = $this->lumpRegistry->reserveDoomEdNumber($doomed_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
                             if (!$result) {
                                 Logger::pg("❌ Found " . $lump->name . " lump but got a DoomEdNum conflict, not including this script", $map_data->rampId, true);
-                                $this->project_build_data->addRejectedScript($map_data->rampId);
+                                $this->lumpRegistry->addRejectedScript($map_data->rampId);
                                 continue 2;
                             }
                         }
@@ -558,10 +557,10 @@ class Project_Compiler {
                         for ($i = 0; $i < count($matches[1]); $i++) {
                             $classname = $matches[1][$i];
                             $spawn_number = $matches[2][$i];
-                            $result = $this->project_build_data->reserveSpawnNumber($spawn_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
+                            $result = $this->lumpRegistry->reserveSpawnNumber($spawn_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
                             if (!$result) {
                                 Logger::pg("❌ Found " . $lump->name . " lump but got a spawnnum conflict, not including this script", $map_data->rampId, true);
-                                $this->project_build_data->addRejectedScript($map_data->rampId);
+                                $this->lumpRegistry->addRejectedScript($map_data->rampId);
                                 continue 2;
                             }
                         }
@@ -608,18 +607,18 @@ class Project_Compiler {
                     continue;
                 }
                 // Doomednums will all be added at the end - put them into a global array as we encounter them
-                if ($this->project_build_data->mapHasRejectedScript($map_data->rampId)) {
+                if ($this->lumpRegistry->mapHasRejectedScript($map_data->rampId)) {
                     Logger::pg("❌ Not importing identifiers because scripts for this map were rejected", $map_data->rampId, true);
                 }
                 else {
                     if (isset($mapinfo_properties['doomednums'])) {
                         foreach($mapinfo_properties['doomednums'] as $number => $classname) {
-                            $this->project_build_data->reserveDoomEdNumber($number, $map_data->rampId, $classname);
+                            $this->lumpRegistry->reserveDoomEdNumber($number, $map_data->rampId, $classname);
                         }
                     }
                     if (isset($mapinfo_properties['spawnnums'])) {
                         foreach($mapinfo_properties['spawnnums'] as $number => $classname) {
-                            $this->project_build_data->reserveSpawnNumber($number, $map_data->rampId, $classname);
+                            $this->lumpRegistry->reserveSpawnNumber($number, $map_data->rampId, $classname);
                         }
                     }
                 }
@@ -799,9 +798,9 @@ class Project_Compiler {
         
         // If custom identifiers were found during WAD creation, add them to the global MAPINFO now
 
-        if ($this->project_build_data->hasDoomEdNumbers()) {
+        if ($this->lumpRegistry->hasDoomEdNumbers()) {
             $mapinfo .= "doomednums {" . PHP_EOL;
-            foreach ($this->project_build_data->getDoomEdNumbers() as $reservedDoomEdNumber) {
+            foreach ($this->lumpRegistry->getDoomEdNumbers() as $reservedDoomEdNumber) {
                 //If this DoomEd number was defined by Decorate, it doesn't need to be included in this list - it will already have been parsed
                 if (str_starts_with($reservedDoomEdNumber->className, $this->decorate_id_number_prefix)) {
                     continue;
@@ -810,9 +809,9 @@ class Project_Compiler {
             }
             $mapinfo .= "}" . PHP_EOL;
         }
-        if ($this->project_build_data->hasSpawnNumbers()) {
+        if ($this->lumpRegistry->hasSpawnNumbers()) {
             $mapinfo .= "spawnnums {" . PHP_EOL;
-            foreach ($this->project_build_data->getSpawnNumbers() as $reservedSpawnNumber) {
+            foreach ($this->lumpRegistry->getSpawnNumbers() as $reservedSpawnNumber) {
                 if (str_starts_with($reservedSpawnNumber->className, $this->decorate_id_number_prefix)) {
                     continue;
                 }

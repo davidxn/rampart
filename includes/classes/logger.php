@@ -95,9 +95,9 @@ class Logger {
         return $log_link;
     }
     
-    public static function save_build_info($projectBuildData, $lump_guardian): void
+    public static function save_build_info(LumpRegistry $lumpRegistry): void
     {
-        $json = json_encode($projectBuildData);
+        $json = json_encode($lumpRegistry);
         @file_put_contents(WORK_FOLDER . DIRECTORY_SEPARATOR . "buildinfo.log", $json);
     }
 }
