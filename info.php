@@ -23,6 +23,8 @@ ksort($rejected_dnums);
 
 $ambients = $build_info['globalAmbientList'];
 ksort($ambients);
+
+$rejected_lumps = $build_info['rejectedLumps'];
 ?>
 
 <?php if ($rejected_dnums) { ?>
@@ -36,12 +38,12 @@ foreach($rejected_dnums as $rejected_dnum_info) {
         $table_string .= "<tr>";
         $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['number'] . "</td>";
         $table_string .= "<td class=\"nopad\">" . $rejected_dnum_info['className'] . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->lump . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->getMapLink() . "</td>";
         $table_string .= "<td class=\"nopad\">" . $rejected_map_data->author . "</td>";
         if ($rejected_dnum_info['ownerRampId'] == ReservedLump::LUMP_OWNER_IWAD) {
             $table_string .= "<td class=\"nopad\" colspan=\"2\">(Base resources)</td>";
         } else {
-            $table_string .= "<td class=\"nopad\">" . $original_map_data->lump . "</td>";
+            $table_string .= "<td class=\"nopad\">" . $original_map_data->getMapLink() . "</td>";
             $table_string .= "<td class=\"nopad\">" . $original_map_data->author . "</td>";
         }
         $table_string .= "</tr>";
@@ -52,6 +54,32 @@ echo ($table_string);
 
 } ?>
 
+<?php if ($rejected_lumps) { ?>
+    <p>Rejected lumps:</p>
+    <?php
+    $table_string = "<table class=\"maps_table\"><thead><tr><th>Lump</th><th>Rejected from map</th><th>By author</th><th>Defined in map</th><th>By author</th></tr></thead><tbody>";
+    foreach($rejected_lumps as $rejected_lump) {
+
+        $original_map_data = $catalog_handler->get_map_by_ramp_id($rejected_lump['ownerRampId']);
+        $rejected_map_data = $catalog_handler->get_map_by_ramp_id($rejected_lump['attemptRampId']);
+        $table_string .= "<tr>";
+        $table_string .= "<td class=\"nopad\">" . strtoupper($rejected_lump['lumpName']) . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->getMapLink() . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $rejected_map_data->author . "</td>";
+        if ($rejected_lump['ownerRampId'] == ReservedLump::LUMP_OWNER_IWAD) {
+            $table_string .= "<td class=\"nopad\" colspan=\"2\">(Base resources)</td>";
+        } else {
+            $table_string .= "<td class=\"nopad\">" . $original_map_data->getMapLink() . "</td>";
+            $table_string .= "<td class=\"nopad\">" . $original_map_data->author . "</td>";
+        }
+        $table_string .= "</tr>";
+    }
+    $table_string .= "</tbody></table>";
+
+    echo ($table_string);
+
+} ?>
+
 <?php if ($successful_dnums) { ?>
 <p>Used DoomEdNums:</p>
 <?php
@@ -59,25 +87,25 @@ $table_string = "<table class=\"maps_table\"><thead><tr><th>DoomEdNum</th><th>Cl
 $highest_num_range_start = -1;
 $reserved_range_pointer = 0;
 
-$lump_registry = new Lump_Registry();
+$reservedDoomEdNumRanges = (new LumpRegistry())->reservedDoomEdNumRanges;
 foreach($successful_dnums as $successful_dnum => $dnum_info) {
 
-	while ($successful_dnum >= $highest_num_range_start && $reserved_range_pointer < count($lump_registry->reservedDoomEdNumRanges)) {
-        $range = $lump_registry->reservedDoomEdNumRanges[$reserved_range_pointer];
+	while ($successful_dnum >= $highest_num_range_start && $reserved_range_pointer < count($reservedDoomEdNumRanges)) {
+        $range = $reservedDoomEdNumRanges[$reserved_range_pointer];
         $rangeDisplay = $range->start . "-" . $range->end;
         if ($range->start == $range->end) {
             $rangeDisplay = $range->start;
         }
 		$table_string .= sprintf("<tr><td class=\"reservednumspan\">%s</td><td class=\"reservednumspan\" colspan=\"4\">%s</td></tr>", $rangeDisplay, $range->name);
 		$reserved_range_pointer++;
-		$highest_num_range_start = $lump_registry->reservedDoomEdNumRanges[$reserved_range_pointer]->start ?? 0;
+		$highest_num_range_start = $reservedDoomEdNumRanges[$reserved_range_pointer]->start ?? 0;
 	}
       
     $map_data = $catalog_handler->get_map_by_ramp_id($dnum_info['ownerRampId']);
     $table_string .= "<tr>";
     $table_string .= "<td class=\"nopad\">" . $successful_dnum . "</td>";
     $table_string .= "<td class=\"nopad\">" . $dnum_info['className'] . "</td>";
-    $table_string .= "<td class=\"nopad\">" . $map_data->lump . "</td>";
+    $table_string .= "<td class=\"nopad\">" . $map_data->getMapLink() . "</td>";
     $table_string .= "<td class=\"nopad\">" . $map_data->author . "</td>";
     $table_string .= "</tr>";
 }
@@ -96,7 +124,7 @@ foreach($ambients as $index => $ambient_info) {
         $map_data = $catalog_handler->get_map_by_ramp_id($ambient_info['map']);
         $table_string .= "<tr>";
         $table_string .= "<td class=\"nopad\">" . $index . "</td>";
-        $table_string .= "<td class=\"nopad\">" . $map_data->lump . "</td>";
+        $table_string .= "<td class=\"nopad\">" . $map_data->getMapLink() . "</td>";
         $table_string .= "<td class=\"nopad\">" . $map_data->author . "</td>";
         $table_string .= "</tr>";
 }
