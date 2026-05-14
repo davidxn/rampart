@@ -29,6 +29,9 @@ class Catalog_Handler {
     }
 
     private function save_catalog(): void {
+        uksort($this->catalog, function ($a, $b) {
+            return intval($a) <=> intval($b);
+        });
         file_put_contents(CATALOG_FILE, json_encode($this->catalog));
     }
     

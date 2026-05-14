@@ -43,7 +43,7 @@ class Upload_Handler {
         if ($pin) {
             $existing_map = $this->validate_pin($pin, $catalog_handler);
             $ramp_id = $existing_map->rampId;
-            $map_lumpname = $existing_map->lump;
+            $map_lump = $existing_map->lump;
             $map_number = $existing_map->mapnum;
         }
         else {
@@ -54,7 +54,7 @@ class Upload_Handler {
                 die();
             }
             $ramp_id = $catalog_handler->get_next_available_slot();
-            $map_lumpname = ($ramp_id < 10 ? ('MAP0' . $ramp_id) : ('MAP' . $ramp_id));
+            $map_lump = ($ramp_id < 10 ? ('MAP0' . $ramp_id) : ('MAP' . $ramp_id));
             $map_number = $ramp_id;
             Logger::lg("Assigning PIN: " . $pin);
             Logger::lg("Assigning RAMP ID and map number: " . $ramp_id);
@@ -82,7 +82,7 @@ class Upload_Handler {
             $ramp_id,
             [
                 'pin' => $pin,
-                'lump' => $map_lumpname,
+                'lump' => $map_lump,
                 'mapnum' => $map_number,
                 'disabled' => 0, // Re-enable a map on reupload
 
