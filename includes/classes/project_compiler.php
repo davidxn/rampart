@@ -67,8 +67,8 @@ class Project_Compiler {
             $this->write_guide_dialogue();
             if (get_setting("GENERATE_MARQUEES")) {
                 $this->set_status("Generating marquee textures...");
-                $generator = new Marquee_Generator();
-                $generator->generate_marquees($this->catalog_handler);
+                $generator = new Marquee_Generator($this->catalog_handler);
+                $generator->includeMarquees();
             }
             file_put_contents(PK3_FOLDER . DIRECTORY_SEPARATOR . "RVERSION", "Build number " . $new_build_number . ", built: " . date("F j, Y, g:i a T", $start_time));
             $milestone_times[] = time() - $start_time; //Generating hub resources
@@ -668,7 +668,7 @@ class Project_Compiler {
                 //This is a screenshot, so include it under the screenshots folder for processing later
                 $lump_folder = WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR;
                 @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . 'RSHOT' . $map_data->rampId;
+                $output_file = $lump_folder . 'RAMPSHOTRAW' . $map_data->rampId;
                 file_put_contents($output_file, $lump->data);
                 Logger::pg("📷 Exported RAMPSHOT picture as " . $output_file, $map_data->rampId);
             }

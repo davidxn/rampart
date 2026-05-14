@@ -12,7 +12,7 @@ class Map_Data_Editor {
 
         if ($field != 'mapInfoString') {
             $value = clean_text($value);
-            if (!$value) {
+            if (!$value && $value !== "0") {
                 echo(json_encode(['success' => false, 'error' => 'No value provided']));
                 die();
             }

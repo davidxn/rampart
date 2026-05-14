@@ -136,6 +136,7 @@ const PK3_GEN_HISTORY_FILE  = WORK_FOLDER . "pk3history.log";
 const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
 const BUILD_INFO_FILE       = WORK_FOLDER . "buildinfo.log";
+const MARQUEE_HASH_FILE     = WORK_FOLDER . "marqueehashes.json";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
 const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads" . DIRECTORY_SEPARATOR;

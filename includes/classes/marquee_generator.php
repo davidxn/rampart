@@ -2,23 +2,35 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
 class Marquee_Generator {
-    
-    public $LETTER_HEIGHT = 8;
-    public $LETTER_WIDTH = 8;
-    public $CHARACTER_MAP = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -':";
-    public $CHARACTER_MAP_MORE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-=_+:,.\"'!@#$%^&*()/? ";
-    public $ZONE_FONTS = [
-        "space" => '../fonts/Robofan Free.otf',
-        "uac" => '../fonts/DOOM.TTF',
-        "castle" => '../fonts/DOMINICA.TTF',
-        "hell" => '../fonts/Frightmare.ttf',
-        "cave" => '../fonts/Berenika-BoldOblique.ttf',
-        "ancient" => '../fonts/MountOlympus.otf',
-        "mystery" => '../fonts/Winsconsin.otf',
-        "city" => '../fonts/transporth.ttf',
-        "none" => '../fonts/F25_Bank_Printer.ttf'
-    ];
-    public $ZONE_IDS = [
+    private string $exo_font = RAMPART_HOME . 'fonts' . DIRECTORY_SEPARATOR . 'EXO2BOLD.OTF';
+    private string $upheaval_font = RAMPART_HOME . 'fonts' . DIRECTORY_SEPARATOR . 'upheavtt.ttf';
+    private string $bannerTemplateImage = DATA_FOLDER . 'bannertemplate.png';
+    private string $tileTemplateImage = DATA_FOLDER . 'tiletemplate.png';
+    private string $tileBackgroundPrefix = DATA_FOLDER . 'tilebg';
+    private string $tileMaskImage = DATA_FOLDER . 'tilemask.png';
+    private string $tileIconPrefix = DATA_FOLDER . 'rzone';
+    private string $maskImage = DATA_FOLDER . 'bannermask.png';
+    private string $ghostMaskImage = DATA_FOLDER . 'ghostmask.png';
+    private string $wedgeDifficulty = DATA_FOLDER . 'wedgedifficulty.png';
+    private string $wedgeLength = DATA_FOLDER . 'wedgelength.png';
+    private string $marqueePatchesFolder = PK3_FOLDER . 'patches' . DIRECTORY_SEPARATOR . 'marquee' . DIRECTORY_SEPARATOR;
+    private string $marqueeGraphicFolder = PK3_FOLDER . 'graphics' . DIRECTORY_SEPARATOR . 'marquee' . DIRECTORY_SEPARATOR;
+    private string $marqueeTexturesFile = PK3_FOLDER . "TEXTURES.marquee";
+
+    private string $screenshotTempFolder = WORK_FOLDER . 'screenshots' . DIRECTORY_SEPARATOR;
+
+    private array $rampIdsToMarqueeHashes = [];
+
+    private const LENGTH_START_X = 733;
+    private const LENGTH_START_Y = 106;
+    private const LENGTH_DIFF_X = 9;
+    private const LENGTH_DIFF_Y = 15;
+    private const DIFFICULTY_START_X = 733;
+    private const DIFFICULTY_START_Y = 398;
+    private const DIFFICULTY_DIFF_X = 9;
+    private const DIFFICULTY_DIFF_Y = -15;
+
+    public array $ZONE_IDS = [
         "space" => 0,
         "uac" => 1,
         "castle" => 2,
@@ -28,181 +40,243 @@ class Marquee_Generator {
         "mystery" => 6,
         "city" => 7,
         "none" => 9
-    ];    
-    
-    function generate_marquees(Catalog_Handler $catalog_handler) {
-        Logger::pg("Generating marquee textures");
-        @mkdir($marquee_folder, 0755, true);
-        
-        $marquee_textures_lump = "";
-        
-        $marquee_textures_template = "
-        Texture \"MARQ@mapnum@\", 620, 620
-        {
-            Patch \"@zonecap@\", 0, 0
-            Patch \"YMARQ@mapnum@\", 0, 173
-            Patch \"RAMPSCRE\", 0, 237
-            @screenshotpatch@
-            Patch \"RAMPSCRB\", 0, 237
+    ];
+
+    private Catalog_Handler $catalog;
+
+    public function __construct(Catalog_Handler $catalog) {
+        $this->catalog = $catalog;
+        if (file_exists(MARQUEE_HASH_FILE)) {
+            $this->rampIdsToMarqueeHashes = json_decode(file_get_contents(MARQUEE_HASH_FILE), true);
         }
-        Texture \"MARX@mapnum@\", 620, 620
-        {
-            Patch \"@zonecap@\", 0, 0
-            Patch \"BMARQ@mapnum@\", 0, 173
-            Patch \"RAMPSCRE\", 0, 237
-            @screenshotpatch@
-            Patch \"RAMPSCRB\", 0, 237
-            Patch \"RAMPCHEK\", 276, 0
-        }
-        ";
-
-        foreach ($catalog_handler->get_catalog() as $map_data) {
-            $map_name = $map_data->name;
-            $map_author = $map_data->author;
-            $map_number = $map_data->mapnum;
-            $map_category = $map_data->category;
-            $zone_id = $this->ZONE_IDS[$map_category];
-            $screenshot_width = $this->generatePatches($map_name, $map_number, $map_author, $map_category);
-            $half_screenshot_width = round($screenshot_width / 2);
-            Logger::pg("Wrote marquee patches for map " . $map_number);
-            
-            $screenshot_patch_text = "";
-            if ($half_screenshot_width > 0) {
-                $screenshot_patch_text = "Patch \"RSHOT" . $map_number . "\", " . 310 - $half_screenshot_width . ", 237";
-            }
-            
-            $this_patch_data = str_replace("@mapnum@", $map_number, $marquee_textures_template);
-            $this_patch_data = str_replace("@screenshotpatch@", $screenshot_patch_text, $this_patch_data);
-            $this_patch_data = str_replace("@zonecap@", "RAMPSCR" . $zone_id, $this_patch_data);
-            
-            $marquee_textures_lump .= $this_patch_data;
-        } 
-        $marquee_textures_filename = PK3_FOLDER . "TEXTURES.marquee";
-        @unlink($marquee_textures_filename);
-        file_put_contents($marquee_textures_filename, $marquee_textures_lump);        
-    }    
-
-    function generateImage($levelname, $imagetype, $font_name) {
-        
-        $font_info = $this->getFontInfo($font_name);
-        
-        $image_width = (strlen($levelname)) * $font_info['width'];
-        //Create image
-        $final_image = imagecreatetruecolor($image_width, $font_info['height']);
-        $source_image = $imagetype ? imagecreatefrompng("./img/marquee/" . $font_info['source']) : imagecreatefrompng("./img/marquee/" . $font_info['source2']);
-
-        //Fill with black background
-        $background = imagecolorallocatealpha($final_image, 0, 0, 0, 0);
-        imagefill($final_image, 0, 0, $background);
-
-        $character_index = 0;
-        while ($character_index < strlen($levelname)) {
-            $char = substr($levelname, $character_index, 1);
-            //Convert to uppercase if we're using the basic character map
-            if ($font_info['charmap'] == $this->CHARACTER_MAP) {
-                $char = strtoupper($char);
-            }
-            $char_position = strpos($font_info['charmap'], $char);
-            
-            imagecopy(
-                $final_image, $source_image, //Dest, source
-                $character_index * $font_info['width'], 0, //Top left pixel of destination
-                $char_position * $font_info['width'], 0, //Top left pixel of source
-                $font_info['width'], $font_info['height'] //Width and height of rectangle to copy
-            );
-            $character_index++;
-        }
-        imagesavealpha($final_image, true);
-        
-        return $final_image;
     }
-    
-    function getFontInfo($font_name) {
-        switch ($font_name) {
-            case 'dos':
-                return ['width' => '9', 'height' => '16', 'source' => 'dos-y.png', 'source2' => 'dos-b.png', 'charmap' => $this->CHARACTER_MAP_MORE];
-            case 'dosborder':
-                return ['width' => '9', 'height' => '18', 'source' => 'dosborder-y.png', 'source2' => 'dosborder-b.png', 'charmap' => $this->CHARACTER_MAP_MORE];                
-            case 'visitor':
-            default:
-                return ['width' => '8', 'height' => '8', 'source' => 'source.png', 'source2' => 'source2.png', 'charmap' => $this->CHARACTER_MAP];
+
+    public function getMapMarqueeDataHash(RampMap $map): string {
+        $screenshotFile = $this->screenshotTempFolder . 'RAMPSHOTRAW' . $map->rampId;
+        $screenshotFileHash = "";
+        if (file_exists($screenshotFile)) {
+            $screenshotFileHash = md5_file($screenshotFile);
         }
-        return [];
+        return md5($map->name . $map->lump . $map->author . $map->mapnum . $map->category . $map->length . $map->difficulty . $screenshotFileHash);
     }
-    
-    function generatePatches($levelname, $mapnum, $mapauthor, $category = "none") {
-        
-        $marquee_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "patches" . DIRECTORY_SEPARATOR . "marquee";
-        
-        $bannerImage = $this->generateTextBanner($levelname, $mapauthor, $category);
 
-        $backgroundImage = new Imagick();
-        $backgroundImage->readImage(DATA_FOLDER . "RAMPSCRE.png");    
+    public function includeMarquees(): void {
+        Logger::pg("Assembling marquee graphics");
+        foreach ($this->catalog->get_catalog() as $map_data) {
+            $marqueeDataMatchesCache = (
+                isset($this->rampIdsToMarqueeHashes[$map_data->rampId])
+                && $this->getMapMarqueeDataHash($map_data) == $this->rampIdsToMarqueeHashes[$map_data->rampId]);
+            if (!$marqueeDataMatchesCache) {
+                Logger::pg("Regenerating textures for {$map_data->rampId}");
+                try {
+                    $marqueeImages = $this->generateMarquee($map_data->rampId);
+                    $marqueeImages[0]->writeImage("{$this->screenshotTempFolder}RSHOT{$map_data->mapnum}.png");
+                    $marqueeImages[1]->writeImage("{$this->screenshotTempFolder}RNAME{$map_data->mapnum}.png");
+                    $marqueeImages[2]->writeImage("{$this->screenshotTempFolder}RAUTH{$map_data->mapnum}.png");
+                    $marqueeImages[3]->writeImage("{$this->screenshotTempFolder}RBACK{$map_data->mapnum}.png");
 
-        //Do we have a screenshot? If we do, let's put that on
-        $screenshotImage = new Imagick();
+                    $tileImage = $this->generateTile($map_data->rampId);
+                    $tileImage->writeImage("{$this->screenshotTempFolder}RTILE{$map_data->mapnum}.png");
+
+                    $this->rampIdsToMarqueeHashes[$map_data->rampId] = $this->getMapMarqueeDataHash($map_data);
+                }
+                catch (Exception $e) {
+                    Logger::pg("Failed to write a marquee image for {$map_data->getMapLink()}: {$e->getMessage()}");
+                    continue;
+                }
+            }
+            $names = [
+                "RSHOT" => $this->marqueePatchesFolder,
+                "RNAME" => $this->marqueeGraphicFolder,
+                "RAUTH" => $this->marqueeGraphicFolder,
+                "RTILE" => $this->marqueeGraphicFolder,
+                "RBACK" => $this->marqueeGraphicFolder,
+            ];
+            foreach ($names as $name => $destination) {
+                $filename = "{$name}{$map_data->mapnum}.png";
+                copy("{$this->screenshotTempFolder}{$filename}", "{$destination}{$filename}");
+            }
+            Logger::pg("Copied marquees for {$map_data->rampId}");
+        }
+        file_put_contents(MARQUEE_HASH_FILE, json_encode($this->rampIdsToMarqueeHashes));
+        $this->writeMarqueeTexturesFile();
+    }
+
+    public function writeMarqueeTexturesFile(): void {
+        Logger::pg("Writing marquee texture file");
+        $texturesFile = "";
+        foreach ($this->catalog->get_catalog() as $map_data) {
+            for ($i = 0; $i < 9; $i++) {
+                $isPlain = ($i == 8);
+                $texturesFile .= "Texture \"RSHO{$i}{$map_data->mapnum}\", 909, 547" . PHP_EOL;
+                $texturesFile .= "{" . PHP_EOL;
+                $texturesFile .= "  Patch \"RSHOT{$map_data->mapnum}\", 0, 0" . PHP_EOL;
+                if (!$isPlain) {
+                    $texturesFile .= "  Patch \"R2026BIG\", 279, 85" . PHP_EOL;
+                    if ($i & 1) { $texturesFile .= "  Patch \"RMONTHM\", 486, 362" . PHP_EOL; }
+                    if ($i & 2) { $texturesFile .= "  Patch \"RITMTHM\", 534, 333" . PHP_EOL; }
+                    if ($i & 4) { $texturesFile .= "  Patch \"RSECTHM\", 582, 304" . PHP_EOL; }
+                }
+                $texturesFile .= "}" . PHP_EOL . PHP_EOL;
+            }
+        }
+
+        file_put_contents($this->marqueeTexturesFile, $texturesFile);
+    }
+
+    public function generateTile(int $rampId): ?IMagick {
+        $rampMap = $this->catalog->get_map_by_ramp_id($rampId);
+
         try {
-            $hasScreenshot = $screenshotImage->readImage(WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR . "RSHOT" . $mapnum);
-        } catch (Exception $ex) {
-            $hasScreenshot = false;
+            $frameImage = new Imagick();
+            $frameImage->readImage($this->tileTemplateImage);
+            $bgImage = new Imagick();
+            $bgImage->readImage($this->tileBackgroundPrefix . $this->ZONE_IDS[$rampMap->category] . '.png');
+            $iconImage = new Imagick();
+            $iconImage->readImage($this->tileIconPrefix . $this->ZONE_IDS[$rampMap->category] . '.png');
+            $maskImage = new Imagick();
+            $maskImage->readImage($this->tileMaskImage);
+
+            $mapTitleImage = $this->getSizedTextImage($rampMap->name, 11, 460, $this->upheaval_font, "#fff", 0.0);
+            $mapTitleImageBlack = $this->getSizedTextImage($rampMap->name, 11, 460, $this->upheaval_font, "#000", 0.0);
+            $mapAuthorImage = $this->getSizedTextImage($rampMap->author, 11, 460, $this->upheaval_font, "#fff", 0.0);
+            $mapAuthorImageBlack = $this->getSizedTextImage($rampMap->author, 11, 460, $this->upheaval_font, "#000", 0.0);
+            $mapLumpImage = $this->getSizedTextImage($rampMap->lump, 11, 460, $this->upheaval_font, "#ffd800", 0.0);
+            $mapLumpImageBlack = $this->getSizedTextImage($rampMap->lump, 11, 460, $this->upheaval_font, "#000", 0.0);
+
+            $screenshotImage = new Imagick();
+            try {
+                $screenshotImage->readImage(WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR . "RAMPSHOTRAW" . $rampId);
+            } catch (Exception $ex) {
+                $screenshotImage->readImage(DATA_FOLDER . 'defaultscreenshot.png');
+            }
+            $screenshotImage->setImageFormat('png32');
+            $screenshotImage->setImageAlphaChannel(Imagick::ALPHACHANNEL_SET);
+            $screenshotImage->resizeImage(0,106, imagick::FILTER_CATROM, 0.9);
+            $screenshotImage->compositeImage($maskImage, Imagick::COMPOSITE_DSTIN, 0, 0, Imagick::CHANNEL_ALPHA);
+
+            $mapLumpPos = [122, 9];
+            $mapTitlePos = [129, 28];
+            $mapAuthorPos = [136, 47];
+            $mapIconPos = [570, 40];
+
+            $bgImage->compositeImage($screenshotImage, imagick::COMPOSITE_OVER, 0, 0);
+            $bgImage->compositeImage($frameImage, imagick::COMPOSITE_OVER, 0, 0);
+
+            $iconImage->resizeImage(0,21, imagick::FILTER_POINT, 0);
+            $bgImage->compositeImage($iconImage, imagick::COMPOSITE_OVER, $mapIconPos[0], $mapIconPos[1]);
+
+            $bgImage->compositeImage($mapTitleImageBlack, imagick::COMPOSITE_OVER, $mapTitlePos[0] + 2, $mapTitlePos[1] + 2);
+            $bgImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, $mapTitlePos[0], $mapTitlePos[1]);
+
+            $bgImage->compositeImage($mapLumpImageBlack, imagick::COMPOSITE_OVER, $mapLumpPos[0] + 2, $mapLumpPos[1] + 2);
+            $bgImage->compositeImage($mapLumpImage, imagick::COMPOSITE_OVER, $mapLumpPos[0], $mapLumpPos[1]);
+
+            $bgImage->compositeImage($mapAuthorImageBlack, imagick::COMPOSITE_OVER, $mapAuthorPos[0] + 2, $mapAuthorPos[1] + 2);
+            $bgImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, $mapAuthorPos[0], $mapAuthorPos[1]);
+
+            return $bgImage;
+
+        } catch (Exception $e) {
+            print $e->getMessage();
+            return null;
         }
-        if ($hasScreenshot) {
-            $screenshotImage->resizeImage(0,384, imagick::FILTER_CATROM, 0.9, false);
-            $screenshotImage->writeImage($marquee_folder . DIRECTORY_SEPARATOR . "RSHOT" . $mapnum . ".jpg");
+    }
+
+    public function generateMarquee(int $rampId): array
+    {
+        $rampMap = $this->catalog->get_map_by_ramp_id($rampId);
+
+        try {
+            $baseImage = new Imagick();
+            $baseImage->readImage($this->bannerTemplateImage);
+
+            $mapTitleImage = $this->getSizedTextImage($rampMap->name, 32, 712, $this->upheaval_font);
+            $mapAuthorImage = $this->getSizedTextImage($rampMap->author, 26, 712, $this->upheaval_font);
+            $mapLengthImage = $this->getSizedTextImage($rampMap->length, 50, 712, $this->upheaval_font, '#88f');
+            $mapDifficultyImage = $this->getSizedTextImage($rampMap->difficulty, 50, 712, $this->upheaval_font, '#f33');
+            $mapNumberImage = $this->getSizedTextImage($rampMap->mapnum, 44, 120, $this->upheaval_font);
+
+            $baseImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, 180, 13);
+            $baseImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, 666 - $mapAuthorImage->getImageWidth(), 510);
+            $baseImage->compositeImage($mapLengthImage, imagick::COMPOSITE_OVER, 770 - intval($mapLengthImage->getImageWidth()/2), 88);
+            $baseImage->compositeImage($mapDifficultyImage, imagick::COMPOSITE_OVER, 770 - intval($mapDifficultyImage->getImageWidth()/2), 426);
+            $baseImage->compositeImage($mapNumberImage, imagick::COMPOSITE_OVER, 94 - intval($mapNumberImage->getImageWidth()/2), 68);
+
+            //Do we have a screenshot? If we do, let's put that on
+            $screenshotImage = new Imagick();
+            try {
+                $screenshotImage->readImage(WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR . "RAMPSHOTRAW" . $rampId);
+            } catch (Exception $ex) {
+                $screenshotImage->readImage(DATA_FOLDER . 'defaultscreenshot.png');
+            }
+
+            $screenshotImage->setImageFormat('png32');
+            $screenshotImage->setImageAlphaChannel(Imagick::ALPHACHANNEL_SET);
+            $screenshotImage->resizeImage(0,426, imagick::FILTER_CATROM, 0.9);
+            if ($screenshotImage->getImageWidth() < 686) {
+                $screenshotImage->resizeImage(686, 426, imagick::FILTER_CATROM, 0.9);
+            }
+            $ghostImage = clone $screenshotImage;
+
+            $maskImage = new Imagick();
+            $maskImage->readImage($this->maskImage);
+            $screenshotImage->compositeImage($maskImage, Imagick::COMPOSITE_DSTIN, 0, 0, Imagick::CHANNEL_ALPHA);
+
+            $baseImage->compositeImage($screenshotImage, imagick::COMPOSITE_OVER, 95, 69);
+
+            //Add wedges for length and difficulty
+            $lengthCounterImage = new Imagick();
+            $lengthCounterImage->readImage($this->wedgeLength);
+            $difficultyCounterImage = new Imagick();
+            $difficultyCounterImage->readImage($this->wedgeDifficulty);
+
+            $mapLength = $rampMap->length;
+            $mapDifficulty = $rampMap->difficulty;
+
+            while ($mapLength > 0) {
+                $baseImage->compositeImage($lengthCounterImage, imagick::COMPOSITE_OVER, self::LENGTH_START_X + (self::LENGTH_DIFF_X * $mapLength), self::LENGTH_START_Y + (self::LENGTH_DIFF_Y * $mapLength));
+                $mapLength--;
+            }
+            while ($mapDifficulty > 0) {
+                $baseImage->compositeImage($difficultyCounterImage, imagick::COMPOSITE_OVER, self::DIFFICULTY_START_X + (self::DIFFICULTY_DIFF_X * $mapDifficulty), self::DIFFICULTY_START_Y + (self::DIFFICULTY_DIFF_Y * $mapDifficulty));
+                $mapDifficulty--;
+            }
+
+            $ghostMaskImage = new Imagick();
+            $ghostMaskImage->readImage($this->ghostMaskImage);
+            $ghostImage->compositeImage($ghostMaskImage, Imagick::COMPOSITE_DSTIN, 0, 0, Imagick::CHANNEL_ALPHA);
+
+            return [$baseImage, $mapTitleImage, $mapAuthorImage, $ghostImage];
+
+        } catch (Exception $e) {
+            print $e->getMessage();
+            return [];
         }
-
-        $bannerImage->writeImage($marquee_folder . DIRECTORY_SEPARATOR . "YMARQ" . $mapnum . ".png");
-        $bannerImage->modulateImage(100, 100, 0);
-        $bannerImage->writeImage($marquee_folder . DIRECTORY_SEPARATOR . "BMARQ" . $mapnum . ".png");
-        
-        //Return the eventual width of the screenshot, need this to calculate the position for the patch
-        return $hasScreenshot ? $screenshotImage->getImageWidth() : 0;
     }
-    
-    private function generateTextBanner($bannerText, $authorText, $category) {
 
-        $textImage = $this->getSizedTextImage($bannerText, 35, 600, $this->ZONE_FONTS[$category]);
-        $authorImage = $this->getSizedTextImage($authorText, 15, 600, $this->ZONE_FONTS["none"]);
-
-        $bannerImage = new Imagick();
-        $bannerImage->newImage(620, 64, "black");
-
-        $pointTextCentre = [310, 24];
-        $pastePoint = [$pointTextCentre[0] - ($textImage->getImageWidth()/2),
-                        $pointTextCentre[1] - ($textImage->getImageHeight()/2)];
-        
-        $bannerImage->compositeImage($textImage, imagick::COMPOSITE_OVER, intval($pastePoint[0]), intval($pastePoint[1]));
-        
-        $pointAuthorCentre = [310, 52];
-        $pastePoint = [$pointAuthorCentre[0] - ($authorImage->getImageWidth()/2),
-                        $pointAuthorCentre[1] - ($authorImage->getImageHeight()/2)];
-
-        $bannerImage->compositeImage($authorImage, imagick::COMPOSITE_OVER, intval($pastePoint[0]), intval($pastePoint[1]));        
-        //Add lines across the top and bottom
-        $draw = new ImagickDraw();
-        $draw->setFontSize(4);
-        $draw->setFillColor('#ff0');
-        $draw->line(0, 0, 620, 0);
-        $draw->line(0, 63, 620, 63);
-        $bannerImage->drawImage($draw);
-        
-        return $bannerImage;
-    }
-    
-    private function getSizedTextImage($text, $height, $maxWidth, $font) {
-
+    /**
+     * @throws ImagickDrawException
+     * @throws ImagickException|ImagickPixelException
+     */
+    private function getSizedTextImage($text, $height, $maxWidth, $font, $colour = '#fff', $strokeWidth = 1.0): Imagick
+    {
         $prefixBufferSize = 100;
 
         $draw = new ImagickDraw();
         $draw->setFont($font);
-        $draw->setFontSize(30); // Draw large then reduce
+        $draw->setFontSize(60); // Draw large then reduce
         $draw->setTextAntialias(true);
-        $draw->setFillColor('#ff0');
+        $draw->setFillColor(new ImagickPixel($colour));
+        $draw->setStrokeColor(new ImagickPixel('#000'));
+        $draw->setStrokeAntialias(true);
+        $draw->setStrokeWidth($strokeWidth);
 
         //Create text
         $textImage = new Imagick();
         $textImage->newImage(6000,500, "transparent");
-        $textImage->annotateImage($draw, 0, 50, 0, "yY                 " . $text);
+        $textImage->annotateImage($draw, 0, 50, 0, "yY                 " . "$text");
+
         $textImage->trimImage(0);
 
         //Crop pixels off the left to remove prefix
@@ -231,5 +305,5 @@ class Marquee_Generator {
 
         return $textImage;
     }
-    
+
 }
