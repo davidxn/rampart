@@ -17,7 +17,6 @@ foreach ($catalog_handler->get_catalog() as $rampId => $rampMap) {
         'author' => $rampMap->author,
         'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
         'map_number' => $map_number,
-        'jumpcrouch' => $rampMap->jumpCrouch,
         'wip' => $rampMap->wip,
         'locked' => $rampMap->locked,
         'log_link' => Logger::get_log_link($rampId),
@@ -37,21 +36,12 @@ foreach($file_table as $file_data) {
         $table_string .= "<td>" . $file_data['map_name'] . "</td>";
         $table_string .= "<td>" . $file_data['author'] . "</td>";
         $table_string .= "<td>";
-        if ($file_data['wip']) {
-            $table_string .= ' <span class="map_property">WIP</span>';
-        }
-        if ($file_data['locked']) {
-            $table_string .= '<img src="/img/special_locked.png"/>';
-        }
         if ($file_data['length']) {
             $table_string .= ' <span class="map_length">' . $file_data['length'] . '</span>';
         }
         if ($file_data['difficulty']) {
             $table_string .= ' <span class="map_difficulty">' . $file_data['difficulty'] . '</span>';
         }
-        if ($file_data['jumpcrouch']) {
-            $table_string .= ' <span class="map_property">Jump</span>';
-        }      
         $table_string .= "</td>";
         $table_string .= "<td>" . $file_data['category'] . "</td>";
         $table_string .= "<td>" . $file_data['updated'] . "</td>";

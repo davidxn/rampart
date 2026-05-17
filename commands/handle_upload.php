@@ -8,7 +8,8 @@ class Upload_Handler {
 
     public Wad_Validator $validator;
 
-    function handle_upload($filename, $filesize, $tmp_name, $pin) {
+    function handle_upload($filename, $filesize, $tmp_name, $pin): void
+    {
 
         Logger::lg("Starting an upload attempt");
         
@@ -17,12 +18,19 @@ class Upload_Handler {
         $mapname =     clean_text($_POST['mapname']);
         $authorname =  clean_text($_POST['authorname']);
         $musiccredit = clean_text($_POST['musiccredit']);
-        $jumpcrouch =  clean_text($_POST['jumpcrouch']);
         $category =    clean_text($_POST['category']);
         $length =      clean_text($_POST['length']);
         $difficulty =  clean_text($_POST['difficulty']);
         $monsters =    clean_numeric($_POST['monsters']);
-        $wip = isset($_POST['wip']) ? clean_text($_POST['wip']) : 0;
+
+        $flags = [];
+        foreach ($_POST as $key => $value) {
+            if (!str_starts_with($key, 'flag_')) { continue; }
+            if ($value && ($value !== "0")) {
+                $flags[] = substr($key, 5);
+            }
+        }
+
         $pin = strtoupper(clean_text($pin));
 
         $this->validate_fields($mapname, $authorname, $musiccredit);
@@ -89,8 +97,7 @@ class Upload_Handler {
                 'name' => $mapname,
                 'author' => $authorname,
                 'musicCredit' => $musiccredit,
-                'jumpCrouch' => $jumpcrouch,
-                'wip' => $wip,
+                'flags' => $flags,
                 'category' => $category,
                 'length' => $length,
                 'difficulty' => $difficulty,
@@ -108,16 +115,16 @@ class Upload_Handler {
         Logger::clear_log_for_map($ramp_id);
         
         if (!$existing_map && get_setting('NOTIFY_ON_MAPS') != 'never' && !empty(get_setting('NOTIFY_EMAIL'))) {
-            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: New map added", "A new map '" . $mapname . "' by " . $authorname . " has been added to the project as " . $map_lumpname . ".");
+            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: New map added", "A new map '" . $mapname . "' by " . $authorname . " has been added to the project as " . $map_lump . ".");
         } else if ($existing_map && get_setting('NOTIFY_ON_MAPS') == 'all') {
-            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lumpname . " " . $mapname . "' by " . $authorname . " has just been updated.");
+            mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lump . " " . $mapname . "' by " . $authorname . " has just been updated.");
         }
 
         $success_message = "Success! Your WAD has been added to the project with map ID " . $ramp_id .
-            " It will be included in the project as " . $map_lumpname . ". " .
+            " It will be included in the project as " . $map_lump . ". " .
             "Your PIN is: <div style=\"font-size: 64pt; font-weight: bold; text-align: center\">" . $pin . "</div>Use this if you ever need to update your level.";
         if ($existing_map) {
-            $success_message = "Success! Map ID " . $ramp_id . " in lump " . $map_lumpname . "</b> has been updated.";
+            $success_message = "Success! Map ID " . $ramp_id . " in lump " . $map_lump . "</b> has been updated.";
         }
 
         echo json_encode(["name" => $filename, "size" => $filesize, "pin" => $pin, "map_number" => $map_number, "success" => $success_message]);
@@ -209,7 +216,8 @@ class Upload_Handler {
         }
     }
     
-    function detect_bad_words($phrase) {
+    function detect_bad_words($phrase): void
+    {
         $ban_list_file = DATA_FOLDER . "badwords";
         if (file_exists($ban_list_file)) {
             $ban_list = file_get_contents($ban_list_file);

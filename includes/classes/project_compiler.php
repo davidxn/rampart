@@ -705,9 +705,10 @@ class Project_Compiler {
 
             //Check flags set by user
             $map_allows_jump = 0;
-            if (($allow_jump == 'always' || $map_data->jumpCrouch == 1) && $allow_jump != 'never') {
+            if (($allow_jump == 'always' || ($map_data->hasFlag(RampMap::FLAG_JUMP)) && $allow_jump != 'never')) {
                 $map_allows_jump = 1;
             }
+            $map_is_wip = $map_data->hasFlag(RampMap::FLAG_WIP);
 
             $language .= $map_data->lump . "NAME = \"" . $map_data->name . "\";" . PHP_EOL;
             $language .= $map_data->lump . "AUTH = \"" . $map_data->author . "\";" . PHP_EOL;
@@ -719,7 +720,7 @@ class Project_Compiler {
                     $map_data->mapnum,
                     $map_data->lump,
                     $map_allows_jump,
-                    $map_data->wip,
+                    $map_is_wip,
                     $map_data->length ?? 0,
                     $map_data->difficulty ?? 0,
                     $map_data->monsters ?? 0,

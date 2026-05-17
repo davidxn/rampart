@@ -76,8 +76,13 @@ $(function() {
         uploadFormData.set('authorname', $('#input_author_name').val());
         uploadFormData.set('musiccredit', $('#input_music_credit').val());
         uploadFormData.set('pin', $('#input_pin_to_reupload').val());
-        uploadFormData.set('jumpcrouch', ($('#input_map_jumpcrouch')[0].checked ? 1 : 0));
-        uploadFormData.set('wip', ($('#input_map_wip')[0].checked ? 1 : 0));
+        $(":input[id^='input_flag_']").each(function() {
+            let flag_name = this.id.substring(11);
+            uploadFormData.set('flag_' + flag_name, this.checked ? "1" : "0");
+        });
+
+        uploadFormData.set('flag_rjump', ($('#input_flag_rjump')[0].checked ? 1 : 0));
+        uploadFormData.set('flag_rwip', ($('#input_flag_rwip')[0].checked ? 1 : 0));
         uploadFormData.set('category', $('input[name="input_map_category"]:checked').val());
         uploadFormData.set('difficulty', $('input[name="input_map_difficulty"]:checked').val());
         uploadFormData.set('length', $('input[name="input_map_length"]:checked').val());
@@ -233,8 +238,10 @@ function populateMapInfo(response) {
         $("#input_map_name").val(response.name);
         $("#input_author_name").val(response.author);
         $("#input_music_credit").val(response.musiccredit);
-        $('#input_map_jumpcrouch')[0].checked = response.jumpcrouch == 0 ? false : true;
-        $('#input_map_wip')[0].checked = response.wip == 0 ? false : true;
+
+        response.flags.forEach((flag) => {
+            $('#input_flag_' + flag)[0].checked = true;
+        });
 
         $('[name="input_map_category"]').removeAttr('checked');
         $('input[name="input_map_category"][value="' + response.category + '"]').prop('checked', true);

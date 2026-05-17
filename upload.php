@@ -54,7 +54,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             ><td>Allow jump and crouch:</td>
                             <td>
                                 <label class="checkmarkcontainer">
-                                    <input type="checkbox" id="input_map_jumpcrouch">
+                                    <input type="checkbox" id="input_flag_rjump">
                                     <span class="checkmark"></span>
                                 </label>
                             </td>
@@ -62,7 +62,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <td>Map is a work-in-progress:</td>
                             <td>
                                 <label class="checkmarkcontainer">
-                                    <input type="checkbox" id="input_map_wip">
+                                    <input type="checkbox" id="input_flag_rwip">
                                     <span class="checkmark"></span>
                                 </label>
                                 <div class="smallnote">Check this box to indicate a map isn't ready to be fully played yet. You'll still be able to upload new versions even if this box isn't checked</div>

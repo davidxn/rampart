@@ -86,10 +86,12 @@ $setting_defaults = [
 
 function get_setting($setting, $type = null) {
     if (isset($GLOBALS['settings'][$setting])) {
+        $value = $GLOBALS['settings'][$setting];
+        if (is_array($value)) { return $value; }
         //Stupid special cases
-        if (strtolower($GLOBALS['settings'][$setting]) == "true") { return true; }
-        if (strtolower($GLOBALS['settings'][$setting]) == "false") { return false; }
-        return $GLOBALS['settings'][$setting];
+        if (strtolower($value) == "true") { return true; }
+        if (strtolower($value) == "false") { return false; }
+        return $value;
     } else if (isset($GLOBALS['setting_defaults'][$setting])) {
         return $GLOBALS['setting_defaults'][$setting];
     }

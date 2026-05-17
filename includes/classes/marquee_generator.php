@@ -6,6 +6,7 @@ class Marquee_Generator {
     private string $upheaval_font = RAMPART_HOME . 'fonts' . DIRECTORY_SEPARATOR . 'upheavtt.ttf';
     private string $bannerTemplateImage = DATA_FOLDER . 'bannertemplate.png';
     private string $tileTemplateImage = DATA_FOLDER . 'tiletemplate.png';
+    private string $musicNoteImage = DATA_FOLDER . 'musicnote.png';
     private string $tileBackgroundPrefix = DATA_FOLDER . 'tilebg';
     private string $tileMaskImage = DATA_FOLDER . 'tilemask.png';
     private string $tileIconPrefix = DATA_FOLDER . 'rzone';
@@ -74,6 +75,9 @@ class Marquee_Generator {
                     $marqueeImages[1]->writeImage("{$this->screenshotTempFolder}RNAME{$map_data->mapnum}.png");
                     $marqueeImages[2]->writeImage("{$this->screenshotTempFolder}RAUTH{$map_data->mapnum}.png");
                     $marqueeImages[3]->writeImage("{$this->screenshotTempFolder}RBACK{$map_data->mapnum}.png");
+                    if ($marqueeImages[4]) {
+                        $marqueeImages[4]->writeImage("{$this->screenshotTempFolder}RMUSC{$map_data->mapnum}.png");
+                    }
 
                     $tileImage = $this->generateTile($map_data->rampId);
                     $tileImage->writeImage("{$this->screenshotTempFolder}RTILE{$map_data->mapnum}.png");
@@ -89,12 +93,15 @@ class Marquee_Generator {
                 "RSHOT" => $this->marqueePatchesFolder,
                 "RNAME" => $this->marqueeGraphicFolder,
                 "RAUTH" => $this->marqueeGraphicFolder,
+                "RMUSC" => $this->marqueeGraphicFolder,
                 "RTILE" => $this->marqueeGraphicFolder,
                 "RBACK" => $this->marqueeGraphicFolder,
             ];
             foreach ($names as $name => $destination) {
                 $filename = "{$name}{$map_data->mapnum}.png";
-                copy("{$this->screenshotTempFolder}{$filename}", "{$destination}{$filename}");
+                if (file_exists("{$this->screenshotTempFolder}$filename")) {
+                    copy("{$this->screenshotTempFolder}{$filename}", "{$destination}{$filename}");
+                }
             }
             Logger::pg("Copied marquees for {$map_data->rampId}");
         }
@@ -193,9 +200,21 @@ class Marquee_Generator {
 
             $mapTitleImage = $this->getSizedTextImage($rampMap->name, 32, 712, $this->upheaval_font);
             $mapAuthorImage = $this->getSizedTextImage($rampMap->author, 26, 712, $this->upheaval_font);
+            $mapMusicImageWithNote = null;
+            if ($rampMap->musicCredit) {
+                $mapMusicImage = $this->getSizedTextImage($rampMap->musicCredit, 20, 660, $this->upheaval_font);
+                $noteImage = new Imagick();
+                $noteImage->readImage($this->musicNoteImage);
+                $mapMusicImageWithNote = new Imagick();
+                $mapMusicImageWithNote->newImage($mapMusicImage->getImageWidth() + 6 + $noteImage->getImageWidth(), $mapMusicImage->getImageHeight(), "transparent");
+                $mapMusicImageWithNote->compositeImage($noteImage, imagick::COMPOSITE_OVER, 0, 0);
+                $mapMusicImageWithNote->compositeImage($mapMusicImage, imagick::COMPOSITE_OVER, $noteImage->getImageWidth() + 6, 0);
+            }
             $mapLengthImage = $this->getSizedTextImage($rampMap->length, 50, 712, $this->upheaval_font, '#88f');
             $mapDifficultyImage = $this->getSizedTextImage($rampMap->difficulty, 50, 712, $this->upheaval_font, '#f33');
             $mapNumberImage = $this->getSizedTextImage($rampMap->mapnum, 44, 120, $this->upheaval_font);
+
+
 
             $baseImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, 180, 13);
             $baseImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, 666 - $mapAuthorImage->getImageWidth(), 510);
@@ -247,7 +266,7 @@ class Marquee_Generator {
             $ghostMaskImage->readImage($this->ghostMaskImage);
             $ghostImage->compositeImage($ghostMaskImage, Imagick::COMPOSITE_DSTIN, 0, 0, Imagick::CHANNEL_ALPHA);
 
-            return [$baseImage, $mapTitleImage, $mapAuthorImage, $ghostImage];
+            return [$baseImage, $mapTitleImage, $mapAuthorImage, $ghostImage, $mapMusicImageWithNote];
 
         } catch (Exception $e) {
             print $e->getMessage();

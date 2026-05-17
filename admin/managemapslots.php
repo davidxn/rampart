@@ -30,8 +30,7 @@ foreach($catalog_handler->get_catalog() as $ramp_id => $map_data) {
         'author' => $map_data->author,
         'updated' => file_exists($wad_path) ? date("Y-m-d g:i", filemtime($wad_path)) : "(No file)",
         'map_number' => $map_data->mapnum,
-        'jumpcrouch' => $map_data->jumpCrouch ?? 0,
-        'wip' => $map_data->wip ?? 0,
+        'flags' => $map_data->flags,
         'locked' => $map_data->locked ?? 0,
         'disabled' => $map_data->disabled ?? 0
     ];
