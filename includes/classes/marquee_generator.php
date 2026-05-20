@@ -63,6 +63,10 @@ class Marquee_Generator {
 
     public function includeMarquees(): void {
         Logger::pg("Assembling marquee graphics");
+
+        @mkdir($this->marqueePatchesFolder, 0755, true);
+        @mkdir($this->marqueeGraphicFolder, 0755, true);
+
         foreach ($this->catalog->get_catalog() as $map_data) {
             $marqueeDataMatchesCache = (
                 isset($this->rampIdsToMarqueeHashes[$map_data->rampId])
@@ -119,10 +123,10 @@ class Marquee_Generator {
                 $texturesFile .= "{" . PHP_EOL;
                 $texturesFile .= "  Patch \"RSHOT{$map_data->mapnum}\", 0, 0" . PHP_EOL;
                 if (!$isPlain) {
-                    $texturesFile .= "  Patch \"R2026BIG\", 279, 85" . PHP_EOL;
-                    if ($i & 1) { $texturesFile .= "  Patch \"RMONTHM\", 486, 362" . PHP_EOL; }
-                    if ($i & 2) { $texturesFile .= "  Patch \"RITMTHM\", 534, 333" . PHP_EOL; }
-                    if ($i & 4) { $texturesFile .= "  Patch \"RSECTHM\", 582, 304" . PHP_EOL; }
+                    $texturesFile .= "  Patch \"RCHEKBIG\", 330, 149" . PHP_EOL;
+                    if ($i & 1) { $texturesFile .= "  Patch \"RMONTHM\", 344, 138" . PHP_EOL; }
+                    if ($i & 2) { $texturesFile .= "  Patch \"RITMTHM\", 344, 389" . PHP_EOL; }
+                    if ($i & 4) { $texturesFile .= "  Patch \"RSECTHM\", 500, 389" . PHP_EOL; }
                 }
                 $texturesFile .= "}" . PHP_EOL . PHP_EOL;
             }

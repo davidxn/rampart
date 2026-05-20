@@ -696,19 +696,17 @@ class Project_Compiler {
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
         $ramp_data = [];
 
-        $allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
+        $global_allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
         $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
 
         foreach ($catalog as $map_data) {
             $map_index++;
             $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
 
-            //Check flags set by user
-            $map_allows_jump = 0;
-            if (($allow_jump == 'always' || ($map_data->hasFlag(RampMap::FLAG_JUMP)) && $allow_jump != 'never')) {
-                $map_allows_jump = 1;
+            //If our global settings don't allow jump, remove the RJUMP flag here
+            if (!$global_allow_jump) {
+                $map_data->removeFlag(RampMap::FLAG_JUMP);
             }
-            $map_is_wip = $map_data->hasFlag(RampMap::FLAG_WIP);
 
             $language .= $map_data->lump . "NAME = \"" . $map_data->name . "\";" . PHP_EOL;
             $language .= $map_data->lump . "AUTH = \"" . $map_data->author . "\";" . PHP_EOL;
@@ -719,12 +717,11 @@ class Project_Compiler {
                 [
                     $map_data->mapnum,
                     $map_data->lump,
-                    $map_allows_jump,
-                    $map_is_wip,
                     $map_data->length ?? 0,
                     $map_data->difficulty ?? 0,
                     $map_data->monsters ?? 0,
                     $map_data->category ?? '',
+                    implode(":", $map_data->flags),
                     Logger::map_has_errors($map_data->rampId),
                     $map_data->name
                 ]
@@ -782,7 +779,7 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
             }
 
-            if ($map_allows_jump) {
+            if ($map_data->hasFlag("RJUMP")) {
                 $mapinfo .= "\t" . "AllowJump" . PHP_EOL;
                 $mapinfo .= "\t" . "AllowCrouch" . PHP_EOL;
             } else {

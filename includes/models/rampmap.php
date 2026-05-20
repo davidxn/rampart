@@ -17,6 +17,7 @@ class RampMap implements JsonSerializable
     const FLAG_MOUSELOOK = "RMOUSE";
     const FLAG_SPIDER = "RSPIDER";
     const FLAG_WIP = "RWIP";
+    const FLAG_FIRST = "RFIRST";
 
 
     public string $author = '';
@@ -56,6 +57,11 @@ class RampMap implements JsonSerializable
     public function hasFlag(String $flag): bool
     {
         return in_array($flag, $this->flags);
+    }
+
+    public function removeFlag(String $flag): void
+    {
+        $this->flags = array_diff($this->flags, [$flag]);
     }
 
     public function jsonSerialize(): array

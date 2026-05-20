@@ -36,7 +36,7 @@ foreach($catalog_handler->get_catalog() as $ramp_id => $map_data) {
     ];
     $file_table[] = $row_data;
     if ($row_data['locked']) { $locked_maps++; }
-    if ($row_data['wip']) { $wip_maps++; }
+    if ($map_data->hasFlag(RampMap::FLAG_WIP)) { $wip_maps++; }
     $total_maps++;
 }
 

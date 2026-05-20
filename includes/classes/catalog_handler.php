@@ -55,7 +55,11 @@ class Catalog_Handler {
     
     public function update_map_property($rampId, $property, $value): void {
         $this->catalog[$rampId]->$property = $value;
-        Logger::lg("Edited $rampId property: $property to $value");
+        $logValue = $value;
+        if (is_array($value)) {
+            $logValue = json_encode($value);
+        }
+        Logger::lg("Edited $rampId property: $property to $logValue");
         $this->save_catalog();
     }
     
