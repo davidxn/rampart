@@ -126,6 +126,7 @@ const WORK_FOLDER           = RAMPART_HOME . "work" . DIRECTORY_SEPARATOR;
 const DATA_FOLDER           = RAMPART_HOME . "data" . DIRECTORY_SEPARATOR;
 
 const CATALOG_FILE          = WORK_FOLDER . "catalog.json";
+const PROVISIONAL_PIN_FILE  = WORK_FOLDER . "provisionalpins.json";
 const PIN_FILE              = WORK_FOLDER . "pins.txt";
 const PIN_MASTER_FILE       = WORK_FOLDER . "pins-master.txt";
 const IPS_FOLDER            = WORK_FOLDER . "ips" . DIRECTORY_SEPARATOR;
@@ -139,6 +140,7 @@ const UPLOAD_LOG_FILE       = WORK_FOLDER . "uploads.log";
 const SNAPSHOT_ID_FILE      = WORK_FOLDER . "snapshot.id";
 const BUILD_INFO_FILE       = WORK_FOLDER . "buildinfo.log";
 const MARQUEE_HASH_FILE     = WORK_FOLDER . "marqueehashes.json";
+const IP_BAN_FILE     = WORK_FOLDER . "ipbans";
 
 const BLANK_MAP             = DATA_FOLDER . "NOMAP.WAD";
 const RESOURCE_WAD_FOLDER   = DATA_FOLDER . "resourcewads" . DIRECTORY_SEPARATOR;
@@ -148,6 +150,7 @@ const MAPS_FOLDER           = PK3_FOLDER . "maps" . DIRECTORY_SEPARATOR;
 
 const LOCK_FILE_UPLOAD      = WORK_FOLDER . ".uploadlockfile";
 const LOCK_FILE_COMPILE     = WORK_FOLDER . ".compilelockfile";
+const LOCK_FILE_PROVISIONAL_PINS = WORK_FOLDER . ".provisionalpinlockfile";
 const STATUS_FILE           = RAMPART_HOME . "status.log";
 
 const PASSWORD_FILE         = DATA_FOLDER . DIRECTORY_SEPARATOR . "rampartpass.php";

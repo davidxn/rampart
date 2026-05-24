@@ -16,21 +16,35 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                 <p>Take a look at the <a href="./rules.php">rules page</a> for a complete list of accepted data. If what you want isn't there, ask!</p>
                 </div>
 
+                <div class="spacer" style="height: 32px">&nbsp;</div>
+
                 <div id="upload-question-type">
                     <p>I want to...</p>
-                    <?php if (get_setting("ALLOW_NEW_UPLOADS")) { ?>
+                    <?php if (get_setting("ALLOW_NEW_UPLOADS") == 'direct') { ?>
                     <button type="button" id="uploadtype_first">Add a new map</button>
                     <?php } ?>
+                    <?php if (get_setting("ALLOW_NEW_UPLOADS") == 'request') { ?>
+                        <button type="button" id="uploadtype_request">Request a map slot</button>
+                    <?php } ?>
                     <?php if (get_setting("ALLOW_EDIT_UPLOADS")) { ?>
-                    <button type="button" id="uploadtype_update">Update a map I submitted before</button>
+                    <button type="button" id="uploadtype_update">Use a PIN to submit or update a map</button>
                     <?php } ?>
                 </div>
                 <div id="upload-question-pin">
                     <div id="pin_form" class="lightbox">
                         <p>Please enter the PIN for the slot you want to update. (If you don't know it, contact the project owner)</p>
                         <div id="pin_status">&nbsp;</div>
-                        <input type="text" style="width: 100px;" id="input_pin_to_reupload"></input>
+                        <input type="text" style="width: 100px;" id="input_pin_to_reupload"/>
                         <button type="button" id="confirm_pin">That's my PIN</button>
+                    </div>
+                </div>
+
+                <div id="upload-question-email">
+                    <div id="email_form" class="lightbox">
+                        <p>Enter your email address and RAMPART will send you a PIN you can use to upload your map!</p>
+                        <div id="email_status">&nbsp;</div>
+                        <input type="text" style="width: 300px;" id="input_email_address"/>
+                        <button type="button" id="confirm_email">That's my email</button>
                     </div>
                 </div>
 
@@ -113,16 +127,20 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <td>Map labels</td>
                             <td>
                                 <?php
-                                    echo html_flag_checkbox("rfirst", "I'm a Doom beginner!");
-                                    echo("<br/>");
+                                    echo("<div class='\"checkboxseparator\"'>About</div>");
+                                    echo html_flag_checkbox("rfirst", "I'm a Doom mapping beginner!");
+                                    echo html_flag_checkbox("rnewmon", "Includes custom monsters");
+                                    echo html_flag_checkbox("rnewwep", "Includes custom weapons or pickups");
+                                    echo("<div class='\"checkboxseparator\"'>Special configuration</div>");
                                     echo html_flag_checkbox("rmouse", "Requires mouselook");
-                                    echo html_flag_checkbox("rnewmon", "Uses custom monsters");
-                                    echo html_flag_checkbox("rnewwep", "Uses custom weapons or pickups");
-                                    echo("<br/>");
+                                    echo html_flag_checkbox("rlight", "Requires dynamic lighting");
+                                    echo("<div class='\"checkboxseparator\"'>Map genre</div>");
                                     echo html_flag_checkbox("rslaught", "This is a slaughtermap");
                                     echo html_flag_checkbox("rpuzzle", "Contains puzzles");
                                     echo html_flag_checkbox("rpeace", "No combat in this map");
-                                    echo("<br/>");
+                                    echo html_flag_checkbox("rgame", "This is a minigame unlike normal Doom gameplay");
+                                    echo html_flag_checkbox("rstory", "Story-focused");
+                                    echo("<div class='\"checkboxseparator\"'>Phobias</div>");
                                     echo html_flag_checkbox("rscare", "Contains jumpscares!");
                                     echo html_flag_checkbox("rspider", "Might be bad for arachnophobics");
                                     echo html_flag_checkbox("rwater", "Involves swimming underwater");

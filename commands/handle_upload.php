@@ -55,7 +55,7 @@ class Upload_Handler {
         }
         else {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
-            $pin = $pin_manager::get_new_pin();
+            $pin = (new $pin_manager())->get_new_pin();
             if (empty($pin)) {
                 echo json_encode(['error' => 'Error creating a PIN! Ask the project owner about this.']);
                 die();
@@ -118,7 +118,7 @@ class Upload_Handler {
             mail(get_setting('NOTIFY_EMAIL'), "RAMPART: Map updated", "Map '" . $map_lump . " " . $mapname . "' by " . $authorname . " has just been updated.");
         }
 
-        $success_message = "Success! Your WAD has been added to the project with map ID " . $ramp_id .
+        $success_message = "Success! Your WAD has been added to the project with map ID " . $ramp_id . ". " .
             " It will be included in the project as " . $map_lump . ". " .
             "Your PIN is: <div style=\"font-size: 64pt; font-weight: bold; text-align: center\">" . $pin . "</div>Use this if you ever need to update your level.";
         if ($existing_map) {
@@ -163,17 +163,9 @@ class Upload_Handler {
         Logger::lg("Recording upload from IP " . $ip);        
 
         @mkdir(IPS_FOLDER);
-        
-        $ban_list_file = DATA_FOLDER . "ipbans";
-        if (file_exists($ban_list_file)) {
-            $ip_ban_list = file_get_contents($ban_list_file);
-            $ip_prefixes = explode("\n", $ip_ban_list);
-            foreach ($ip_prefixes as $ip_prefix) {
-                if (trim($ip_prefix) != "" && str_starts_with($ip, $ip_prefix)) {
-                    Logger::lg("Blocked upload attempt from IP " . $ip . " due to match with prefix " . $ip_prefix);
-                    $this->validator->handle_validation_failure();
-                }
-            }
+
+        if (is_ip_banned()) {
+            $this->validator->handle_validation_failure();
         }
 
         $filename = 'b' . $ip . 'b';
