@@ -80,13 +80,9 @@ $(function() {
             let flag_name = this.id.substring(11);
             uploadFormData.set('flag_' + flag_name, this.checked ? "1" : "0");
         });
-
-        uploadFormData.set('flag_rjump', ($('#input_flag_rjump')[0].checked ? 1 : 0));
-        uploadFormData.set('flag_rwip', ($('#input_flag_rwip')[0].checked ? 1 : 0));
         uploadFormData.set('category', $('input[name="input_map_category"]:checked').val());
         uploadFormData.set('difficulty', $('input[name="input_map_difficulty"]:checked').val());
         uploadFormData.set('length', $('input[name="input_map_length"]:checked').val());
-        uploadFormData.set('monsters', $('#input_monster_count').val());
         uploadData(uploadFormData);
     });
 
@@ -251,8 +247,6 @@ function populateMapInfo(response) {
 
         $('[name="input_map_length"]').removeAttr('checked');
         $('input[name="input_map_length"][value="' + response.length + '"]').prop('checked', true);
-        
-        $("#input_monster_count").val(response.monsters);
 
         $("#upload_prompt").html('OK - alter your details and attach a new map here if you need to.');
         $("#upload_wad").text('Submit changes');

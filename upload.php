@@ -38,33 +38,24 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                     <div id="upload_form" class="lightbox">
                         <p id="upload_prompt">OK - add your details here and click Upload to submit the map.</p>
                         <table class="upload_table"><tbody><tr>
-                            <td width="200">Map name:</td>
+                            <td width="200">Map name</td>
                             <td><input type="text" id="input_map_name"></input></td>
                         </tr><tr>
-                            <td>Author name:</td>
+                            <td>Author name</td>
                             <td><input type="text" id="input_author_name"></input></td>
                         </tr><tr>
-                            <td>Music credit:</td>
+                            <td>Music credit</td>
                             <td><input type="text" id="input_music_credit"></input>
                             <div class="smallnote">Not needed, just if you want to add a "Rondo in D# by Flynn Taggart" note on level start</div></td>
                         </tr><tr
                         <?php if (!(get_setting('ALLOW_GAMEPLAY_JUMP') == 'user')) {
                             echo(' style="display: none"');
                         } ?>
-                            ><td>Allow jump and crouch:</td>
-                            <td>
-                                <label class="checkmarkcontainer">
-                                    <input type="checkbox" id="input_flag_rjump">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </td>
+                            ><td>Allow jump and crouch</td><td><?php echo html_flag_checkbox("rjump")?></td>
                         </tr><tr>
-                            <td>Map is a work-in-progress:</td>
+                            <td>Map is a work-in-progress</td>
                             <td>
-                                <label class="checkmarkcontainer">
-                                    <input type="checkbox" id="input_flag_rwip">
-                                    <span class="checkmark"></span>
-                                </label>
+                                <?php echo html_flag_checkbox("rwip")?>
                                 <div class="smallnote">Check this box to indicate a map isn't ready to be fully played yet. You'll still be able to upload new versions even if this box isn't checked</div>
                             </td>
                         </tr>
@@ -119,23 +110,36 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             </div>
                             </td>
                         <tr>
-                        
-                        <tr>
-                            <td>Monster count:</td>
-                            <td><div class="smallnote">Doesn't have to be exact. If it's very different between difficulty levels, use the rough average</div>
-                            <input type="number" style="width: 100px" id="input_monster_count"></input></td>
+                            <td>Map labels</td>
+                            <td>
+                                <?php
+                                    echo html_flag_checkbox("rfirst", "I'm a Doom beginner!");
+                                    echo("<br/>");
+                                    echo html_flag_checkbox("rmouse", "Requires mouselook");
+                                    echo html_flag_checkbox("rnewmon", "Uses custom monsters");
+                                    echo html_flag_checkbox("rnewwep", "Uses custom weapons or pickups");
+                                    echo("<br/>");
+                                    echo html_flag_checkbox("rslaught", "This is a slaughtermap");
+                                    echo html_flag_checkbox("rpuzzle", "Contains puzzles");
+                                    echo html_flag_checkbox("rpeace", "No combat in this map");
+                                    echo("<br/>");
+                                    echo html_flag_checkbox("rscare", "Contains jumpscares!");
+                                    echo html_flag_checkbox("rspider", "Might be bad for arachnophobics");
+                                    echo html_flag_checkbox("rwater", "Involves swimming underwater");
+                                ?>
+                            </td>
                         </tr>
-
-
-                        <td>Map file:</td><td>
-                        <input type="file" name="file" id="file">
-                        
-                        <!-- Drag and Drop container-->
-                        <div class="upload-area"  id="uploadfile">
-                            <h1>Drag and drop your WAD here!<br/>(Or click to select a file)</h1>
-                        </div>
-                        <br/>
-                        </td></tr>
+                        <tr>
+                            <td>Map file:</td>
+                            <td>
+                                <input type="file" name="file" id="file">
+                                <!-- Drag and Drop container-->
+                                <div class="upload-area"  id="uploadfile">
+                                    <h1>Drag and drop your WAD here!<br/>(Or click to select a file)</h1>
+                                </div>
+                                <br/>
+                            </td>
+                        </tr>
                         </tbody></table>
                         <button type="button" id="upload_wad">Submit WAD!</button>
                     </div>
@@ -143,4 +147,3 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                 </div>
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'footer.php');
-?>

@@ -49,6 +49,10 @@ function html_radio_button($setting, $text, $value = null, $linebreak = false, $
     return $html;
 }
 
+function html_flag_checkbox($flag, $label = ""): string {
+    return "<label class=\"checkmarkcontainer\"><input type=\"checkbox\" id=\"input_flag_{$flag}\"><span class=\"checkmark\"></span><span class=\"checkmarklabel\">{$label}</span></label>";
+}
+
 function wait_for_lock(string $lock_file_name): bool {
     $tries = 0;
 

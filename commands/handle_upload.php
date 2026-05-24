@@ -19,9 +19,8 @@ class Upload_Handler {
         $authorname =  clean_text($_POST['authorname']);
         $musiccredit = clean_text($_POST['musiccredit']);
         $category =    clean_text($_POST['category']);
-        $length =      clean_text($_POST['length']);
-        $difficulty =  clean_text($_POST['difficulty']);
-        $monsters =    clean_numeric($_POST['monsters']);
+        $length =      clean_numeric($_POST['length']);
+        $difficulty =  clean_numeric($_POST['difficulty']);
 
         $flags = [];
         foreach ($_POST as $key => $value) {
@@ -100,8 +99,7 @@ class Upload_Handler {
                 'flags' => $flags,
                 'category' => $category,
                 'length' => $length,
-                'difficulty' => $difficulty,
-                'monsterCount' => $monsters,
+                'difficulty' => $difficulty
             ]
         );
         Logger::lg("Wrote map ID " . $ramp_id . ": " . $pin . " entry to catalog");

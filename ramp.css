@@ -273,6 +273,7 @@ table.upload_table {
 
 table.upload_table td {
     border-bottom: 1px solid var(--border-color-header);
+    padding: 5px;
 }
 
 table.maps_table {
@@ -403,6 +404,10 @@ h3 {
 .checkmarkcontainer input:checked ~ .checkmark:after {
   display: block;
 }
+
+.checkmarklabel {
+    margin-left: 32px;
+ }
 
 input[type="radio"] {
     display: none;
