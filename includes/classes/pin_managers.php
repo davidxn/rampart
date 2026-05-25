@@ -83,7 +83,7 @@ class Pin_Manager_Preset {
 
 class Pin_Manager_Random extends Pin_Manager {
 
-    private static $source_chars = "acdefghjkmnpqrtvwxy346789";
+    private static string $source_chars = "acdefghjkmnpqrtvwxy346789";
 
     public function get_new_pin(): string
     {
