@@ -7,34 +7,33 @@ abstract class Pin_Manager {
 
     public abstract function get_new_pin(): string;
 
-    public function consume_provisional_pin($pin): bool {
+    public function find_provisional_pin($pin): bool {
         wait_for_lock(LOCK_FILE_PROVISIONAL_PINS);
         $this->load_provisional_pins();
         $found = false;
-        $correctCasePin = '';
-        foreach ($this->provisional_pins as $provisional_pin) {
+        foreach ($this->provisional_pins as $email_hash => $provisional_pin) {
             if (strtoupper($provisional_pin) == strtoupper($pin)) {
                 $found = true;
-                $correctCasePin = $provisional_pin;
                 break;
             }
         }
-        if (!$found) {
-            release_lock(LOCK_FILE_PROVISIONAL_PINS);
-            return false;
-        }
-        //Need to match case here!
-        $this->provisional_pins = array_diff($this->provisional_pins, [$correctCasePin]);
-        $this->save_provisional_pins();
         release_lock(LOCK_FILE_PROVISIONAL_PINS);
-        return true;
+        return $found;
     }
 
-    public function get_new_provisional_pin($email): string {
-        $new_pin = $this->get_new_pin();
+    public function get_provisional_pin($email): string {
         wait_for_lock(LOCK_FILE_PROVISIONAL_PINS);
         $this->load_provisional_pins();
-        $this->provisional_pins[] = $new_pin;
+        $email_hash = md5($email);
+        $existing_pin_for_email = $this->provisional_pins[$email_hash] ?? null;
+        if ($existing_pin_for_email) {
+            Logger::lg("{$email} requested a map slot, giving them existing PIN {$existing_pin_for_email}");
+            release_lock(LOCK_FILE_PROVISIONAL_PINS);
+            return $existing_pin_for_email;
+        }
+
+        $new_pin = $this->get_new_pin();
+        $this->provisional_pins[$email_hash] = $new_pin;
         Logger::lg("{$email} requested a new provisional PIN, generated {$new_pin}");
         $this->save_provisional_pins();
         release_lock(LOCK_FILE_PROVISIONAL_PINS);
@@ -62,7 +61,7 @@ abstract class Pin_Manager {
     }
 }
 
-class Pin_Manager_Preset {
+class Pin_Manager_Preset extends Pin_Manager {
 
     public function get_new_pin(): string
     {

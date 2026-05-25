@@ -19,7 +19,7 @@ class Pin_Handler {
         $map = $catalog_handler->get_map_by_pin($pin);
         if (!$map) {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
-            $provisional_pin_accepted = (new $pin_manager())->consume_provisional_pin($pin);
+            $provisional_pin_accepted = (new $pin_manager())->find_provisional_pin($pin);
             if (!$provisional_pin_accepted) {
                 echo json_encode(['error' => "Sorry, I couldn't find a map with that PIN"]);
                 die();

@@ -16,7 +16,7 @@ if (is_ip_banned()) {
 }
 
 $pin_manager = get_setting("PIN_MANAGER_CLASS");
-$pin = (new $pin_manager())->get_new_provisional_pin($email);
+$pin = (new $pin_manager())->get_provisional_pin($email);
 
 $api_key = file_get_contents(WORK_FOLDER . "mailtrap.secret");
 if (!$api_key) {
