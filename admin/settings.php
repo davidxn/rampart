@@ -35,10 +35,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <td>Allow users to add new map slots:</td>
                             <td>
                                 <div class="smallnote">Use this if you're making a project with a hub that anyone can submit a level to. Turn it off if you want to manage the available level slots yourself.</div>
-                                <label class="checkmarkcontainer">
-                                    <input type="checkbox" id="ALLOW_NEW_UPLOADS" <?=get_setting("ALLOW_NEW_UPLOADS", "checkbox")?"checked=\"checked\"":""?>>
-                                    <span class="checkmark"></span>
-                                </label>
+                                <?php
+                                    echo html_radio_button('ALLOW_NEW_UPLOADS', 'By request', 'request');
+                                    echo html_radio_button('ALLOW_NEW_UPLOADS', 'Directly', 'direct');
+                                    echo html_radio_button('ALLOW_NEW_UPLOADS', 'No', false);
+                                ?>
                             </td>
                         </tr>
                         <tr>

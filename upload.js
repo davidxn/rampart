@@ -18,8 +18,10 @@ $(function() {
         $("#upload-question-type").hide();
         $("#upload-question-details").show();
     });
-    
-    // Upload form buttons
+    $("#uploadtype_request").click(function(){
+        $("#upload-question-type").hide();
+        $("#upload-question-email").show();
+    });
     $("#uploadtype_update").click(function(){
         $("#upload-question-type").hide();
         $("#upload-question-pin").show();
@@ -90,6 +92,12 @@ $(function() {
         uploadFormData = new FormData();
         uploadFormData.set('pin', $('#input_pin_to_reupload').val());
         submitPin(uploadFormData);
+    });
+
+    $("#confirm_email").click(function(){
+        uploadFormData = new FormData();
+        uploadFormData.set('email', $('#input_email_address').val());
+        submitEmail(uploadFormData);
     });
     
     $("#download_button").click(function(){
@@ -200,6 +208,24 @@ function submitPin(formdata){
     });
 }
 
+function submitEmail(formdata){
+    $('#confirm_email').attr("disabled", true);
+    $('#confirm_email').addClass("waitingdisabled");
+    $('#confirm_email').text("Working...");
+
+    $.ajax({
+        url: './commands/handle_slot_request.php',
+        type: 'post',
+        data: formdata,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(response){
+            confirmEmail(response);
+        }
+    });
+}
+
 
 function updateUploadArea(response) {
     if (response.error) {
@@ -210,13 +236,13 @@ function updateUploadArea(response) {
         $('#upload_status').removeClass('success');
         $('#upload_status').addClass('fail');
         $('#upload_status').text(response.error);
-    } else {
-        $("h1").text("OK!");
-        $('#upload_status').removeClass('fail');
-        $('#upload_status').addClass('success');
-        $("#upload_status").html(response.success);
-        $('#upload_form').remove();
+        return;
     }
+    $("h1").text("OK!");
+    $('#upload_status').removeClass('fail');
+    $('#upload_status').addClass('success');
+    $("#upload_status").html(response.success);
+    $('#upload_form').remove();
 }
 
 function populateMapInfo(response) {
@@ -228,27 +254,45 @@ function populateMapInfo(response) {
         $('#pin_status').addClass('fail');
         $('#pin_status').text(response.error);
         $('#pin_status').show();
-    } else {
-        $("#upload-question-pin").hide();
-        $("#upload-question-details").show();
-        $("#input_map_name").val(response.name);
-        $("#input_author_name").val(response.author);
-        $("#input_music_credit").val(response.musiccredit);
-
-        response.flags.forEach((flag) => {
-            $('#input_flag_' + flag)[0].checked = true;
-        });
-
-        $('[name="input_map_category"]').removeAttr('checked');
-        $('input[name="input_map_category"][value="' + response.category + '"]').prop('checked', true);
-
-        $('[name="input_map_difficulty"]').removeAttr('checked');
-        $('input[name="input_map_difficulty"][value="' + response.difficulty + '"]').prop('checked', true);
-
-        $('[name="input_map_length"]').removeAttr('checked');
-        $('input[name="input_map_length"][value="' + response.length + '"]').prop('checked', true);
-
-        $("#upload_prompt").html('OK - alter your details and attach a new map here if you need to.');
-        $("#upload_wad").text('Submit changes');
+        return;
     }
+    $("#upload-question-pin").hide();
+    $("#upload-question-details").show();
+    $("#input_map_name").val(response.name);
+    $("#input_author_name").val(response.author);
+    $("#input_music_credit").val(response.musiccredit);
+
+    response.flags.forEach((flag) => {
+        $('#input_flag_' + flag)[0].checked = true;
+    });
+
+    $('[name="input_map_category"]').removeAttr('checked');
+    $('input[name="input_map_category"][value="' + response.category + '"]').prop('checked', true);
+
+    $('[name="input_map_difficulty"]').removeAttr('checked');
+    $('input[name="input_map_difficulty"][value="' + response.difficulty + '"]').prop('checked', true);
+
+    $('[name="input_map_length"]').removeAttr('checked');
+    $('input[name="input_map_length"][value="' + response.length + '"]').prop('checked', true);
+
+    $("#upload_prompt").html('OK - alter your details and attach a new map here if you need to.');
+    $("#upload_wad").text('Submit changes');
+}
+
+function confirmEmail(response) {
+    if (response.error) {
+        $('#confirm_email').attr("disabled", false);
+        $('#confirm_email').removeClass("waitingdisabled");
+        $('#confirm_email').text("That's my email");
+        $('#email_status').removeClass('success');
+        $('#email_status').addClass('fail');
+        $('#email_status').text(response.error);
+        $('#email_status').show();
+        return;
+    }
+    $('#email_status').addClass('success');
+    $('#email_status').text("Sent! You should receive your PIN in an email from doomproject.com soon - when you have it, come back to this page and enter it to get the map upload form.");
+    $('#email_status').show();
+    $('#input_email_address').hide();
+    $('#confirm_email').hide();
 }

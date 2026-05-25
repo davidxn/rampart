@@ -24,7 +24,7 @@ $template_entries = [];
 $catalog_handler = new Catalog_Handler();
 $pin_manager = get_setting("PIN_MANAGER_CLASS");
 for ($i = 0; $i < $slots; $i++) {
-    $pin = $pin_manager::get_new_pin();
+    $pin = (new $pin_manager())->get_new_pin();
     $map_number = $catalog_handler->get_next_available_slot();
     $next_map_number = $map_number + 1;
     //Default map properties...
@@ -57,7 +57,7 @@ for ($i = 0; $i < $slots; $i++) {
         $map_number,
         [
             'name' => 'Map ' . $map_number,
-            'author' => 'Nobody yet',
+            'author' => '',
             'mapnum' => $map_number,
             'lump' => $map_lumpname,
             'flags' => [],

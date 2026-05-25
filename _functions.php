@@ -110,3 +110,18 @@ function strip_quotes($string): string {
 function trim_and_lowercase($str) {
     return strtolower(trim($str));
 }
+
+function is_ip_banned() : bool {
+    $ip = $_SERVER['REMOTE_ADDR'];
+    if (file_exists(IP_BAN_FILE)) {
+        $ip_ban_list = file_get_contents(IP_BAN_FILE);
+        $ip_prefixes = explode("\n", $ip_ban_list);
+        foreach ($ip_prefixes as $ip_prefix) {
+            if (trim($ip_prefix) != "" && str_starts_with($ip, $ip_prefix)) {
+                Logger::lg("Blocked activity from IP " . $ip . " due to match with prefix " . $ip_prefix);
+                return true;
+            }
+        }
+    }
+    return false;
+}

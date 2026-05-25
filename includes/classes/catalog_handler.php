@@ -6,7 +6,6 @@ class Catalog_Handler {
 
     /** @var RampMap[] $catalog */
     private array $catalog = [];
-    private array $pinsToRampIds = [];
     
     public function __construct() {
         $string_to_decode = "[]";
@@ -24,7 +23,6 @@ class Catalog_Handler {
         foreach ($decoded_json as $ramp_id => $mapdata) {
             $rampMap = new RampMap($ramp_id, $mapdata);
             $this->catalog[$rampMap->rampId] = $rampMap;
-            $this->pinsToRampIds[$rampMap->pin] = $rampMap->rampId;
         }
     }
 
@@ -32,7 +30,7 @@ class Catalog_Handler {
         uksort($this->catalog, function ($a, $b) {
             return intval($a) <=> intval($b);
         });
-        file_put_contents(CATALOG_FILE, json_encode($this->catalog));
+        file_put_contents(CATALOG_FILE, json_encode($this->catalog, JSON_PRETTY_PRINT));
     }
     
     public function get_next_available_slot(): int
@@ -64,8 +62,11 @@ class Catalog_Handler {
     }
     
     public function get_map_by_pin($pin): ?RampMap {
-        if (isset($this->pinsToRampIds[$pin])) {
-            return $this->catalog[$this->pinsToRampIds[$pin]];
+        $pin = strtoupper($pin);
+        foreach ($this->catalog as $rampId => $map) {
+            if (strtoupper($pin) === strtoupper($map->pin)) {
+                return $map;
+            }
         }
         return null;
     }

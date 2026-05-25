@@ -1,9 +1,70 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . '_bootstrap.php');
 
-class Pin_Manager_Preset {
+abstract class Pin_Manager {
 
-    public static function get_new_pin() {
+    private array $provisional_pins = [];
+
+    public abstract function get_new_pin(): string;
+
+    public function find_provisional_pin($pin): bool {
+        wait_for_lock(LOCK_FILE_PROVISIONAL_PINS);
+        $this->load_provisional_pins();
+        $found = false;
+        foreach ($this->provisional_pins as $email_hash => $provisional_pin) {
+            if (strtoupper($provisional_pin) == strtoupper($pin)) {
+                $found = true;
+                break;
+            }
+        }
+        release_lock(LOCK_FILE_PROVISIONAL_PINS);
+        return $found;
+    }
+
+    public function get_provisional_pin($email): string {
+        wait_for_lock(LOCK_FILE_PROVISIONAL_PINS);
+        $this->load_provisional_pins();
+        $email_hash = md5($email);
+        $existing_pin_for_email = $this->provisional_pins[$email_hash] ?? null;
+        if ($existing_pin_for_email) {
+            Logger::lg("{$email} requested a map slot, giving them existing PIN {$existing_pin_for_email}");
+            release_lock(LOCK_FILE_PROVISIONAL_PINS);
+            return $existing_pin_for_email;
+        }
+
+        $new_pin = $this->get_new_pin();
+        $this->provisional_pins[$email_hash] = $new_pin;
+        Logger::lg("{$email} requested a new provisional PIN, generated {$new_pin}");
+        $this->save_provisional_pins();
+        release_lock(LOCK_FILE_PROVISIONAL_PINS);
+        return $new_pin;
+    }
+
+    private function load_provisional_pins(): void {
+        $string_to_decode = "[]";
+        if (file_exists(PROVISIONAL_PIN_FILE)) {
+            $string_to_decode = file_get_contents(PROVISIONAL_PIN_FILE);
+        }
+        $decoded_json = json_decode($string_to_decode, true);
+        if (json_last_error() != JSON_ERROR_NONE) {
+            die("Provisional PIN file could not be JSON-decoded!");
+        }
+        if (!$decoded_json) {
+            $this->provisional_pins = [];
+            return;
+        }
+        $this->provisional_pins = $decoded_json;
+    }
+
+    private function save_provisional_pins(): void {
+        file_put_contents(PROVISIONAL_PIN_FILE, json_encode($this->provisional_pins, JSON_PRETTY_PRINT));
+    }
+}
+
+class Pin_Manager_Preset extends Pin_Manager {
+
+    public function get_new_pin(): string
+    {
         if (file_exists(PIN_FILE)) {
             $file = file(PIN_FILE);
         }
@@ -19,11 +80,12 @@ class Pin_Manager_Preset {
     }
 }
 
-class Pin_Manager_Random {
+class Pin_Manager_Random extends Pin_Manager {
 
-    private static $source_chars = "ABCDEFGHJKMNPRSTVWXYZ1346789";
+    private static string $source_chars = "acdefghjkmnpqrtvwxy346789";
 
-    public static function get_new_pin() {
+    public function get_new_pin(): string
+    {
         $pin = "";        
         for ($i = 0; $i < 6; $i++) {
             $pin .= substr(self::$source_chars, rand(0, strlen(self::$source_chars)-1), 1);
