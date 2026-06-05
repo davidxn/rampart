@@ -1,28 +1,28 @@
 :root {
     --bg-color-outside: #000;
 
-    --bg-color-main: #135;
-    --bg-color-dark: #081828;
+    --bg-color-main: #111;
+    --bg-color-dark: #000;
     --bg-color-header: #222;
     --border-color-header: #444;
 
     --bg-color-banner: #228;
 
-    --bg-color-code: #003;
+    --bg-color-code: #333;
     --text-color-code: #CCC;
-    --border-color-code: #225;
+    --border-color-code: #222;
 
-    --text-color-body: #FFF;
-    --text-color-tooltip: #EEF;
+    --text-color-body: #DDD;
+    --text-color-tooltip: #CCC;
     --text-color-link: #DDF;
 
-    --bg-color-button: #080808;
+    --bg-color-button: #333;
     --text-color-button: #FFF;
-    --border-color-button: #333;
+    --border-color-button: #666;
 
-    --bg-color-button-disabled: #747;
-    --text-color-button-disabled: #CCC;
-    --border-color-button-disabled: #949;
+    --bg-color-button-disabled: #111;
+    --text-color-button-disabled: #333;
+    --border-color-button-disabled: #777;
 
     --border-color-error: #800;
     --bg-color-error: #A00;
@@ -30,13 +30,13 @@
     --border-color-success: #44A;
     --bg-color-success: #66F;
 
-    --bg-color-menuitem: #135;
-    --bg-color-menuitem-hover: #227;
+    --bg-color-menuitem: #111;
+    --bg-color-menuitem-hover: #444;
 
-    --bg-color-table-header: #88B;
-    --border-color-table-header: #559;
-    --bg-color-table-data: #337;
-    --border-color-table-data: #225;
+    --bg-color-table-header: #333;
+    --border-color-table-header: #777;
+    --bg-color-table-data: #222;
+    --border-color-table-data: #666;
 
     --bg-color-checkbox-off: #666;
     --border-color-checkbox-off: #888;
@@ -64,12 +64,11 @@ div.starterpack {
 
 body {
     background-color: var(--bg-color-outside);
-    font-family: Exo, sans-serif;
+    font-family: Tomorrow, sans-serif;
     background-image: url('/img/bg.png');
     background-attachment: fixed;
     background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background-repeat: repeat;
     color: var(--text-color-body);
 }
 
@@ -82,6 +81,11 @@ button {
     cursor: pointer;
     display: inline-block;
     user-select: none;
+    font-family: Tomorrow, sans-serif;
+}
+
+li {
+    padding: 4px;
 }
 
 button#download_button {
@@ -205,7 +209,7 @@ textarea {
     background-image: url('/img/bannerimage.png');
     background-repeat: no-repeat;
     width: 100%;
-    height: 220px;
+    height: 260px;
     position: relative;
 }
 
@@ -306,6 +310,9 @@ td.nopad {
 #upload-question-pin {
     display: none;
 }
+#upload-question-email {
+    display: none;
+}
 #upload-question-details {
     display: none;
 }
@@ -358,7 +365,7 @@ h3 {
     -ms-user-select: none;
     user-select: none;
     vertical-align: middle;
-    height: 27px;
+    height: 30px;
 }
 
 /* Hide the browser's default checkbox */
@@ -560,4 +567,8 @@ button.property-enabled {background-image: url("/img/lightbulb.png");   }
 table.maps_table td.reservednumspan {
     background-color: var(--bg-color-header);
     border: 1px solid var(--border-color-header);
+}
+
+img.mapflag {
+    display: inline-block;
 }

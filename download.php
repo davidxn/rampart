@@ -22,7 +22,8 @@ foreach ($catalog_handler->get_catalog() as $rampId => $rampMap) {
         'log_link' => Logger::get_log_link($rampId),
         'length' => $rampMap->length,
         'difficulty' => $rampMap->difficulty,
-        'category' => $rampMap->category
+        'category' => $rampMap->category,
+        'flags' => $rampMap->getFlags(),
     ];
 }
 
@@ -31,22 +32,31 @@ usort($file_table, 'compare_lumpnamed_things');
 $table_string = "<table class=\"maps_table\"><thead><tr><th>Map</th><th>Name</th><th>Author</th><th>Details</th><th>Category</th><th>Updated</th><th>Log</th></tr></thead><tbody>";
 foreach($file_table as $file_data) {
       
-        $table_string .= "<tr>";
-        $table_string .= "<td>" . $file_data['lumpname'] . "</td>";
-        $table_string .= "<td>" . $file_data['map_name'] . "</td>";
-        $table_string .= "<td>" . $file_data['author'] . "</td>";
-        $table_string .= "<td>";
-        if ($file_data['length']) {
-            $table_string .= ' <span class="map_length">' . $file_data['length'] . '</span>';
-        }
-        if ($file_data['difficulty']) {
-            $table_string .= ' <span class="map_difficulty">' . $file_data['difficulty'] . '</span>';
-        }
-        $table_string .= "</td>";
-        $table_string .= "<td>" . $file_data['category'] . "</td>";
-        $table_string .= "<td>" . $file_data['updated'] . "</td>";
-        $table_string .= "<td>" . $file_data['log_link'] . "</td>";
-        $table_string .= "</tr>";
+    $table_string .= "<tr>";
+    $table_string .= "<td>" . $file_data['lumpname'] . "</td>";
+    $table_string .= "<td>" . $file_data['map_name'] . "</td>";
+    $table_string .= "<td>" . $file_data['author'] . "</td>";
+    $table_string .= "<td>";
+
+    if ($file_data['length'] > 0) {
+        $length_name = "rlen" . $file_data['length'];
+        $table_string .= "<img class=\"mapflag\" alt=\"{$length_name}\" src=\"./img/mapflags/{$length_name}.png\"/>";
+    }
+    if ($file_data['difficulty'] > 0) {
+        $difficulty_name = "rdiff" . $file_data['difficulty'];
+        $table_string .= "<img class=\"mapflag\" alt=\"{$difficulty_name}\" src=\"./img/mapflags/{$difficulty_name}.png\"/>";
+    }
+
+    $table_string .= "&nbsp;&nbsp;";
+    foreach ($file_data['flags'] as $flag) {
+        $table_string .= "<img class=\"mapflag\" alt=\"{$flag}\" src=\"./img/mapflags/{$flag}.png\"/>";
+    }
+
+    $table_string .= "</td>";
+    $table_string .= "<td>" . $file_data['category'] . "</td>";
+    $table_string .= "<td>" . $file_data['updated'] . "</td>";
+    $table_string .= "<td>" . $file_data['log_link'] . "</td>";
+    $table_string .= "</tr>";
 }
 $table_string .= "</tbody></table>";
 

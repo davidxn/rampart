@@ -17,6 +17,7 @@ class Marquee_Generator {
     private string $marqueePatchesFolder = PK3_FOLDER . 'patches' . DIRECTORY_SEPARATOR . 'marquee' . DIRECTORY_SEPARATOR;
     private string $marqueeGraphicFolder = PK3_FOLDER . 'graphics' . DIRECTORY_SEPARATOR . 'marquee' . DIRECTORY_SEPARATOR;
     private string $marqueeTexturesFile = PK3_FOLDER . "TEXTURES.marquee";
+    private string $flagsFolder = RAMPART_HOME . 'img/mapflags' . DIRECTORY_SEPARATOR;
 
     private string $screenshotTempFolder = WORK_FOLDER . 'screenshots' . DIRECTORY_SEPARATOR;
 
@@ -43,6 +44,20 @@ class Marquee_Generator {
         "none" => 9
     ];
 
+    public array $FLAG_COORDINATES = [
+        [59, 297],
+        [78, 332],
+        [97, 367],
+        [116, 402],
+        [135, 437],
+        [154, 472],
+        [40, 332],
+        [59, 367],
+        [78, 402],
+        [97, 437],
+        [116, 472]
+    ];
+
     private Catalog_Handler $catalog;
 
     public function __construct(Catalog_Handler $catalog) {
@@ -58,7 +73,7 @@ class Marquee_Generator {
         if (file_exists($screenshotFile)) {
             $screenshotFileHash = md5_file($screenshotFile);
         }
-        return md5($map->name . $map->lump . $map->author . $map->mapnum . $map->category . $map->length . $map->difficulty . $screenshotFileHash);
+        return md5($map->name . $map->lump . $map->author . $map->mapnum . $map->category . $map->length . $map->difficulty . join(",", $map->flags) . $screenshotFileHash);
     }
 
     public function includeMarquees(): void {
@@ -77,11 +92,9 @@ class Marquee_Generator {
                     $marqueeImages = $this->generateMarquee($map_data->rampId);
                     $marqueeImages[0]->writeImage("{$this->screenshotTempFolder}RSHOT{$map_data->mapnum}.png");
                     $marqueeImages[1]->writeImage("{$this->screenshotTempFolder}RNAME{$map_data->mapnum}.png");
-                    $marqueeImages[2]->writeImage("{$this->screenshotTempFolder}RAUTH{$map_data->mapnum}.png");
+                    if ($marqueeImages[2]) { $marqueeImages[2]->writeImage("{$this->screenshotTempFolder}RAUTH{$map_data->mapnum}.png"); }
                     $marqueeImages[3]->writeImage("{$this->screenshotTempFolder}RBACK{$map_data->mapnum}.png");
-                    if ($marqueeImages[4]) {
-                        $marqueeImages[4]->writeImage("{$this->screenshotTempFolder}RMUSC{$map_data->mapnum}.png");
-                    }
+                    if ($marqueeImages[4]) { $marqueeImages[4]->writeImage("{$this->screenshotTempFolder}RMUSC{$map_data->mapnum}.png"); }
 
                     $tileImage = $this->generateTile($map_data->rampId);
                     $tileImage->writeImage("{$this->screenshotTempFolder}RTILE{$map_data->mapnum}.png");
@@ -143,8 +156,6 @@ class Marquee_Generator {
             $frameImage->readImage($this->tileTemplateImage);
             $bgImage = new Imagick();
             $bgImage->readImage($this->tileBackgroundPrefix . $this->ZONE_IDS[$rampMap->category] . '.png');
-            $iconImage = new Imagick();
-            $iconImage->readImage($this->tileIconPrefix . $this->ZONE_IDS[$rampMap->category] . '.png');
             $maskImage = new Imagick();
             $maskImage->readImage($this->tileMaskImage);
 
@@ -174,17 +185,20 @@ class Marquee_Generator {
             $bgImage->compositeImage($screenshotImage, imagick::COMPOSITE_OVER, 0, 0);
             $bgImage->compositeImage($frameImage, imagick::COMPOSITE_OVER, 0, 0);
 
-            $iconImage->resizeImage(0,21, imagick::FILTER_POINT, 0);
-            $bgImage->compositeImage($iconImage, imagick::COMPOSITE_OVER, $mapIconPos[0], $mapIconPos[1]);
+            if ($mapTitleImage) {
+                $bgImage->compositeImage($mapTitleImageBlack, imagick::COMPOSITE_OVER, $mapTitlePos[0] + 2, $mapTitlePos[1] + 2);
+                $bgImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, $mapTitlePos[0], $mapTitlePos[1]);
+            }
 
-            $bgImage->compositeImage($mapTitleImageBlack, imagick::COMPOSITE_OVER, $mapTitlePos[0] + 2, $mapTitlePos[1] + 2);
-            $bgImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, $mapTitlePos[0], $mapTitlePos[1]);
+            if ($mapLumpImage) {
+                $bgImage->compositeImage($mapLumpImageBlack, imagick::COMPOSITE_OVER, $mapLumpPos[0] + 2, $mapLumpPos[1] + 2);
+                $bgImage->compositeImage($mapLumpImage, imagick::COMPOSITE_OVER, $mapLumpPos[0], $mapLumpPos[1]);
+            }
 
-            $bgImage->compositeImage($mapLumpImageBlack, imagick::COMPOSITE_OVER, $mapLumpPos[0] + 2, $mapLumpPos[1] + 2);
-            $bgImage->compositeImage($mapLumpImage, imagick::COMPOSITE_OVER, $mapLumpPos[0], $mapLumpPos[1]);
-
-            $bgImage->compositeImage($mapAuthorImageBlack, imagick::COMPOSITE_OVER, $mapAuthorPos[0] + 2, $mapAuthorPos[1] + 2);
-            $bgImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, $mapAuthorPos[0], $mapAuthorPos[1]);
+            if ($mapAuthorImage) {
+                $bgImage->compositeImage($mapAuthorImageBlack, imagick::COMPOSITE_OVER, $mapAuthorPos[0] + 2, $mapAuthorPos[1] + 2);
+                $bgImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, $mapAuthorPos[0], $mapAuthorPos[1]);
+            }
 
             return $bgImage;
 
@@ -218,13 +232,11 @@ class Marquee_Generator {
             $mapDifficultyImage = $this->getSizedTextImage($rampMap->difficulty, 50, 712, $this->upheaval_font, '#f33');
             $mapNumberImage = $this->getSizedTextImage($rampMap->mapnum, 44, 120, $this->upheaval_font);
 
-
-
-            $baseImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, 180, 13);
-            $baseImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, 666 - $mapAuthorImage->getImageWidth(), 510);
-            $baseImage->compositeImage($mapLengthImage, imagick::COMPOSITE_OVER, 770 - intval($mapLengthImage->getImageWidth()/2), 88);
-            $baseImage->compositeImage($mapDifficultyImage, imagick::COMPOSITE_OVER, 770 - intval($mapDifficultyImage->getImageWidth()/2), 426);
-            $baseImage->compositeImage($mapNumberImage, imagick::COMPOSITE_OVER, 94 - intval($mapNumberImage->getImageWidth()/2), 68);
+            if ($mapTitleImage) { $baseImage->compositeImage($mapTitleImage, imagick::COMPOSITE_OVER, 180, 13); }
+            if ($mapAuthorImage) { $baseImage->compositeImage($mapAuthorImage, imagick::COMPOSITE_OVER, 666 - $mapAuthorImage->getImageWidth(), 510); }
+            if ($mapLengthImage) { $baseImage->compositeImage($mapLengthImage, imagick::COMPOSITE_OVER, 770 - intval($mapLengthImage->getImageWidth()/2), 88); }
+            if ($mapDifficultyImage) { $baseImage->compositeImage($mapDifficultyImage, imagick::COMPOSITE_OVER, 770 - intval($mapDifficultyImage->getImageWidth()/2), 426); }
+            if ($mapNumberImage) { $baseImage->compositeImage($mapNumberImage, imagick::COMPOSITE_OVER, 94 - intval($mapNumberImage->getImageWidth()/2), 68); }
 
             //Do we have a screenshot? If we do, let's put that on
             $screenshotImage = new Imagick();
@@ -254,8 +266,8 @@ class Marquee_Generator {
             $difficultyCounterImage = new Imagick();
             $difficultyCounterImage->readImage($this->wedgeDifficulty);
 
-            $mapLength = $rampMap->length;
-            $mapDifficulty = $rampMap->difficulty;
+            $mapLength = $rampMap->length-1;
+            $mapDifficulty = $rampMap->difficulty-1;
 
             while ($mapLength > 0) {
                 $baseImage->compositeImage($lengthCounterImage, imagick::COMPOSITE_OVER, self::LENGTH_START_X + (self::LENGTH_DIFF_X * $mapLength), self::LENGTH_START_Y + (self::LENGTH_DIFF_Y * $mapLength));
@@ -270,6 +282,19 @@ class Marquee_Generator {
             $ghostMaskImage->readImage($this->ghostMaskImage);
             $ghostImage->compositeImage($ghostMaskImage, Imagick::COMPOSITE_DSTIN, 0, 0, Imagick::CHANNEL_ALPHA);
 
+            $flag_index = 0;
+            foreach ($rampMap->flags as $flag) {
+                $flagImage = new Imagick();
+                $flagLoaded = $flagImage->readImage($this->flagsFolder . DIRECTORY_SEPARATOR . $flag . ".png");
+                if ($flagLoaded) {
+                    $baseImage->compositeImage($flagImage, imagick::COMPOSITE_OVER, $this->FLAG_COORDINATES[$flag_index][0], $this->FLAG_COORDINATES[$flag_index][1]);
+                }
+                $flag_index++;
+                if ($flag_index > 11) {
+                    break;
+                }
+            }
+
             return [$baseImage, $mapTitleImage, $mapAuthorImage, $ghostImage, $mapMusicImageWithNote];
 
         } catch (Exception $e) {
@@ -282,8 +307,11 @@ class Marquee_Generator {
      * @throws ImagickDrawException
      * @throws ImagickException|ImagickPixelException
      */
-    private function getSizedTextImage($text, $height, $maxWidth, $font, $colour = '#fff', $strokeWidth = 1.0): Imagick
+    private function getSizedTextImage($text, $height, $maxWidth, $font, $colour = '#fff', $strokeWidth = 1.0): ?Imagick
     {
+        if ($text == "") {
+            return null;
+        }
         $prefixBufferSize = 100;
 
         $draw = new ImagickDraw();

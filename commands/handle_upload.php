@@ -11,9 +11,9 @@ class Upload_Handler {
     function handle_upload($filename, $filesize, $tmp_name, $pin): void
     {
 
-        Logger::lg("Starting an upload attempt");
+        Logger::lg("Starting an upload attempt from IP " . $_SERVER['REMOTE_ADDR']);
         
-        $this->validator = new Wad_Validator($filename);
+        $this->validator = new Wad_Validator($tmp_name);
 
         $mapname =     clean_text($_POST['mapname']);
         $authorname =  clean_text($_POST['authorname']);
@@ -21,8 +21,8 @@ class Upload_Handler {
         $category =    clean_text($_POST['category']);
         $length =      clean_numeric($_POST['length']);
         $difficulty =  clean_numeric($_POST['difficulty']);
-
         $flags = [];
+
         foreach ($_POST as $key => $value) {
             if (!str_starts_with($key, 'flag_')) { continue; }
             if ($value && ($value !== "0")) {
@@ -32,7 +32,7 @@ class Upload_Handler {
 
         $pin = strtoupper(clean_text($pin));
 
-        $this->validate_fields($mapname, $authorname, $musiccredit);
+        $this->validate_fields($mapname, $authorname, $musiccredit, $category, $length, $difficulty);
         $this->validate_ip();
         if ($tmp_name) {
             $this->validate_wad_header($tmp_name);
@@ -53,7 +53,7 @@ class Upload_Handler {
             $map_lump = $existing_map->lump;
             $map_number = $existing_map->mapnum;
         }
-        else {
+        else if (get_setting("ALLOW_NEW_UPLOADS") == 'direct') {
             $pin_manager = get_setting("PIN_MANAGER_CLASS");
             $pin = (new $pin_manager())->get_new_pin();
             if (empty($pin)) {
@@ -65,6 +65,9 @@ class Upload_Handler {
             $map_number = $ramp_id;
             Logger::lg("Assigning PIN: " . $pin);
             Logger::lg("Assigning RAMP ID and map number: " . $ramp_id);
+        } else {
+            echo json_encode(['error' => 'Creating a new map slot is unavailable']);
+            die();
         }
         
         $location = null;
@@ -160,8 +163,6 @@ class Upload_Handler {
     function validate_ip(): void
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        Logger::lg("Recording upload from IP " . $ip);        
-
         @mkdir(IPS_FOLDER);
 
         if (is_ip_banned()) {
@@ -179,7 +180,7 @@ class Upload_Handler {
         file_put_contents($ip_check_file, ":)");
     }
 
-    function validate_fields($mapname, $authorname, $musiccredit): void
+    function validate_fields($mapname, $authorname, $musiccredit, $category, $length, $difficulty): void
     {
         $this->detect_bad_words($mapname);
         $this->detect_bad_words($authorname);
@@ -204,6 +205,18 @@ class Upload_Handler {
             echo json_encode(['error' => 'A map must have an author name!']);
             die();
         }
+        if ($category == null || $category == "") {
+            echo json_encode(['error' => 'A map must have a category!']);
+            die();
+        }
+        if (!($length >= 1 && $length <= 5)) {
+            echo json_encode(['error' => 'A map must have a length rating from 1 to 5!']);
+            die();
+        }
+        if (!($difficulty >= 1 && $difficulty <= 5)) {
+            echo json_encode(['error' => 'A map must have a difficulty rating from 1 to 5!']);
+            die();
+        }
     }
     
     function detect_bad_words($phrase): void
@@ -215,8 +228,7 @@ class Upload_Handler {
             foreach ($ban_array as $ban) {
                 if (str_contains(strtolower($phrase), strtolower($ban))) {
                     Logger::lg("Blocked upload attempt due to match with banned word");
-                    $validator = new Wad_Validator('');
-                    $validator->handle_validation_failure();
+                    $this->validator->handle_validation_failure();
                 }
             }
         }

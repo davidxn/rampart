@@ -28,7 +28,7 @@ class LumpRegistry implements JsonSerializable {
     /**
      * @var string[]
      */
-    public array $ignore_special_lump_list = ['rampshot', 'rsky1'];
+    public array $ignore_special_lump_list = ['rampshot', 'sky1'];
 
     /**
      * @var ReservedIdentifier[]

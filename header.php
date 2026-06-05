@@ -12,10 +12,12 @@ if (!file_exists(SETTINGS_FILE) && !$GLOBALS['SKIP_SETTINGS_CHECK']) {
         <script src="/upload.js?xcache=8" type="text/javascript"></script>
         <link rel="stylesheet" href="/ramp.css?xcache=10">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Exo">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Tomorrow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
         <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
-        <link rel="manifest" href="/site.webmanifest">
         <title>RAMPART - <?=get_setting("PROJECT_TITLE")?></title>
     </head>
     <body>
@@ -50,10 +52,10 @@ if (!empty(get_setting("BANNER_MESSAGE"))) {
                     <a href="/guide.php"><div class="menuitem">Getting Started</div></a>
 <?php
 $update_verb = "Submit";
-if (!get_setting("ALLOW_NEW_UPLOADS")) {
+if (get_setting("ALLOW_NEW_UPLOADS") === false) {
     $update_verb = "Upload";
 }
-if (get_setting("ALLOW_NEW_UPLOADS") || get_setting("ALLOW_EDIT_UPLOADS")) {
+if (get_setting("ALLOW_NEW_UPLOADS") !== false || get_setting("ALLOW_EDIT_UPLOADS")) {
 ?>
                     <a href="/upload.php"><div class="menuitem"><?=$update_verb?> a Map</div></a>
 <?php
@@ -65,7 +67,7 @@ if (get_setting("ALLOW_SNAPSHOT_DOWNLOAD")) {
 <?php
 } else {
 ?>
-        <a href="/download.php"><div class="menuitem">Maps</div></a>
+                    <a href="/download.php"><div class="menuitem">Maps</div></a>
 <?php
 }
 ?>

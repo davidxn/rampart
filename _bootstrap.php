@@ -28,12 +28,14 @@ if (isset($GLOBALS['auth']) && $GLOBALS['auth'] == true) {
 }
 
 spl_autoload_register(function ($class) {
-    $handler_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/classes/' . strtolower($class) . '.php';
-    if (file_exists($handler_filename)) {
-        require_once $handler_filename;
-    }
-    $model_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'includes/models/' . strtolower($class) . '.php';
-    if (file_exists($model_filename)) {
-        require_once $model_filename;
+    foreach ([
+        'includes/classes',
+        'includes/models',
+        'includes/classes/processors'
+             ] as $dir) {
+        $handler_filename = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . strtolower($class) . '.php';
+        if (file_exists($handler_filename)) {
+            require_once $handler_filename;
+        }
     }
 });
