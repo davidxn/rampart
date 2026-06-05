@@ -61,7 +61,8 @@ $setting_defaults = [
         'specialaction_opendoor',
         'specialaction_lowerfloor',
         'specialaction_killmonsters',
-        'useplayerstartz'
+        'useplayerstartz',
+        'noambientocclusion'
     ],
 
     "GENERATE_MARQUEES" => false,
