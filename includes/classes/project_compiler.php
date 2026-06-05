@@ -11,7 +11,7 @@ class Project_Compiler {
     public Catalog_Handler $catalog_handler;
     public Build_Numberer $build_numberer;
     
-    private string $decorate_id_number_prefix = "DECORATE class:";
+    public static string $decorate_id_number_prefix = "DECORATE class:";
 
     public function __construct() {
         $this->lumpRegistry = new LumpRegistry();
@@ -52,9 +52,9 @@ class Project_Compiler {
         $milestone_times[] = time() - $start_time; //Preparation
 
         $this->set_status("Translating uploaded WADs into maps...");
-        $this->generate_map_wads();
+        $rejected_map_ramp_ids = $this->generate_map_wads();
         $this->set_status("Generating MAPINFO and other descriptors like that...");
-        $this->generate_info();
+        $this->generate_info($rejected_map_ramp_ids);
         $milestone_times[] = time() - $start_time; //Map compiling
 
         //The rest of these actions can be skipped if we're not preparing the final file
@@ -132,17 +132,24 @@ class Project_Compiler {
         Logger::pg("Wrote " . $bytes_written . " bytes to new guide WAD");
     }
     
-    function generate_map_wads() : void {
+    function generate_map_wads() : array {
         Logger::pg("--- IMPORTING MAPS AND RESOURCES FROM UPLOADED WADS ---");
         $catalog = $this->catalog_handler->get_catalog();
         $total_maps = count($catalog);
         $map_index = 0;
+        $rejected_map_ramp_ids = [];
         foreach ($catalog as $map_data) {
             $map_index++;
             $this->set_status("Translating uploaded WADs into maps... " . $map_index . "/" . $total_maps);
+            Logger::pg("-------------------------------------------------------");
+
+            if ($map_data->category == '') {
+                Logger::pg("Skipping provisional map slot. This map will be included after the author makes the first upload.", $map_data->rampId, true);
+                $rejected_map_ramp_ids[] = $map_data->rampId;
+                continue;
+            }
             $map_file_name = get_source_wad_file_name($map_data->rampId);
 
-            Logger::pg("-------------------------------------------------------");
             Logger::pg(PHP_EOL . "📦 " .
                 "Reading source WAD " . $map_file_name . " for " . $map_data->lump . ": " . $map_data->name . " 📦",
                 $map_data->mapnum
@@ -150,6 +157,7 @@ class Project_Compiler {
             
             if (($map_data->disabled ?? 0) > 0) {
                 Logger::pg(get_error_link('ERR_DISABLED'), $map_data->rampId, true);
+                $rejected_map_ramp_ids[] = $map_data->rampId;
                 continue;
             }
 
@@ -157,6 +165,7 @@ class Project_Compiler {
             $wad_handler = new Wad_Handler($source_wad);
             if (!$wad_handler->count_lumps()) {
                 Logger::pg(get_error_link('ERR_WAD_MISSING', [$map_file_name]), $map_data->rampId, true);
+                $rejected_map_ramp_ids[] = $map_data->rampId;
                 continue;
             }
 
@@ -164,10 +173,9 @@ class Project_Compiler {
             
             $this->warn_unsupported_lumps($map_data, $wad_handler);
 
-            if (!$this->validate_sprites($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'])) { continue; }
-            if (!$this->import_map($map_data, $wad_handler)) { continue; }
-            
-            $this->import_sndinfo_and_sounds($map_data, $wad_handler);
+            if (!$this->validate_sprites($map_data, $wad_handler, ['S_START', 'SS_START'], ['S_END', 'SS_END'])) { $rejected_map_ramp_ids[] = $map_data->rampId; continue; }
+            if (!(new MapProcessor($wad_handler, $this->lumpRegistry, $map_data))->process()) { $rejected_map_ramp_ids[] = $map_data->rampId; continue; }
+
             $this->import_between_markers($map_data, $wad_handler, ['P_START', 'PP_START', 'PPSTART'], ['P_END', 'PP_END', 'PPEND'], 'patches', 'patch');
             $this->import_between_markers($map_data, $wad_handler, ['TX_START'], ['TX_END'], 'textures', 'texture');
             $this->import_between_markers($map_data, $wad_handler, ['VX_START'], ['VX_END'], 'voxels', 'voxel');
@@ -179,13 +187,15 @@ class Project_Compiler {
             $this->import_between_markers($map_data, $wad_handler, ['MO_START'], ['MO_END'], 'models', 'obj model', '.obj');
             $this->import_between_markers($map_data, $wad_handler, ['MT_START'], ['MT_END'], 'models', 'png texture', '.png');
             $this->import_between_markers($map_data, $wad_handler, ['FX_START'], ['FX_END'], 'fx', 'shaders', '.glsl');
-            $this->import_modeldefs($map_data, $wad_handler);
-            $this->import_lumps_directly($map_data, $wad_handler, ['TEXTURES', 'GLDEFS', 'ANIMDEFS', 'LOCKDEFS', 'SNDSEQ', 'README', 'MANUAL', 'VOXELDEF', 'TEXTCOLO', 'SPWNDATA', 'DECALDEF', 'TRNSLATE']);
-            $this->import_default_music($map_data, $wad_handler);
-            $this->import_scripts($map_data, $wad_handler);
+            $this->process_lumps($map_data, $wad_handler);
+
+            (new DefaultMusicProcessor($wad_handler, $this->lumpRegistry, $map_data, $this->music_lump_mapper))->process();
             $this->import_mapinfo($map_data, $wad_handler);
-            $this->import_special_lumps($map_data, $wad_handler);
+
+            Logger::pg("Finished processing map " . $map_data->lump, $map_data->rampId);
         }
+
+        return $rejected_map_ramp_ids;
     }
     
     function warn_unsupported_lumps(RampMap $map_data, Wad_Handler $wad_handler): void {
@@ -208,99 +218,7 @@ class Project_Compiler {
             }
         }
     }
-    
-    function import_sndinfo_and_sounds(RampMap $map_data, Wad_Handler $wad_handler): void {
-        $sndinfo_lines_to_import = [];
-        $sound_lumps_to_extract = [];
-        $sndinfo_lumps = $wad_handler->get_lumps("SNDINFO");
-        if ($sndinfo_lumps) {
-            // Add comment showing map identification
-            $sndinfo_lines_to_import[] = ("// " . $map_data->lump . ": " . $map_data->name);
-            
-            // Get all lines we want to include
-            foreach ($sndinfo_lumps as $sndinfo_lump) {
-                Logger::pg("🔊 Found SNDINFO, attempting to parse it", $map_data->rampId);
-                $sndinfo_handler = new Sndinfo_Handler($sndinfo_lump->data, $map_data->rampId);
-                $sndinfo_result = $sndinfo_handler->parse();
-                $requested_lump_names = $sndinfo_result['requested_lump_names'];
-                $requested_definitions = $sndinfo_result['requested_definitions'];
-                $requested_ambients = $sndinfo_result['requested_ambients'];
-                $ambient_result = $this->lumpRegistry->add_ambients($requested_ambients, $map_data->rampId);
-                if ($ambient_result === false) {
-                    Logger::pg("❌ Not importing this SNDINFO", $map_data->rampId, true);
-                    continue;
-                }
-                for ($i = 0; $i < count($requested_lump_names); $i++) {
-                    if (!$this->lumpRegistry->add_sndinfo_definition($requested_definitions[$i], $requested_lump_names[$i], $map_data->rampId)) {
-                        Logger::pg("❌ Not importing this SNDINFO", $map_data->rampId, true);
-                        continue 2;
-                    }
-                }
-                $sndinfo_lines_to_import = array_merge($sndinfo_lines_to_import, $sndinfo_result['input_lines']);
-                $sound_lumps_to_extract = array_merge($sound_lumps_to_extract, $requested_lump_names);
-            }
-            
-            // We have the sound lumps we want to extract - let's look through and do that
-            foreach ($wad_handler->lumps as $lump) {
-                if (in_array($lump->name, $sound_lumps_to_extract)) {
-                    Logger::pg("🔈 Found " . $lump->name . " mentioned in SNDINFO - assuming it's a sound", $map_data->rampId);
-                    if (!$this->lumpRegistry->reserveLump($lump, $map_data->rampId)) {
-                        continue;
-                    }
-                    //This is a lump mentioned in SNDINFO! Copy it into the sounds folder
-                    $sound_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . "sounds" . DIRECTORY_SEPARATOR . $map_data->lump;
-                    @mkdir($sound_folder, 0755, true);
-                    $sound_path = $sound_folder . DIRECTORY_SEPARATOR . $lump->name;
-                    file_put_contents($sound_path, $lump->data);
-                    Logger::pg("Wrote " . strlen($lump->data) . " bytes to " . $sound_path, $map_data->rampId);
-                }
-            }
-            
-            //Finally, write our compiled SNDINFO
-            if ($sndinfo_lines_to_import) {
-                $sndinfo_filename = PK3_FOLDER . "SNDINFO." . $map_data->rampId;
-                @unlink($sndinfo_filename);
-                file_put_contents($sndinfo_filename, implode(PHP_EOL, $sndinfo_lines_to_import));
-                Logger::pg("🔊 Wrote " . $sndinfo_filename, $map_data->rampId);
-            }
-        }
-    }
-    
-    function import_map($map_data, $wad_handler): bool {
-        $in_map = false;
-        $map_lumps = [];
-        
-        foreach ($wad_handler->lumps as $lump) {
-            //If we're in a map and this lump is not map data, we are no longer in a map!
-            if ($lump->type != 'mapdata' && $in_map) {
-                Logger::pg("Finished reading map lumps", $map_data->rampId);
-                break;
-            }
-            if (($lump->type == 'mapmarker' && !$in_map) || ($lump->type == 'mapdata' && $in_map)) {
-                $in_map = true;
-                $map_lumps[] = $lump;
-                Logger::pg("Read map lump " . $lump->name . " with size " . strlen($lump->data), $map_data->rampId);
-            }
-        }
-        
-        if (count($map_lumps) <= 1) {
-            Logger::pg(get_error_link('ERR_WAD_NO_LUMPS'), $map_data->rampId, true);
-            return false;
-        }
-        
-        //Construct a new WAD using only the map lumps
-        $target_wad = PK3_FOLDER . "maps" . DIRECTORY_SEPARATOR . $map_data->lump . ".WAD";
-        Logger::pg("🗺 Writing map WAD as " . $target_wad, $map_data->rampId);
-        $wad_writer = new Wad_Handler();
-        foreach ($map_lumps as $lump) {
-            $wad_writer->add_lump($lump);
-        }
-        @unlink($target_wad);
-        $bytes_written = $wad_writer->write_wad($target_wad);
-        Logger::pg("Wrote " . $bytes_written . " bytes to " . $target_wad, $map_data->rampId);
-        return true;
-    }
-    
+
     function validate_sprites($map_data, $wad_handler, $start_names, $stop_names): bool {
         $in_zone = "";
         foreach ($wad_handler->lumps as $lump) {
@@ -368,230 +286,28 @@ class Project_Compiler {
         }
     }
     
-    function import_lumps_directly(RampMap $map_data, Wad_Handler $wad_handler, $allowed_lump_names): void {
-        
-        $included_lump_counts = [];
-        
-        foreach ($wad_handler->lumps as $lump) {
-            if (in_array($lump->name, $allowed_lump_names)) {
-                
-                //Special case - reject LOCKDEFS if it tries to clear locks
-                if ($lump->name == 'LOCKDEFS' && strpos(strtolower($lump->data), 'clearlocks') !== false) {
-                    Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CLEARLOCKS'), $map_data->rampId, true);
-                    continue;
-                }
+    function process_lumps(RampMap $map_data, Wad_Handler $wad_handler): void {
 
-                // Reject lockdefs that contain at least 1 lock that overwrites a vanilla lock
-                if ($lump->name == 'LOCKDEFS') {
-                    $lumptxt = $lump->data;
-                    $lumprgx = "/^lock\s+([0-6]|10[0-1]|129|13[0-4]|229)\s*\{/mi";
-                    preg_match_all($lumprgx, $lumptxt, $matches, PREG_SET_ORDER, 0);
-
-                    if (preg_match($lumprgx, $lumptxt)) {
-                        Logger::pg(get_error_link('ERR_LUMP_LOCKDEFS_CONFLICTS'), $map_data->rampId, true);
-                        continue;
-                    }
-                }                
-                
-                //Another special case - reject TEXTURES if it redefines any existent lumps
-                if ($lump->name == 'TEXTURES') {
-                    $texture_validation_result = $this->lumpRegistry->validate_textures($lump->data, $map_data->rampId);
-                    $lump->data = $texture_validation_result['cleaned_data'];
-                    if (!$texture_validation_result['success']) {
-                        Logger::pg(get_error_link('ERR_TEX_CONFLICTS'), $map_data->rampId, true);
-                    }
-                }
-
-                if ($lump->name == 'SNDSEQ') {
-                    $sndseq_result = $this->lumpRegistry->add_sound_sequences($lump->data, $map_data->rampId);
-                    $lump->data = $sndseq_result['cleaned_data'];
-                    if (!$sndseq_result['success']) {
-                        Logger::pg(get_error_link('ERR_SOUND_SNDSEQ_CONFLICTS'), $map_data->rampId, true);
-                    }
-                }
-                
-                if ($lump->name == 'GLDEFS') {
-                    //Extract and load brightmaps
-                    $matches = [];
-                    preg_match_all('/[^0-9A-Za-z]+?map ([0-9A-Za-z]*)/im', $lump->data, $matches);
-                    for ($i = 0; $i < count($matches[0]); $i++) {
-                        $bmlumpname = $matches[1][$i];
-                        //Get this lump from our current WAD and treat it as a graphic, if this lump isn't already there
-                        $bmlump = $wad_handler->get_lump($bmlumpname);
-                        if (!$bmlump) {
-                            Logger::pg("Couldn't find brightmap " . $bmlumpname . " to import, trusting it's already included", $map_data->rampId);
-                            continue;
-                        }
-                        if (!$this->lumpRegistry->reserveLump($bmlump, $map_data->rampId)) {
-                            continue;
-                        }
-                        Logger::pg("Adding brightmap " . $bmlumpname . " as a graphic", $map_data->rampId);
-                        $graphics_folder = PK3_FOLDER . "graphics";
-                        @mkdir($graphics_folder, 0755, true);
-                        $graphic_file_path = PK3_FOLDER . "graphics/" . $bmlumpname;
-                        file_put_contents($graphic_file_path, $bmlump->data);
-                    }
-                }
-                
-                Logger::pg("💾 Including " . $lump->name . " lump", $map_data->rampId);
-                if (!isset($included_lump_counts[$lump->name])) {
-                    $included_lump_counts[$lump->name] = 1;
-                }
-                else {
-                    $included_lump_counts[$lump->name]++;
-                }
-                
-                @mkdir(PK3_FOLDER, 0755, true);
-                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump->name . "." . $map_data->rampId . "-" . $included_lump_counts[$lump->name];
-                file_put_contents($data_path, $lump->data);
-                Logger::pg("Wrote " . strlen($lump->data) . " bytes to " . $data_path, $map_data->rampId);
-            }
+        foreach ($wad_handler->lumps as $index => $lump) {
+            $lumpProcessorClassName = null;
             if ($lump->type == 'font') {
-                if (!$this->lumpRegistry->reserveLump($lump, $map_data->rampId)) {
-                    continue;
-                }
-                Logger::pg("💾 Including " . $lump->name . " lump as font", $map_data->rampId);
-                @mkdir(PK3_FOLDER . DIRECTORY_SEPARATOR . 'fonts', 0755, true);
-                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . 'fonts' . DIRECTORY_SEPARATOR . $lump->name . '.' . $map_data->rampId;
-                file_put_contents($data_path, $lump->data);
-                Logger::pg("Wrote " . strlen($lump->data) . " bytes to " . $data_path, $map_data->rampId);
+                $lumpProcessorClassName = 'FontProcessor';
             }
-        }
-    }
+            $lumpProcessorClassName = $lumpProcessorClassName ?? match ($lump->name) {
+                'LOCKDEFS' => 'LockDefsProcessor',
+                'TEXTURES' => 'TexturesProcessor',
+                'SNDINFO' => 'SndInfoProcessor',
+                'SNDSEQ' => 'SndSeqProcessor',
+                'GLDEFS' => 'GlDefsProcessor',
+                'TEXTCOLO' => 'TextColoProcessor',
+                'DECORATE', 'ZSCRIPT' => 'ScriptsProcessor',
+                'MODELDEF' => 'ModelDefsProcessor',
+                'ANIMDEFS', 'TERRAIN', 'README', 'MANUAL', 'VOXELDEF', 'SPWNDATA', 'DECALDEF', 'TRNSLATE' => 'LumpProcessor',
+                default => null
+            };
 
-    function import_modeldefs(RampMap $map_data, Wad_Handler $wad_handler): void {
-
-        $number_of_modeldefs = 0;
-
-        //import MODELDEF files
-        //there could be multiple files with one definition in each, or one file with multiple definitions
-        //this should handle both cases -- or even a mixture of cases -- fine
-        foreach ($wad_handler->lumps as $lump) {
-            if ($lump->name == 'MODELDEF') {
-                $number_of_modeldefs++;
-                
-                Logger::pg("💾 Including " . $lump->name . " lump " . $number_of_modeldefs, $map_data->rampId);
-
-                //MODELDEF files must go in the root directory of the pk3           
-                $data_path = PK3_FOLDER . DIRECTORY_SEPARATOR . $lump->name . "." . $map_data->rampId . "-" . $number_of_modeldefs;
-
-                $modeldef_lines = explode(PHP_EOL, $lump->data);
-
-                $modeldef_data = "";
-
-                foreach ($modeldef_lines as $line) {
-
-                    if(preg_match('/MODEL\s+0/i', $line)){
-                        //For each model definition in a legal model definition there will always be one file starting "Model 0"
-                        //We need to add one Path definition line to each model definition, matching the path to models for the map being imported
-                        //So it makes sense to add it immediately prior to the "Model 0" line
-                        $modeldef_data .= 'Path "models' . DIRECTORY_SEPARATOR . $map_data->lump . DIRECTORY_SEPARATOR . '"' . PHP_EOL;
-                    } 
-
-                    //Since RAMPART needs to add its own Path definition line, we ignore one the mapper has already included
-                    //note that allowing the mapper to include a Path line which is ignored makes it easier for the
-                    //mapper to run their map both locally for testing and as part of the built project
-                    if (!preg_match('/^\s*PATH/i', $line)) {
-                        $modeldef_data .= $line . PHP_EOL;
-                    } 
-                }
-
-                file_put_contents($data_path, $modeldef_data);
-                Logger::pg("Wrote " . strlen($modeldef_data) . " bytes to " . $data_path, $map_data->rampId);
-            }
-        }
-    }
-    
-    function import_default_music(RampMap $map_data, Wad_Handler $wad_handler): void {
-        $default_music_lump_name = get_setting("DEFAULT_MUSIC_LUMP");
-        $default_music_lump = $wad_handler->get_lump($default_music_lump_name);
-        if (!$default_music_lump) {
-            Logger::pg("🎵 No default music lump " . $default_music_lump_name . " found in WAD", $map_data->rampId);
-            return;
-        }
-
-        $music_type = $default_music_lump->type;
-        $music_length = strlen($default_music_lump->data);
-        Logger::pg("🎵 Music of type " . $music_type . " found in lump " . $default_music_lump_name . " with size " . $music_length, $map_data->rampId);
-        $music_path = PK3_FOLDER . "music/" . $this->music_lump_mapper->get_name_for_music_lump($map_data->lump);
-        file_put_contents($music_path, $default_music_lump->data);
-        Logger::pg("Wrote " . $music_length . " bytes to " . $music_path, $map_data->rampId);
-    }
-    
-    function import_scripts($map_data, $wad_handler): void {
-        //Copy DECORATE or ZSCRIPT into files in the scripts folder, and append the name on to the include file in the root
-        $lump_number = 0;
-        foreach ($wad_handler->lumps as $lump) {
-            if (in_array(strtoupper($lump->name), ['DECORATE', 'ZSCRIPT'])) {
-                if (stripos($lump->data, "replaces") !== false) { //Okay, I don't have time to write a proper parser
-                    Logger::pg("❌ Found " . $lump->name . " lump but refusing it as it performs replacements!", $map_data->rampId, true);
-                    $this->lumpRegistry->addRejectedScript($map_data->rampId);
-                    continue;
-                }
-                
-                //If this script is DECORATE, watch out for DoomEd number definitions
-                
-                if (strtoupper($lump->name == 'DECORATE')) {
-                    $matches = [];
-                    //Oh dear god - this gets the class name and DoomEd number out of an actor definition
-                    preg_match_all('/(*ANYCRLF)^\s*?actor\s+([a-zA-Z0-9_]*)\s*(?::\s*[a-zA-Z0-9_]*)?\s+([0-9]+)/im', $lump->data, $matches);
-                    if (isset($matches[1])) {
-                        //We have some matching DoomEd numbers - attempt to add them to the global list
-                        for ($i = 0; $i < count($matches[1]); $i++) {
-                            $classname = $matches[1][$i];
-                            $doomed_number = $matches[2][$i];
-                            $result = $this->lumpRegistry->reserveDoomEdNumber($doomed_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
-                            if (!$result) {
-                                Logger::pg("❌ Found " . $lump->name . " lump but got a DoomEdNum conflict, not including this script", $map_data->rampId, true);
-                                $this->lumpRegistry->addRejectedScript($map_data->rampId);
-                                continue 2;
-                            }
-                        }
-                    }
-                    
-                    //Same for spawn nums
-                    $matches = [];
-                    preg_match_all('/(*ANYCRLF)\s*?actor\s+([a-zA-Z0-9_]*)[^{]*?{[^}]*?spawnid[\s]*?([0-9]+)[\s\S]*?}/im', $lump->data, $matches);
-                    if (isset($matches[1])) {
-                        //We have some matching spawn numbers - attempt to add them to the global list
-                        for ($i = 0; $i < count($matches[1]); $i++) {
-                            $classname = $matches[1][$i];
-                            $spawn_number = $matches[2][$i];
-                            $result = $this->lumpRegistry->reserveSpawnNumber($spawn_number, $map_data->rampId, $this->decorate_id_number_prefix . $classname);
-                            if (!$result) {
-                                Logger::pg("❌ Found " . $lump->name . " lump but got a spawnnum conflict, not including this script", $map_data->rampId, true);
-                                $this->lumpRegistry->addRejectedScript($map_data->rampId);
-                                continue 2;
-                            }
-                        }
-                    }
-                }                
-                
-                Logger::pg("📜 Found " . $lump->name . " lump, adding it to our script folder", $map_data->rampId);
-                $lump_number++;
-                $script_folder = PK3_FOLDER . DIRECTORY_SEPARATOR . strtoupper($lump->name);
-                @mkdir($script_folder, 0755, true);
-                $script_file_name = strtoupper($lump->name) . "-" . $map_data->rampId . "-" . $lump_number . ".txt";
-                $script_file_path = $script_folder . DIRECTORY_SEPARATOR . $script_file_name;
-                
-                //If this is a ZSCRIPT file and it begins with a version declaration, we have to strip that out
-                if ($lump->name == 'ZSCRIPT' && strtolower(substr($lump->data, 0, 7)) == "version") {
-                    Logger::pg("Taking version declaration out of ZSCRIPT lump");
-                    $first_newline_position = strpos($lump->data, PHP_EOL);
-                    $lump->data = substr($lump->data, $first_newline_position);
-                }
-                
-                file_put_contents($script_file_path, $lump->data);
-                Logger::pg("Wrote " . strlen($lump->data) . " bytes to " . $script_file_path, $map_data->rampId);
-                
-                //If this is our first ZSCRIPT inclusion, we need to add the version declaration
-                $script_include_file_path = PK3_FOLDER . strtoupper($lump->name) . ".custom";
-                if (strtoupper($lump->name) == "ZSCRIPT" && !file_exists($script_include_file_path)) {
-                    file_put_contents($script_include_file_path, "version \"" . get_setting("ZSCRIPT_VERSION") . "\"" . PHP_EOL . PHP_EOL);
-                }
-                
-                file_put_contents($script_include_file_path, "#include \"" . strtoupper($lump->name) . DIRECTORY_SEPARATOR . $script_file_name . "\"" . PHP_EOL, FILE_APPEND);
-
+            if ($lumpProcessorClassName) {
+                (new $lumpProcessorClassName($wad_handler, $this->lumpRegistry, $map_data, $index, $lump))->process();
             }
         }
     }
@@ -657,20 +373,6 @@ class Project_Compiler {
                 $skyfile = $this->write_sky_to_pk3($map_data->rampId, 1, $lump->data);
                 if (!isset($this->map_additional_mapinfo[$map_data->rampId])) { $this->map_additional_mapinfo[$map_data->rampId] = []; }
                 $this->map_additional_mapinfo[$map_data->rampId]['sky1'] = $skyfile;
-                continue;
-            }
-        }
-    }
-    
-    function import_special_lumps($map_data, $wad_handler) {
-        foreach ($wad_handler->lumps as $lump) {
-            if (in_array(strtoupper($lump->name), ['RAMPSHOT'])) {
-                //This is a screenshot, so include it under the screenshots folder for processing later
-                $lump_folder = WORK_FOLDER . DIRECTORY_SEPARATOR . 'screenshots' . DIRECTORY_SEPARATOR;
-                @mkdir($lump_folder, 0755, true);
-                $output_file = $lump_folder . 'RAMPSHOTRAW' . $map_data->rampId;
-                file_put_contents($output_file, $lump->data);
-                Logger::pg("📷 Exported RAMPSHOT picture as " . $output_file, $map_data->rampId);
             }
         }
     }
@@ -683,7 +385,7 @@ class Project_Compiler {
     /**
      * Writes the MAPINFO, LANGUAGE and other data lumps using the map properties and whether we've found music, skies, etc
      */
-    function generate_info() {
+    function generate_info(array $rejected_map_ramp_ids) : void {
         
         Logger::pg("--- GENERATING INFO LUMPS ---");
         
@@ -691,21 +393,28 @@ class Project_Compiler {
         $total_maps = count($catalog);
         $map_index = 0;
 
-        //For every map in the catalog, write a MAPINFO entry and LANGUAGE lump.
         $mapinfo = "";
         $language = "[enu default]" . PHP_EOL . PHP_EOL;
         $ramp_data = [];
 
-        $global_allow_jump = get_setting("ALLOW_GAMEPLAY_JUMP");
         $write_mapinfo = get_setting("PROJECT_WRITE_MAPINFO");
 
         foreach ($catalog as $map_data) {
             $map_index++;
             $this->set_status("Generating MAPINFO and other descriptors like that... " . $map_index . "/" . $total_maps);
 
+            //Skip acknowledging this map if it was rejected
+            if (in_array($map_data->rampId, $rejected_map_ramp_ids)) {
+                Logger::pg("Skipping writing metadata for rejected map " . $map_data->lump . " with id " . $map_data->rampId);
+                continue;
+            }
+
             //If our global settings don't allow jump, remove the RJUMP flag here
-            if (!$global_allow_jump) {
+            if (get_setting("ALLOW_GAMEPLAY_JUMP") == 'never') {
                 $map_data->removeFlag(RampMap::FLAG_JUMP);
+            }
+            if (get_setting("ALLOW_GAMEPLAY_JUMP") == 'always') {
+                $map_data->addFlag(RampMap::FLAG_JUMP);
             }
 
             $language .= $map_data->lump . "NAME = \"" . $map_data->name . "\";" . PHP_EOL;
@@ -721,7 +430,7 @@ class Project_Compiler {
                     $map_data->difficulty ?? 0,
                     $map_data->monsters ?? 0,
                     $map_data->category ?? '',
-                    implode(":", $map_data->flags),
+                    implode(":", $map_data->getFlags()),
                     Logger::map_has_errors($map_data->rampId),
                     $map_data->name
                 ]
@@ -736,10 +445,11 @@ class Project_Compiler {
             
             //The basics - include the name, author, and point everything to go back to the hub/intermission map
             $mapinfo .= "{" . PHP_EOL;
-            $mapinfo .= "author = \"$" . $map_data->lump . "AUTH\"" . PHP_EOL;
-            $mapinfo .= "levelnum = " . $map_data->mapnum . PHP_EOL;
-            $mapinfo .= "cluster = 1" . PHP_EOL;
-            
+            $mapinfo .= "\t" . "author = \"$" . $map_data->lump . "AUTH\"" . PHP_EOL;
+            $mapinfo .= "\t" . "levelnum = " . $map_data->mapnum . PHP_EOL;
+            $mapinfo .= "\t" . "cluster = 1" . PHP_EOL; // Why don't these inherit?
+            $mapinfo .= "\t" . "NoIntermission" . PHP_EOL;
+
             //Include any allowed custom properties from original upload
             Logger::pg("Checking for custom properties for map " .$map_data->lump, $map_data->rampId);
             if (isset($this->map_additional_mapinfo[$map_data->rampId])) {
@@ -760,8 +470,8 @@ class Project_Compiler {
             //Skies. If we haven't got a specific one (which will have been added by the custom properties above),
             //check for a sky written to the folder, then fall back to default
             if (!isset($this->map_additional_mapinfo[$map_data->rampId]['sky1'])) {
-                Logger::pg("No sky1 set, falling back to RSKY1 for map " . $map_data->lump, $map_data->rampId);
-                $mapinfo .= "\t" . "sky1 = RSKY1" . PHP_EOL;
+                Logger::pg("No sky1 set, falling back to SKY1 for map " . $map_data->lump, $map_data->rampId);
+                $mapinfo .= "\t" . "sky1 = SKY1" . PHP_EOL;
             }
 
             //Use this map's music if we've already parsed it out. If not, try the music in the custom properties. Then fall back to our default
@@ -779,7 +489,7 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "music = " . get_setting("DEFAULT_MUSIC_LUMP") . PHP_EOL;
             }
 
-            if ($map_data->hasFlag("RJUMP")) {
+            if ($map_data->hasFlag(RampMap::FLAG_JUMP)) {
                 $mapinfo .= "\t" . "AllowJump" . PHP_EOL;
                 $mapinfo .= "\t" . "AllowCrouch" . PHP_EOL;
             } else {
@@ -787,8 +497,13 @@ class Project_Compiler {
                 $mapinfo .= "\t" . "NoCrouch" . PHP_EOL;
             }
 
-            //Finally, include properties specified by map data. If there is nothing in MAPINFO, default to setting the next level to the one defined globally
-            $mapinfo .= ($map_data->mapInfoString ?? 'next = ' . get_setting("POST_LEVEL_MAP_NAME")) . PHP_EOL;
+            //Finally, include properties specified by map data.
+            $mapinfo .= ($map_data->mapInfoString);
+            $postLevelMapLumpName = get_setting("POST_LEVEL_MAP_NAME");
+            if ($postLevelMapLumpName) {
+                $mapinfo .= "\t" . "next = {$postLevelMapLumpName}" . PHP_EOL;
+                $mapinfo .= "\t" . "secretnext = {$postLevelMapLumpName}" . PHP_EOL;
+            }
 
             $mapinfo .= "}" . PHP_EOL;
             $mapinfo .= PHP_EOL;
@@ -800,7 +515,7 @@ class Project_Compiler {
             $mapinfo .= "doomednums {" . PHP_EOL;
             foreach ($this->lumpRegistry->getDoomEdNumbers() as $reservedDoomEdNumber) {
                 //If this DoomEd number was defined by Decorate, it doesn't need to be included in this list - it will already have been parsed
-                if (str_starts_with($reservedDoomEdNumber->className, $this->decorate_id_number_prefix)) {
+                if (str_starts_with($reservedDoomEdNumber->className, self::$decorate_id_number_prefix)) {
                     continue;
                 }
                 $mapinfo .= "    " . $reservedDoomEdNumber->number . " = " . "\"" . $reservedDoomEdNumber->className . "\"" . " // Ramp ID " . $reservedDoomEdNumber->ownerRampId . PHP_EOL;
@@ -810,7 +525,7 @@ class Project_Compiler {
         if ($this->lumpRegistry->hasSpawnNumbers()) {
             $mapinfo .= "spawnnums {" . PHP_EOL;
             foreach ($this->lumpRegistry->getSpawnNumbers() as $reservedSpawnNumber) {
-                if (str_starts_with($reservedSpawnNumber->className, $this->decorate_id_number_prefix)) {
+                if (str_starts_with($reservedSpawnNumber->className, self::$decorate_id_number_prefix)) {
                     continue;
                 }
                 $mapinfo .= "    " . $reservedSpawnNumber->number . " = " . "\"" . $reservedSpawnNumber->className . "\"" . " // Ramp ID " . $reservedSpawnNumber->ownerRampId . PHP_EOL;

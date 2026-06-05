@@ -24,7 +24,7 @@ $setting_defaults = [
     
     "ALLOW_GAMEPLAY_JUMP" => 'never',
     
-    "DEFAULT_SKY_LUMP" => "RSKY1",
+    "DEFAULT_SKY_LUMP" => "SKY1",
     "DEFAULT_MUSIC_LUMP" => "D_RUNNIN",
     
     "NOTIFY_ON_MAPS" => 'never',
@@ -164,6 +164,7 @@ const COMPILE_ERRORS = [
     'ERR_WAD_MISSING' => '$1 does not exist in uploads folder, skipping it',
     'ERR_WAD_NO_LUMPS' => 'No map lumps read after map marker, possible malformed WAD. Map will not be included',
     'ERR_WAD_BAD_LUMPS' => 'Unexpected lump $1 in map definition, will not include this map',
+    'ERR_WAD_PREMATURE_END' => 'Some map lumps seem to be missing (last map lump read was $1), will not include this map',
     'ERR_TEX_DEFINITION_NOT_NEEDED' => 'You don\'t need to define dummy texture $1 - skipping it',
     'ERR_TEX_REDEFINITION_BASE' => 'TEXTURES attempts to redefine $1 $2 as $3. Already defined in IWAD as $4. Skipping this definition',
     'ERR_TEX_REDEFINITION_OTHER' => 'TEXTURES attempts to redefine $1 $2 as $3. Already defined in map $4 as $5. Skipping this definition',
@@ -176,7 +177,8 @@ const COMPILE_ERRORS = [
     'ERR_LUMP_NEEDS_CONVERTED' => '$1 lumps are unsupported - convert to $2 with SLADE3',
     'ERR_LUMP_COLORMAP_UNSUPPORTED' => 'Found colormap-related lump $1, but colormaps are not supported',
     'ERR_LUMP_LOCKDEFS_CLEARLOCKS' => 'Found LOCKDEFS lump but refusing it as it performs CLEARLOCKS!',
-    
+    'ERR_LUMP_TEXTCOLO_OVERRIDE' => 'Refusing TEXTCOLO as it tries to redefine default colours: $1',
+
     'ERR_SOUND_SNDINFO_REDEFINITION' => 'SNDINFO tries to define the sound $1 as $2, but it\'s already defined as $3',
     'WARN_SOUND_SNDINFO_REDEFINITION' => 'SNDINFO defines the sound $1, which is already defined but it matches the existing definition $2',
     'WARN_SOUND_SNDINFO_NOT_IMPORTED' => 'Not importing this SNDINFO',

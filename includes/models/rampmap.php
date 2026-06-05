@@ -15,6 +15,7 @@ class RampMap implements JsonSerializable
     const FLAG_NEW_MONSTERS = "RNEWMON";
     const FLAG_NEW_WEAPONS = "RNEWWEP";
     const FLAG_MOUSELOOK = "RMOUSE";
+    const FLAG_NOMOUSELOOK = "RNOMOUSE";
     const FLAG_SPIDER = "RSPIDER";
     const FLAG_WIP = "RWIP";
     const FLAG_FIRST = "RFIRST";
@@ -56,12 +57,22 @@ class RampMap implements JsonSerializable
 
     public function hasFlag(String $flag): bool
     {
-        return in_array($flag, $this->flags);
+        return in_array(strtolower($flag), $this->flags);
+    }
+
+    public function addFlag(String $flag): void
+    {
+        $this->flags[] = array_intersect($this->flags, [strtolower($flag)]);
     }
 
     public function removeFlag(String $flag): void
     {
-        $this->flags = array_diff($this->flags, [$flag]);
+        $this->flags = array_diff($this->flags, [strtolower($flag)]);
+    }
+
+    public function getFlags(): array
+    {
+        return $this->flags;
     }
 
     public function jsonSerialize(): array
@@ -82,7 +93,7 @@ class RampMap implements JsonSerializable
             'rampId' => $this->rampId,
             'wip' => $this->wip,
             'mapInfoString' => $this->mapInfoString,
-            'flags' => $this->flags
+            'flags' => array_map('strtolower', $this->flags)
         ];
     }
 }

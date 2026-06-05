@@ -34,7 +34,7 @@ abstract class Pin_Manager {
 
         $new_pin = $this->get_new_pin();
         $this->provisional_pins[$email_hash] = $new_pin;
-        Logger::lg("{$email} requested a new provisional PIN, generated {$new_pin}");
+        Logger::lg("{$email} requested a new provisional PIN from IP " . $_SERVER['REMOTE_ADDR'] . ", generated {$new_pin}");
         $this->save_provisional_pins();
         release_lock(LOCK_FILE_PROVISIONAL_PINS);
         return $new_pin;

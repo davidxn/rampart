@@ -221,7 +221,7 @@ class Wad_Handler {
         if ($this->lumpDataContains($lump, 0, 'FON2')) { return 'font'; }
         if ($this->lumpDataContains($lump, 0, 'ID3')) { return 'mp3'; }
         if ($this->lumpDataContains($lump, 0, '\xFF\xFB')) { return 'mp3'; }
-        return 'unknown';
+        return '';
     }
 
     private function lumpDataContains($lump, $startPosition, $dataToMatch): bool {

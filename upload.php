@@ -1,16 +1,18 @@
 <?php
 require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
 ?>
-                <p>Submit or adjust a RAMP 2025 map here!</p>
+                <p>Submit or adjust a RAMP 2026 map here!</p>
                 
                 <div class="lightbox">
                 <p>As well as a map, you can include these resources:</p>
                 <ul>
-                <li>Name a lump D_RUNNIN to include it as the background music for your map.</li>
-                <li>Include a 512x384 image lump RAMPSHOT to display it as the thumbnail image for your map in the hub level.</li>
-                <li>For skies, you can do one of two things:
-                    <ul><li>Include a lump called RSKY1 and it'll automatically be used as the sky</li>
-                    <li>OR Include your sky texture(s) under other names and point to them with SKY1 and SKY2 in a MAPINFO</li></ul>
+                    <li>Name a lump <b>D_RUNNIN</b> to include it as the background music for your map.</li>
+                    <li>Include a 688x426 image lump in PNG/JPG format under the name <b>RAMPSHOT</b> to display it as the thumbnail image for your map in the hub level - use this <a href="./img/2026bannertemplate.png">template</a> to see how it will be cut.</li>
+                    <li>For skies, you can do one of two things:
+                    <ul>
+                        <li>Include a lump called <b>SKY1</b> and it'll automatically be used as the sky</li>
+                        <li>OR Include your sky texture(s) under other names and point to them with SKY1 and SKY2 in a MAPINFO</li>
+                    </ul>
                 </li>
                 </ul>
                 <p>Take a look at the <a href="./rules.php">rules page</a> for a complete list of accepted data. If what you want isn't there, ask!</p>
@@ -53,15 +55,26 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                         <p id="upload_prompt">OK - add your details here and click Upload to submit the map.</p>
                         <table class="upload_table"><tbody><tr>
                             <td width="200">Map name</td>
-                            <td><input type="text" id="input_map_name"></input></td>
+                            <td><input type="text" id="input_map_name"/></td>
                         </tr><tr>
                             <td>Author name</td>
-                            <td><input type="text" id="input_author_name"></input></td>
+                            <td><input type="text" id="input_author_name"/></td>
                         </tr><tr>
                             <td>Music credit</td>
-                            <td><input type="text" id="input_music_credit"></input>
+                            <td><input type="text" id="input_music_credit"/>
                             <div class="smallnote">Not needed, just if you want to add a "Rondo in D# by Flynn Taggart" note on level start</div></td>
-                        </tr><tr
+                        </tr><tr>
+                                <td>Map file:</td>
+                                <td>
+                                    <input type="file" name="file" id="file">
+                                    <!-- Drag and Drop container-->
+                                    <div class="upload-area"  id="uploadfile">
+                                        <h1>Drag and drop your WAD here!<br/>(Or click to select a file)</h1>
+                                    </div>
+                                    <br/>
+                                </td>
+                            </tr>
+                            <tr
                         <?php if (!(get_setting('ALLOW_GAMEPLAY_JUMP') == 'user')) {
                             echo(' style="display: none"');
                         } ?>
@@ -99,11 +112,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <div class="smallnote">How tough is this map?</div>
                             <div>
                                 <?php
-                                    echo html_radio_button('input_map_difficulty', 'No real chance of failure', 1, true, 3);
-                                    echo html_radio_button('input_map_difficulty', 'Pretty gentle', 2, true, 3);
-                                    echo html_radio_button('input_map_difficulty', 'About the same as Ultra-Violence in Doom', 3, true, 3);
-                                    echo html_radio_button('input_map_difficulty', 'You\'re going to die a lot', 4, true, 3);
-                                    echo html_radio_button('input_map_difficulty', 'Densely packed monster-o-rama', 5, true, 3);
+                                    echo html_radio_button('input_map_difficulty', '1. No real chance of failure', 1, true, 3);
+                                    echo html_radio_button('input_map_difficulty', '2. Pretty gentle', 2, true, 3);
+                                    echo html_radio_button('input_map_difficulty', '3. About the same as Ultra-Violence in Doom', 3, true, 3);
+                                    echo html_radio_button('input_map_difficulty', '4. You\'re going to die a lot', 4, true, 3);
+                                    echo html_radio_button('input_map_difficulty', '5. Densely packed monster-o-rama', 5, true, 3);
                                 ?>
                             </div>
                             </td>
@@ -115,11 +128,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                             <div class="smallnote">Aim for maps to last 10 minutes or less.</div>
                             <div>
                                 <?php
-                                    echo html_radio_button('input_map_length', 'A&nbsp;couple&nbsp;of&nbsp;minutes', 1, true, 3);
-                                    echo html_radio_button('input_map_length', '5 minutes or less', 2, true, 3);
-                                    echo html_radio_button('input_map_length', '10 minutes or so', 3, true, 3);
-                                    echo html_radio_button('input_map_length', 'A bit more than 10 minutes', 4, true, 3);
-                                    echo html_radio_button('input_map_length', 'Actually a lot more than 10 minutes', 5, true, 3);
+                                    echo html_radio_button('input_map_length', '1. A&nbsp;couple&nbsp;of&nbsp;minutes', 1, true, 3);
+                                    echo html_radio_button('input_map_length', '2. 5 minutes or less', 2, true, 3);
+                                    echo html_radio_button('input_map_length', '3. 10 minutes or so', 3, true, 3);
+                                    echo html_radio_button('input_map_length', '4. A bit more than 10 minutes', 4, true, 3);
+                                    echo html_radio_button('input_map_length', '5. Actually a lot more than 10 minutes', 5, true, 3);
                                 ?>
                             </div>
                             </td>
@@ -132,7 +145,8 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                                     echo html_flag_checkbox("rnewmon", "Includes custom monsters");
                                     echo html_flag_checkbox("rnewwep", "Includes custom weapons or pickups");
                                     echo("<div class='\"checkboxseparator\"'>Special configuration</div>");
-                                    echo html_flag_checkbox("rmouse", "Requires mouselook");
+                                    echo html_flag_checkbox("rmouse", "Requires vertical mouselook");
+                                    echo html_flag_checkbox("rnomouse", "Vertical mouselook shouldn't be used");
                                     echo html_flag_checkbox("rlight", "Requires dynamic lighting");
                                     echo("<div class='\"checkboxseparator\"'>Map genre</div>");
                                     echo html_flag_checkbox("rslaught", "This is a slaughtermap");
@@ -145,17 +159,6 @@ require_once($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'header.php');
                                     echo html_flag_checkbox("rspider", "Might be bad for arachnophobics");
                                     echo html_flag_checkbox("rwater", "Involves swimming underwater");
                                 ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Map file:</td>
-                            <td>
-                                <input type="file" name="file" id="file">
-                                <!-- Drag and Drop container-->
-                                <div class="upload-area"  id="uploadfile">
-                                    <h1>Drag and drop your WAD here!<br/>(Or click to select a file)</h1>
-                                </div>
-                                <br/>
                             </td>
                         </tr>
                         </tbody></table>
